@@ -1,0 +1,10 @@
+name = "hultberg-org"
+main = "src/index.ts"
+compatibility_date = "2024-06-28"
+format = "modules"
+
+[observability.logs]
+enabled = true
+
+[assets]
+directory = "./public"

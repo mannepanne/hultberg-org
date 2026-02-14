@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "36cd6dcc513b",
+  "session_id": "4ed68e0e-97fe-4855-963f-b9e5c451d275",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-14T14:56:09.085187Z",
+  "branch": "main",
+  "checkpoints_count": 9,
+  "files_touched": [
+    "CLAUDE.md",
+    "SPECIFICATIONS/OnePagerTemplate.md",
+    "SPECIFICATIONS/PRDGENERATION.md",
+    "public/now/index.html",
+    "public/now/index_20260214.CHANGED.html"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 1228,
+    "cache_creation_tokens": 86310,
+    "cache_read_tokens": 1085292,
+    "output_tokens": 7238,
+    "api_call_count": 33
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-14T14:56:09.009318Z",
+    "agent_lines": 0,
+    "human_added": 837,
+    "human_modified": 314,
+    "human_removed": 0,
+    "total_committed": 941,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-magnus-Documents-Coding-MigrateHultbergOrg-hultberg-org/4ed68e0e-97fe-4855-963f-b9e5c451d275.jsonl"
+}

@@ -1,0 +1,46 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+Please familiarise yourself with this project by reading @CLAUDE.md and checking out the project structure. Can you tell me what this project is about?
+
+### Prompt 2
+
+Hmm. But that can't be right. The project is deployed to CloudFlare on https://hultberg.org and is serving the pages as expected.
+
+### Prompt 3
+
+Excellent. Do you need to update something in @CLAUDE.md to make this clear? If a developer comes new to the project, they should be able to read the project top level @CLAUDE.md and quickly get up to speed so they can be productive.
+
+### Prompt 4
+
+Can I somehow run this site locally for purposes of checking development changes?
+
+### Prompt 5
+
+Yes please.
+
+### Prompt 6
+
+Excellent! Let's try updating the /now page. It's the file @public/now/index.html 
+
+First of all, make a copy of the file and save it as a backup using the same file name format at as the previous backups in the same folder, for example @public/now/index_20160926.CHANGED.html
+
+### Prompt 7
+
+I no longer work at Ocado Technology, so the first sentence and the first bullet in the list below need to change. I know work at char.gy (https://char.gy) where we design, manufacture, install and operate EV chargers. By strategically installing charge points along residential streets, we bring convenient, reliable, and affordable charging directly to drivers’ doorsteps.
+
+### Prompt 8
+
+There's a spelling mistake in the second bullet, change "abtch" to "batch". The age of my asparagus bed also needs to change from four years to five. And change "harvested my second batch" to "looking forward to harvesting more asparagus spears this year".
+
+### Prompt 9
+
+Third bullet also needs changing. I now work out 2 days a week while trying to repair the longitudinal splits in bicep tendons in my right arm... Over a year in the making, but slowly getting there. I hope.
+
+### Prompt 10
+
+Great! Please commit these changes (and other changes in the project, I have for example deleted two old files). The give me the command to push to GitHub.
+

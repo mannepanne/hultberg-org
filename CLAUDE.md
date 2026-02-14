@@ -42,7 +42,12 @@ Note: The project currently has a placeholder test script that needs implementat
 - **SEO Files**: Standard web files like `sitemap_base.xml`, `foaf.rdf`, verification files
 
 ### Current Implementation Notes
-The Worker currently returns a hardcoded 404 response for all requests. This appears to be a migration in progress, as the `public/` directory contains a full website structure that should be served through proper asset handling.
+Cloudflare Workers Assets serves static files from `public/` **before** the Worker's fetch handler runs (default `run_worker_first = false`). This means:
+- Static assets (index.html, /now pages, images, etc.) are served directly by Cloudflare
+- The Worker's fetch handler (`src/index.ts`) only executes for requests that don't match static files
+- The Worker provides a custom 404 page with branding and helpful navigation for missing resources
+
+The site is fully functional - there's no KV asset handler code needed in the Worker itself.
 
 ## TypeScript Configuration
 - Target: ESNext modules for Cloudflare Workers runtime

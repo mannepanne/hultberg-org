@@ -66,19 +66,28 @@ A simple, lightweight blog feature for hultberg.org that allows Magnus to publis
 - Fields:
   - **Title** (required)
   - **Excerpt** (optional - if empty, first 150 chars used automatically)
-  - **Content** (Markdown editor with formatting toolbar)
+  - **Content** (Markdown editor using EasyMDE - actively maintained fork of SimpleMDE)
   - **Status** (Draft/Published toggle)
-- Formatting toolbar buttons:
-  - Headers (H1, H2, H3)
-  - Bold, Italic
-  - Links
-  - Bullet lists, Numbered lists
-  - Image upload
+- **EasyMDE Editor Features**:
+  - Split view (Markdown source + live preview side-by-side)
+  - Visual toolbar with icons for:
+    - Headers (H1, H2, H3)
+    - Bold, Italic
+    - Links
+    - Bullet lists, Numbered lists
+    - And standard EasyMDE features
+  - Custom image upload button integrated into toolbar
 - **Image Gallery**:
   - Shows all uploaded images for this update at bottom of editor
   - Click image to insert at cursor position in content
   - Images automatically resized to max 800x800px (maintaining aspect ratio)
   - Client-side resize before upload
+- **Styling**:
+  - Light structure with clean forms
+  - Basic styling for better usability
+  - Clear buttons and inputs
+  - Simple grid layout for dashboard
+  - Minimal but polished aesthetic
 - **Actions**:
   - Save as Draft
   - Publish (or Update if already published)
@@ -217,16 +226,16 @@ public/
 
 ### Phase 2: Public Pages
 5. Implement `/updates` listing page
-   - Read index.json
-   - Filter published updates only
-   - Implement pagination
-   - Render using `/now` page style as template
+  - Read index.json
+  - Filter published updates only
+  - Implement pagination
+  - Render using `/now` page style as template
 6. Implement `/updates/{slug}` individual page
-   - Read update JSON
-   - Convert Markdown to HTML
-   - Sanitize output
-   - Render with metadata and images
-   - Handle 404 for drafts and missing updates
+  - Read update JSON
+  - Convert Markdown to HTML
+  - Sanitize output
+  - Render with metadata and images
+  - Handle 404 for drafts and missing updates
 7. Implement RSS feed (`/updates/feed.xml`)
 
 ### Phase 3: Authentication

@@ -191,6 +191,7 @@ public/
 ## Dependencies
 
 ### NPM Packages (to be added)
+- `easymde` - Markdown editor (actively maintained fork of SimpleMDE, ~50KB)
 - `marked` - Markdown to HTML conversion
 - `dompurify` - Sanitize HTML output
 - `isomorphic-dompurify` - DOMPurify for Workers environment
@@ -203,6 +204,27 @@ public/
 ### External Services
 - **Resend.com** (existing account) - Send magic link emails
 - **GitHub API** - Commit updates from admin interface
+
+## Configuration & Secrets
+
+All sensitive credentials are stored as **Cloudflare Secrets** (encrypted, never committed to repository):
+
+- `RESEND_API_KEY` - Resend.com API key for sending magic link emails
+- `GITHUB_TOKEN` - GitHub Personal Access Token (fine-grained) with:
+  - Repository: `hultberg-org`
+  - Permission: **Contents** (Read and write)
+
+**Setup commands:**
+```bash
+npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put GITHUB_TOKEN
+```
+
+**Access in Worker:**
+```typescript
+env.RESEND_API_KEY
+env.GITHUB_TOKEN
+```
 
 ## Future Enhancements (Not in MVP)
 
@@ -251,41 +273,42 @@ public/
 15. Implement delete functionality
 
 ### Phase 5: Update Editor
-16. Build editor form UI with fields
-17. Implement Markdown formatting toolbar
-18. Add image upload with client-side resize
-19. Create image gallery component
-20. Implement "Save as Draft" functionality
-21. Implement "Publish" functionality
-22. Build preview functionality
+16. Integrate EasyMDE library
+17. Build editor form UI with fields and light styling
+18. Add custom image upload button to EasyMDE toolbar
+19. Implement client-side image resize before upload
+20. Create image gallery component
+21. Implement "Save as Draft" functionality
+22. Implement "Publish" functionality
+23. Build preview functionality
 
 ### Phase 6: GitHub Integration
-23. Set up GitHub API authentication
-24. Implement commit functionality for:
+24. Set up GitHub API authentication using GITHUB_TOKEN secret
+25. Implement commit functionality for:
     - New updates (create JSON file)
     - Updated updates (modify JSON file)
     - Deleted updates (remove JSON file)
     - Uploaded images (add to repo)
-25. Update index.json when updates change
+26. Update index.json when updates change
 
 ### Phase 7: Auto-Deployment
-26. Create GitHub Action workflow file
-27. Configure Cloudflare API token for deployment
-28. Test automatic deployment on commit
+27. Create GitHub Action workflow file
+28. Configure Cloudflare API token for deployment
+29. Test automatic deployment on commit
 
 ### Phase 8: Testing & Polish
-29. Test full workflow end-to-end
-30. Add error handling and validation
-31. Test image upload and resize
-32. Verify RSS feed validity
-33. Test pagination edge cases
-34. Security audit (XSS, CSRF, authentication)
-35. Performance testing
+30. Test full workflow end-to-end
+31. Add error handling and validation
+32. Test image upload and resize
+33. Verify RSS feed validity
+34. Test pagination edge cases
+35. Security audit (XSS, CSRF, authentication)
+36. Performance testing
 
 ### Phase 9: Documentation
-36. Update CLAUDE.md with new routes and functionality
-37. Document admin workflow
-38. Add comments to complex code sections
+37. Update CLAUDE.md with new routes and functionality
+38. Document admin workflow
+39. Add comments to complex code sections
 
 ## Success Criteria
 

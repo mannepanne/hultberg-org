@@ -11,6 +11,16 @@ A simple, lightweight blog feature for hultberg.org that allows Magnus to publis
 - **Simple and fast** - Minimal dependencies, clean HTML based on existing /now page style
 - **Auto-deployment** - GitHub Actions automatically deploy changes when updates are published
 
+## Current Site Architecture
+
+**Important:** The existing site at hultberg.org is fully functional. For complete architecture details, see [CLAUDE.md](../CLAUDE.md#current-implementation-notes).
+
+**Key points:**
+- Cloudflare Workers Assets serves static files from `public/` **before** the Worker's fetch handler runs
+- The Worker (`src/index.ts`) only executes for requests that don't match static files
+- The Worker currently provides a custom 404 page for missing resources
+- This updates feature will add new routes to the Worker for `/updates/*` and `/admin/*`
+
 ## User-Facing Features
 
 ### Updates Listing Page (`/updates`)

@@ -3,9 +3,12 @@
   "checkpoint_id": "eadd4dd3b96a",
   "strategy": "manual-commit",
   "branch": "feature/blog-updates-mvp",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
-    ".claude/skills/review-pr-team/SKILL.md"
+    ".claude/skills/review-pr-team/SKILL.md",
+    "SPECIFICATIONS/blog-style-updates-mvp.md",
+    "SPECIFICATIONS/blog-updates-implementation.md",
+    "SPECIFICATIONS/blog-updates-security.md"
   ],
   "sessions": [
     {
@@ -14,13 +17,20 @@
       "context": "/ea/dd4dd3b96a/0/context.md",
       "content_hash": "/ea/dd4dd3b96a/0/content_hash.txt",
       "prompt": "/ea/dd4dd3b96a/0/prompt.txt"
+    },
+    {
+      "metadata": "/ea/dd4dd3b96a/1/metadata.json",
+      "transcript": "/ea/dd4dd3b96a/1/full.jsonl",
+      "context": "/ea/dd4dd3b96a/1/context.md",
+      "content_hash": "/ea/dd4dd3b96a/1/content_hash.txt",
+      "prompt": "/ea/dd4dd3b96a/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 82,
-    "cache_creation_tokens": 30215,
-    "cache_read_tokens": 207958,
-    "output_tokens": 3015,
-    "api_call_count": 10
+    "input_tokens": 419,
+    "cache_creation_tokens": 281326,
+    "cache_read_tokens": 3323746,
+    "output_tokens": 23313,
+    "api_call_count": 48
   }
 }

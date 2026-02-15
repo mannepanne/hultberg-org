@@ -171,6 +171,38 @@ public/
 - Remove special characters (keep alphanumeric and hyphens)
 - If duplicate slug exists, append `-2`, `-3`, etc.
 
+**Handling slug conflicts with pagination:**
+- Reserved slugs: `page` (used for pagination at `/updates/page/2`)
+- If a user tries to create an update with title "Page", slug becomes `page-2`
+- Pagination route `/updates/page/{n}` takes precedence in routing
+
+### Implementation Details & Clarifications
+
+**Admin Email Configuration:**
+- Admin email address stored as Cloudflare Secret: `ADMIN_EMAIL`
+- Magic links only sent to this address
+- Setup: `npx wrangler secret put ADMIN_EMAIL`
+
+**Bootstrap & Initial Setup:**
+- Directory structure (`public/updates/data/`, `public/images/updates/`) created manually or via initial script
+- Empty `index.json` with `{"updates": []}` committed to repo
+- First update creates the pattern for all subsequent updates
+
+**Empty State Handling:**
+- `/updates` with no published updates: Shows message "No updates yet. Check back soon!"
+- `/updates` with only drafts: Same as empty (drafts not visible to public)
+- Admin dashboard with no updates: Shows "Create your first update" button
+
+**RSS Feed Absolute URLs:**
+- Worker constructs absolute URLs using request hostname
+- Example: `/images/updates/slug/image.jpg` → `https://hultberg.org/images/updates/slug/image.jpg`
+- Implemented via: `new URL(relativePath, request.url).toString()`
+
+**Image Paths in Content:**
+- Stored as relative paths in JSON: `/images/updates/{slug}/image.jpg`
+- Rendered as-is in HTML (browser resolves relative to current page)
+- Converted to absolute for RSS feed
+
 ### Deployment Workflow
 
 1. **User creates/edits update in admin** → Browser POSTs to Worker API endpoint
@@ -180,6 +212,45 @@ public/
 5. **Cloudflare Workers updated** → New content live (~2 min total)
 
 **Security Note:** All GitHub API calls happen server-side in the Worker. The GitHub token is stored as a Cloudflare Secret and never sent to the browser.
+
+### Race Conditions & Eventual Consistency
+
+**The Challenge:**
+- GitHub Action deploy takes ~2 minutes
+- User might save multiple updates during this window
+- User might try to view update before deploy completes
+
+**Mitigation Strategies:**
+
+**1. User Feedback in Admin:**
+- After saving update: Show message "Update saved! Changes will be live in ~2 minutes."
+- Dashboard shows "Last deploy:" timestamp
+- Option to view in Preview mode immediately (no deploy needed)
+
+**2. Multiple Rapid Saves:**
+- Each commit triggers new GitHub Action
+- GitHub Actions queue automatically (won't overwrite each other)
+- Latest commit will be deployed last
+
+**3. Viewing Updates During Deploy:**
+- Drafts: Always viewable in admin preview, never public
+- Published updates: May take ~2 min to appear on public site
+- Admin shows warning badge: "Deploy in progress" if GitHub Action is running
+
+**4. Deploy Status Feedback (Optional Enhancement):**
+- Poll GitHub Actions API for deploy status
+- Show in admin: "Deploying..." → "Live" with timestamp
+- Not critical for MVP but improves UX
+
+**5. Failed Deploys:**
+- GitHub Action sends notification on failure (standard GitHub feature)
+- User can check GitHub Actions tab in repo
+- Updates still saved in repo (can manually deploy later)
+
+**Edge Case Handling:**
+- If user edits same update multiple times rapidly: Latest version wins
+- If user deletes update while deploy running: 404 will appear after deploy completes
+- Stale content in browser: Worker can set short cache headers (5 min max)
 
 ### Authentication Flow
 
@@ -394,9 +465,9 @@ Path: /admin
 23. Implement `POST /admin/api/save-update` endpoint:
     - Receive update data from browser
     - Validate and sanitize input
-    - Use `env.GITHUB_TOKEN` to commit JSON file to GitHub
-    - Update index.json atomically
+    - Use `env.GITHUB_TOKEN` to commit JSON file to `public/updates/data/{slug}.json`
     - Return success/error response
+    - Note: index.json is generated at build time, not updated here
 24. Implement `POST /admin/api/upload-image` endpoint:
     - Receive image from browser
     - Optionally resize server-side (or validate client-side resize)
@@ -404,8 +475,8 @@ Path: /admin
     - Return image path
 25. Implement `DELETE /admin/api/delete-update` endpoint:
     - Remove update JSON file via GitHub API
-    - Update index.json
     - Return success/error response
+    - Note: index.json is regenerated at build time
 26. Implement `DELETE /admin/api/delete-image` endpoint:
     - Remove image file via GitHub API
     - Return success/error response

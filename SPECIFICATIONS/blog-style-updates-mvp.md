@@ -1,5 +1,11 @@
 # Blog-Style Updates Feature - MVP Specification
 
+**Related Documents:**
+- [blog-updates-security.md](./blog-updates-security.md)
+- [blog-updates-implementation.md](./blog-updates-implementation.md)
+
+---
+
 ## What is this feature?
 
 A simple, lightweight blog feature for hultberg.org that allows Magnus to publish updates without requiring a database. Updates are stored as JSON files in the GitHub repository, with automatic deployment to Cloudflare Workers when changes are made. The feature includes a password-protected admin interface for creating, editing, and managing updates.
@@ -20,6 +26,8 @@ A simple, lightweight blog feature for hultberg.org that allows Magnus to publis
 - The Worker (`src/index.ts`) only executes for requests that don't match static files
 - The Worker currently provides a custom 404 page for missing resources
 - This updates feature will add new routes to the Worker for `/updates/*` and `/admin/*`
+
+---
 
 ## User-Facing Features
 
@@ -43,7 +51,6 @@ A simple, lightweight blog feature for hultberg.org that allows Magnus to publis
   - Published date
   - Last edited date (if different from published)
 - Images displayed inline in content
-- Click to enlarge images
 - SEO meta tags (Open Graph, Twitter Cards, etc.)
 - Google Analytics tracking
 - Drafts return 404 to public visitors
@@ -53,14 +60,17 @@ A simple, lightweight blog feature for hultberg.org that allows Magnus to publis
 - Standard RSS 2.0 feed
 - Includes all published updates
 - Full content in feed items
+- Absolute URLs for images
+
+---
 
 ## Admin Features
 
 ### Authentication (`/admin`)
 
-- Magic link authentication
-- Email sent to Magnus's personal email address
+- **Magic link authentication** - Email sent to Magnus's personal email address
 - Simple, secure, no password management
+- See [blog-updates-security.md](./blog-updates-security.md) for complete authentication flow
 
 ### Updates Management Dashboard
 
@@ -74,32 +84,24 @@ A simple, lightweight blog feature for hultberg.org that allows Magnus to publis
 
 ### Update Editor
 
-- Fields:
-  - **Title** (required)
-  - **Excerpt** (optional - if empty, first 150 chars used automatically)
-  - **Content** (Markdown editor using EasyMDE - actively maintained fork of SimpleMDE)
-  - **Status** (Draft/Published toggle)
-- **EasyMDE Editor Features**:
+- **Fields:**
+  - Title (required)
+  - Excerpt (optional - if empty, first 150 chars used automatically)
+  - Content (Markdown editor using EasyMDE)
+  - Status (Draft/Published toggle)
+
+- **EasyMDE Editor Features:**
   - Split view (Markdown source + live preview side-by-side)
-  - Visual toolbar with icons for:
-    - Headers (H1, H2, H3)
-    - Bold, Italic
-    - Links
-    - Bullet lists, Numbered lists
-    - And standard EasyMDE features
+  - Visual toolbar with formatting buttons
   - Custom image upload button integrated into toolbar
-- **Image Gallery**:
+
+- **Image Gallery:**
   - Shows all uploaded images for this update at bottom of editor
   - Click image to insert at cursor position in content
   - Images automatically resized to max 800x800px (maintaining aspect ratio)
   - Client-side resize before upload
-- **Styling**:
-  - Light structure with clean forms
-  - Basic styling for better usability
-  - Clear buttons and inputs
-  - Simple grid layout for dashboard
-  - Minimal but polished aesthetic
-- **Actions**:
+
+- **Actions:**
   - Save as Draft
   - Publish (or Update if already published)
   - Preview
@@ -111,6 +113,8 @@ A simple, lightweight blog feature for hultberg.org that allows Magnus to publis
 - Shows exactly how the update will appear when published
 - Uses same rendering as public update page
 - Can preview drafts before publishing
+
+---
 
 ## Technical Implementation
 
@@ -126,7 +130,7 @@ public/
   updates/
     data/
       {slug}.json
-      index.json          # Metadata for all updates (for listing page)
+      index.json          # Generated at build time by GitHub Action
 ```
 
 ### Update JSON Format
@@ -150,6 +154,8 @@ public/
 
 ### Index JSON Format
 
+Generated automatically by GitHub Action during deployment:
+
 ```json
 {
   "updates": [
@@ -170,45 +176,36 @@ public/
 - Replace spaces with hyphens
 - Remove special characters (keep alphanumeric and hyphens)
 - If duplicate slug exists, append `-2`, `-3`, etc.
+- Reserved slugs: `page` (used for pagination)
 
-**Handling slug conflicts with pagination:**
-- Reserved slugs: `page` (used for pagination at `/updates/page/2`)
-- If a user tries to create an update with title "Page", slug becomes `page-2`
-- Pagination route `/updates/page/{n}` takes precedence in routing
-
-### Implementation Details & Clarifications
+### Implementation Details
 
 **Admin Email Configuration:**
-- Admin email address stored as Cloudflare Secret: `ADMIN_EMAIL`
+- Admin email stored as Cloudflare Secret: `ADMIN_EMAIL`
 - Magic links only sent to this address
-- Setup: `npx wrangler secret put ADMIN_EMAIL`
 
 **Bootstrap & Initial Setup:**
-- Directory structure (`public/updates/data/`, `public/images/updates/`) created manually or via initial script
+- Directory structure created manually or via script
 - Empty `index.json` with `{"updates": []}` committed to repo
-- First update creates the pattern for all subsequent updates
+- First update creates the pattern for subsequent updates
 
 **Empty State Handling:**
-- `/updates` with no published updates: Shows message "No updates yet. Check back soon!"
-- `/updates` with only drafts: Same as empty (drafts not visible to public)
+- `/updates` with no published updates: Shows "No updates yet. Check back soon!"
 - Admin dashboard with no updates: Shows "Create your first update" button
 
 **RSS Feed Absolute URLs:**
 - Worker constructs absolute URLs using request hostname
 - Example: `/images/updates/slug/image.jpg` → `https://hultberg.org/images/updates/slug/image.jpg`
-- Implemented via: `new URL(relativePath, request.url).toString()`
-
-**Image Paths in Content:**
-- Stored as relative paths in JSON: `/images/updates/{slug}/image.jpg`
-- Rendered as-is in HTML (browser resolves relative to current page)
-- Converted to absolute for RSS feed
 
 ### Deployment Workflow
 
 1. **User creates/edits update in admin** → Browser POSTs to Worker API endpoint
 2. **Worker backend** → Commits to GitHub via GitHub API using `env.GITHUB_TOKEN` (token never exposed to browser)
 3. **GitHub receives commit** → Triggers GitHub Action
-4. **GitHub Action runs** → Executes `wrangler deploy`
+4. **GitHub Action runs:**
+  - Scans `public/updates/data/*.json` files
+  - Generates `index.json` automatically
+  - Executes `wrangler deploy`
 5. **Cloudflare Workers updated** → New content live (~2 min total)
 
 **Security Note:** All GitHub API calls happen server-side in the Worker. The GitHub token is stored as a Cloudflare Secret and never sent to the browser.
@@ -221,189 +218,137 @@ public/
 - User might try to view update before deploy completes
 
 **Mitigation Strategies:**
-
-**1. User Feedback in Admin:**
-- After saving update: Show message "Update saved! Changes will be live in ~2 minutes."
+- User feedback: "Update saved! Changes will be live in ~2 minutes."
 - Dashboard shows "Last deploy:" timestamp
-- Option to view in Preview mode immediately (no deploy needed)
+- Preview mode for immediate viewing (no deploy needed)
+- GitHub Actions queue handles multiple rapid saves automatically
+- Deploy status notifications via GitHub
 
-**2. Multiple Rapid Saves:**
-- Each commit triggers new GitHub Action
-- GitHub Actions queue automatically (won't overwrite each other)
-- Latest commit will be deployed last
+See [blog-updates-implementation.md](./blog-updates-implementation.md) for detailed deployment strategy.
 
-**3. Viewing Updates During Deploy:**
-- Drafts: Always viewable in admin preview, never public
-- Published updates: May take ~2 min to appear on public site
-- Admin shows warning badge: "Deploy in progress" if GitHub Action is running
-
-**4. Deploy Status Feedback (Optional Enhancement):**
-- Poll GitHub Actions API for deploy status
-- Show in admin: "Deploying..." → "Live" with timestamp
-- Not critical for MVP but improves UX
-
-**5. Failed Deploys:**
-- GitHub Action sends notification on failure (standard GitHub feature)
-- User can check GitHub Actions tab in repo
-- Updates still saved in repo (can manually deploy later)
-
-**Edge Case Handling:**
-- If user edits same update multiple times rapidly: Latest version wins
-- If user deletes update while deploy running: 404 will appear after deploy completes
-- Stale content in browser: Worker can set short cache headers (5 min max)
-
-### Authentication Flow
-
-1. User visits `/admin`
-2. If not authenticated, show email input form
-3. Submit email → Worker sends magic link via email service (Resend.com)
-4. User clicks link → Sets authentication cookie
-5. Cookie valid for 7 days
-6. Admin dashboard loads
+---
 
 ## Cloudflare Worker Routes
 
+### Public Routes
 - `GET /updates` → List updates (paginated)
 - `GET /updates/page/{n}` → Paginated listing
 - `GET /updates/{slug}` → Individual update (404 if draft)
 - `GET /updates/feed.xml` → RSS feed
-- `GET /admin` → Admin dashboard (auth required)
-- `GET /admin/preview/{slug}` → Preview update (auth required)
+
+### Admin UI Routes (authentication required)
+- `GET /admin` → Admin dashboard
+- `GET /admin/edit/{slug}` → Edit update form
+- `GET /admin/new` → Create new update form
+- `GET /admin/preview/{slug}` → Preview update
+
+### Admin API Routes (authentication required)
 - `POST /admin/api/send-magic-link` → Send authentication email
-- `GET /admin/api/verify-token` → Verify magic link token
+- `GET /admin/api/verify-token` → Verify magic link token and set cookie
+- `GET /admin/api/updates` → List all updates (including drafts)
+- `POST /admin/api/save-update` → Save or publish an update (commits to GitHub)
+- `POST /admin/api/upload-image` → Upload image (commits to GitHub)
+- `DELETE /admin/api/delete-update` → Delete an update (commits to GitHub)
+- `DELETE /admin/api/delete-image` → Delete an image (commits to GitHub)
+
+### Fallback
 - All other routes → Existing 404 handler
+
+---
 
 ## Dependencies
 
 ### NPM Packages (to be added)
-- `easymde` - Markdown editor (actively maintained fork of SimpleMDE, ~50KB)
+- `easymde` - Markdown editor (~50KB)
 - `marked` - Markdown to HTML conversion (server-side in Worker)
 - `sanitize-html` or custom allowlist-based sanitizer - HTML sanitization (Workers-compatible)
-  - Note: `dompurify` is browser-only and won't work in Workers runtime
 
 ### Cloudflare Services
 - **Workers** (existing) - Main application runtime
 - **Workers Assets** (existing) - Serve static files
 - **Workers KV** (existing) - Store magic link tokens and rate limit data
-
-**KV Namespace Configuration:**
-- Namespace name: `MAGIC_LINK_TOKENS`
-- Bind to Worker via `wrangler.toml`
-
-**Key Naming Scheme:**
-- Magic link tokens: `auth:token:{random_token}` → value: `{email_address}`
-- Rate limiting: `ratelimit:ip:{ip_address}` → value: `{request_count}`
-
-**TTL Strategy:**
-- Magic link tokens: 900 seconds (15 minutes) - set via `expirationTtl` on put
-- Rate limit counters: 60 seconds (1 minute window) - set via `expirationTtl` on put
-
-**Token Invalidation:**
-- Single-use: Token deleted from KV immediately after successful authentication
-- Expired tokens: Auto-deleted by KV TTL mechanism
-
-**Eventual Consistency Handling:**
-- KV propagates globally within 60 seconds
-- Magic links are short-lived (15 min) and single-use, so consistency delay is acceptable
-- If token already used/deleted, subsequent attempts fail gracefully (token not found)
+  - See [Security Details](./blog-updates-security.md#workers-kv-configuration) for namespace configuration
 
 ### External Services
 - **Resend.com** (existing account) - Send magic link emails
 - **GitHub API** - Commit updates from admin interface
 
+---
+
 ## Configuration & Secrets
 
-All sensitive credentials are stored as **Cloudflare Secrets** (encrypted, never committed to repository):
+All sensitive credentials are stored as **Cloudflare Secrets** (encrypted, never committed to repository).
 
-- `RESEND_API_KEY` - Resend.com API key for sending magic link emails
-- `GITHUB_TOKEN` - GitHub Personal Access Token (fine-grained) with:
+**Required secrets:**
+- `RESEND_API_KEY` - Resend.com API key
+- `GITHUB_TOKEN` - GitHub Personal Access Token (fine-grained)
   - Repository: `hultberg-org`
   - Permission: **Contents** (Read and write)
+- `ADMIN_EMAIL` - Email address for admin access
+- `JWT_SECRET` - Secret key for signing authentication JWTs
 
-**Setup commands:**
+**Setup:**
 ```bash
 npx wrangler secret put RESEND_API_KEY
 npx wrangler secret put GITHUB_TOKEN
+npx wrangler secret put ADMIN_EMAIL
+npx wrangler secret put JWT_SECRET
 ```
 
-**Access in Worker:**
-```typescript
-env.RESEND_API_KEY
-env.GITHUB_TOKEN
-```
+See [Security Details](./blog-updates-security.md#secrets-management) for complete configuration.
+
+---
 
 ## Security
 
-### Authentication
+This feature implements comprehensive security measures including:
+- Magic link authentication with single-use tokens
+- HttpOnly, Secure, SameSite=Strict cookies
+- CSRF protection via SameSite + Origin validation
+- XSS prevention with server-side Markdown parsing and HTML sanitization
+- Rate limiting on admin endpoints (10 req/min per IP)
+- Input validation on all API endpoints
 
-**Magic Link Flow:**
-1. User enters email address at `/admin`
-2. Worker generates cryptographically secure random token (32 bytes)
-3. Token stored in Workers KV with 15-minute TTL
-4. Email sent via Resend.com with link: `/admin?token={token}`
-5. User clicks link, Worker validates token from KV
-6. On success, token is deleted from KV (single use)
-7. Worker sets authentication cookie
+**For complete security implementation details, see:** [blog-updates-security.md](./blog-updates-security.md)
 
-**Authentication Cookie:**
-```
-Name: auth_token
-Value: JWT signed with secret key
-HttpOnly: true (prevents JavaScript access)
-Secure: true (HTTPS only)
-SameSite: Strict (CSRF protection)
-Max-Age: 604800 (7 days)
-Path: /admin
-```
+---
 
-### CSRF Protection
+## Implementation
 
-**Strategy:** SameSite=Strict cookie + Origin header validation
+The implementation is organized into 9 phases with 39 detailed steps:
 
-1. **SameSite=Strict** prevents cookie from being sent on cross-origin requests
-2. **Origin header check** on all admin POST/DELETE endpoints:
-```typescript
-   const origin = request.headers.get('Origin');
-   if (origin !== 'https://hultberg.org') {
-     return new Response('Forbidden', { status: 403 });
-   }
-```
-3. **No explicit CSRF tokens needed** due to SameSite=Strict
+1. **Storage & Data Structure** - Set up files and formats
+2. **Public Pages** - Listing, individual updates, RSS feed
+3. **Authentication** - Magic link system
+4. **Admin Dashboard** - Management interface
+5. **Update Editor** - EasyMDE integration and image handling
+6. **Worker Backend API** - Server-side endpoints for all operations
+7. **Auto-Deployment** - GitHub Actions with build-time index generation
+8. **Testing & Polish** - Comprehensive testing and validation
+9. **Documentation** - Update project docs and create admin guide
 
-### XSS Prevention
+**For detailed phase-by-phase instructions, see:** [blog-updates-implementation.md](./blog-updates-implementation.md)
 
-**Content Sanitization:**
-- Markdown content is parsed and rendered **server-side in the Worker**
-- HTML output is sanitized before storage using a Workers-compatible library
-- Images are validated (file type, size) before upload
-- User input (title, excerpt) is HTML-escaped when rendered
+---
 
-**Why not dompurify?**
-- `dompurify` is browser-only (DOM API dependency)
-- `isomorphic-dompurify` may not work in Workers runtime
+## Success Criteria
 
-**Alternative approach:**
-1. Use `marked` to convert Markdown → HTML in Worker
-2. Use a simple allowlist-based sanitizer for Workers (custom or library like `sanitize-html`)
-3. Only allow safe HTML tags: `p, h1-h6, a, img, ul, ol, li, blockquote, code, pre, em, strong, br`
-4. Strip all attributes except: `href` (on `a`), `src`/`alt` (on `img`)
-5. Validate all URLs (must be https:// or relative paths)
+Before considering the MVP complete, verify:
 
-### Rate Limiting
+- ✅ Can create, edit, and delete updates via admin interface
+- ✅ Drafts are private, published updates are public
+- ✅ Updates display correctly with Markdown formatting
+- ✅ Multiple images can be uploaded and inserted
+- ✅ Images resize correctly to 800x800 max
+- ✅ Pagination works correctly
+- ✅ RSS feed is valid and includes all published updates
+- ✅ Magic link authentication works reliably
+- ✅ Changes auto-deploy within ~2 minutes
+- ✅ All content version controlled in GitHub
+- ✅ No errors in console or logs
+- ✅ Site maintains existing design aesthetic
 
-**Admin API endpoints:**
-- Maximum 10 requests per minute per IP address
-- Prevents brute force attempts on magic links
-- Uses Workers KV to track request counts
-
-### Input Validation
-
-**All admin API endpoints validate:**
-- Authentication cookie is present and valid
-- Request origin matches expected domain
-- Input data types and formats
-- Image file sizes (max 5MB before resize)
-- Slug format (alphanumeric + hyphens only)
+---
 
 ## Future Enhancements (Not in MVP)
 
@@ -418,102 +363,8 @@ Path: /admin
 - Markdown import/export
 - Multiple authors
 
-## Implementation Steps
+---
 
-### Phase 1: Storage & Data Structure
-1. Create directory structure (`public/updates/data/`, `public/images/updates/`)
-2. Create sample update JSON files for testing
-3. Create index.json structure
-4. Add utility functions for slug generation and duplicate detection
-
-### Phase 2: Public Pages
-5. Implement `/updates` listing page
-  - Read index.json
-  - Filter published updates only
-  - Implement pagination
-  - Render using `/now` page style as template
-6. Implement `/updates/{slug}` individual page
-  - Read update JSON
-  - Convert Markdown to HTML
-  - Sanitize output
-  - Render with metadata and images
-  - Handle 404 for drafts and missing updates
-7. Implement RSS feed (`/updates/feed.xml`)
-
-### Phase 3: Authentication
-8. Implement magic link generation
-9. Set up Resend.com email sending
-10. Implement token storage in Workers KV
-11. Create authentication middleware
-12. Build login page UI
-
-### Phase 4: Admin Dashboard
-13. Create admin layout and navigation
-14. Build updates list view (show all updates with status)
-15. Implement delete functionality
-
-### Phase 5: Update Editor
-16. Integrate EasyMDE library
-17. Build editor form UI with fields and light styling
-18. Add custom image upload button to EasyMDE toolbar
-19. Implement client-side image resize before upload
-20. Create image gallery component
-21. Wire up editor to call Worker API endpoints (not GitHub directly)
-22. Build preview functionality
-
-### Phase 6: Worker Backend API Endpoints
-23. Implement `POST /admin/api/save-update` endpoint:
-    - Receive update data from browser
-    - Validate and sanitize input
-    - Use `env.GITHUB_TOKEN` to commit JSON file to `public/updates/data/{slug}.json`
-    - Return success/error response
-    - Note: index.json is generated at build time, not updated here
-24. Implement `POST /admin/api/upload-image` endpoint:
-    - Receive image from browser
-    - Optionally resize server-side (or validate client-side resize)
-    - Commit to `public/images/updates/{slug}/` in GitHub
-    - Return image path
-25. Implement `DELETE /admin/api/delete-update` endpoint:
-    - Remove update JSON file via GitHub API
-    - Return success/error response
-    - Note: index.json is regenerated at build time
-26. Implement `DELETE /admin/api/delete-image` endpoint:
-    - Remove image file via GitHub API
-    - Return success/error response
-27. Implement `GET /admin/api/updates` endpoint:
-    - Return all updates (including drafts) from index.json
-    - Used by admin dashboard to list updates
-
-### Phase 7: Auto-Deployment
-27. Create GitHub Action workflow file
-28. Configure Cloudflare API token for deployment
-29. Test automatic deployment on commit
-
-### Phase 8: Testing & Polish
-30. Test full workflow end-to-end
-31. Add error handling and validation
-32. Test image upload and resize
-33. Verify RSS feed validity
-34. Test pagination edge cases
-35. Security audit (XSS, CSRF, authentication)
-36. Performance testing
-
-### Phase 9: Documentation
-37. Update CLAUDE.md with new routes and functionality
-38. Document admin workflow
-39. Add comments to complex code sections
-
-## Success Criteria
-
-- ✅ Can create, edit, and delete updates via admin interface
-- ✅ Drafts are private, published updates are public
-- ✅ Updates display correctly with Markdown formatting
-- ✅ Multiple images can be uploaded and inserted
-- ✅ Images resize correctly to 800x800 max
-- ✅ Pagination works correctly
-- ✅ RSS feed is valid and includes all published updates
-- ✅ Magic link authentication works reliably
-- ✅ Changes auto-deploy within ~2 minutes
-- ✅ All content version controlled in GitHub
-- ✅ No errors in console or logs
-- ✅ Site maintains existing design aesthetic
+**Last Updated:** February 2026
+**Status:** Specification complete, ready for implementation
+**Reviewed By:** Independent agent review (ID: ad0e372)

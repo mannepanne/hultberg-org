@@ -1,0 +1,992 @@
+Base directory for this skill: /Users/magnus/Documents/Coding/MigrateHultbergOrg/hultberg-org/.claude/skills/review-pr-team
+
+# Multi-Perspective PR Review
+
+This skill provides comprehensive pull request review from three specialized perspectives:
+1. **Security Reviewer** - Authentication, secrets, XSS, CSRF, input validation, SQL injection
+2. **Product Manager** - Business value, market and customer fit, user experience, features, edge cases, requirements alignment
+3. **Senior Architect** - Design patterns, scalability, maintainability, tech debt, suitability for autonomous LLM agents, 100% code coverage
+
+## How This Works
+
+Three independent reviews are conducted **sequentially**:
+- Each reviewer analyzes the PR from their unique perspective
+- Reviews are independent (no bias from seeing others' feedback)
+- All findings are synthesized and posted to the PR
+- Conflicts or overlaps between reviews are highlighted
+
+---
+
+## Instructions for Claude
+
+When this skill is invoked with a PR number (e.g., `/review-pr-team 1`):
+
+### Step 1: Fetch PR Context
+
+Use GitHub CLI to gather PR information:
+
+```bash
+gh pr view $ARGUMENTS
+gh pr diff $ARGUMENTS
+gh pr view $ARGUMENTS --comments
+```
+
+Review the files changed, commit messages, and any existing comments.
+
+---
+
+### Step 2: Gather Specification Context
+
+Before reviewing, check if there are related specification documents in `SPECIFICATIONS/`:
+
+1. **Check PR description and commits** for references to specification files
+2. **Look in SPECIFICATIONS/** directory for relevant docs
+3. **Read specification files** to understand:
+  - Feature requirements and goals
+  - Security requirements (if security spec exists)
+  - Implementation approach (if implementation plan exists)
+  - Success criteria
+
+**Common specification patterns:**
+- Main spec: `SPECIFICATIONS/*.md` or `SPECIFICATIONS/requirements.md`
+- Security: `SPECIFICATIONS/*-security.md`
+- Implementation: `SPECIFICATIONS/*-implementation.md`
+
+**Create a context summary** including:
+- What is this PR supposed to achieve?
+- What are the key requirements?
+- What security measures were specified?
+- What architectural decisions were made?
+
+This context will be provided to each reviewer so they can evaluate whether the PR matches the intended design.
+
+**If no specifications found:** Note this and reviewers will evaluate based solely on best practices.
+
+---
+
+### Step 3: Security Review (Subagent 1)
+
+Spawn a **general-purpose** subagent with this task:
+
+**Task:** "Act as a security specialist reviewing PR #$ARGUMENTS for security issues.
+
+**Specification Context:**
+[Paste the context summary from Step 2, including security requirements if specified]
+
+Focus on:
+
+**Authentication & Authorization:**
+- Are credentials/secrets properly protected?
+- Are authentication flows secure?
+- Is authorization checked on all protected endpoints?
+
+**Input Validation:**
+- Is user input validated and sanitized?
+- Are there SQL injection, XSS, or command injection risks?
+- Are file uploads validated (type, size)?
+
+**Data Protection:**
+- Are secrets stored securely (not in code)?
+- Is sensitive data encrypted/hashed appropriately?
+- Are API keys and tokens handled correctly?
+
+**CSRF & Session Management:**
+- Is CSRF protection implemented?
+- Are cookies configured securely (HttpOnly, Secure, SameSite)?
+- Is session management robust?
+
+**Dependencies:**
+- Are new dependencies from trusted sources?
+- Any known vulnerabilities in added packages?
+
+**Output Format:**
+- ✅ **Secure Practices**: What's done well
+- 🔴 **Critical Issues**: Must fix before merge
+- ⚠️ **Warnings**: Should fix, not blocking
+- 💡 **Suggestions**: Nice-to-haves
+
+Be specific with file:line references."
+
+Wait for the security review to complete.
+
+---
+
+### Step 4: Product Manager Review (Subagent 2)
+
+Spawn a **general-purpose** subagent with this task:
+
+**Task:** "Act as a product manager reviewing PR #$ARGUMENTS for product quality and user experience.
+
+**Specification Context:**
+[Paste the context summary from Step 2, including feature requirements and success criteria]
+
+Focus on:
+
+**Requirements Alignment:**
+- Does this PR match the stated goals/requirements?
+- Are all acceptance criteria met?
+- Is anything out of scope or missing?
+
+**User Experience:**
+- Is the feature intuitive and user-friendly?
+- Are error messages clear and helpful?
+- Is the UI/UX consistent with existing patterns?
+
+**Edge Cases:**
+- Are edge cases handled (empty states, errors, etc.)?
+- What happens when things go wrong?
+- Are loading states and feedback clear?
+
+**Completeness:**
+- Is the feature fully functional?
+- Are there half-finished parts?
+- Is documentation updated (if needed)?
+
+**Future Impact:**
+- Does this create technical debt?
+- Will this be easy to extend later?
+- Any backward compatibility issues?
+
+**Output Format:**
+- ✅ **Well Done**: What meets/exceeds expectations
+- 🔴 **Blocking Issues**: Must address before ship
+- ⚠️ **Concerns**: Should address, worth discussing
+- 💡 **Enhancements**: Ideas for improvement
+
+Be specific with examples and file references."
+
+Wait for the product review to complete.
+
+---
+
+### Step 5: Senior Architect Review (Subagent 3)
+
+Spawn a **general-purpose** subagent with this task:
+
+**Task:** "Act as a senior software architect reviewing PR #$ARGUMENTS for design quality and long-term maintainability.
+
+**Specification Context:**
+[Paste the context summary from Step 2, including architectural decisions and implementation approach]
+
+Focus on:
+
+**Architecture & Design:**
+- Does this fit well with existing architecture?
+- Are design patterns used appropriately?
+- Is the code organization logical?
+
+**Code Quality:**
+- Is the code readable and well-structured?
+- Are functions/components properly sized?
+- Are naming conventions clear and consistent?
+
+**Scalability & Performance:**
+- Will this perform well under load?
+- Are there potential bottlenecks?
+- Is caching/optimization appropriate?
+
+**Maintainability:**
+- Is the code easy to understand and modify?
+- Are abstractions appropriate (not over/under-engineered)?
+- Are there code smells or anti-patterns?
+
+**Testing:**
+- Is test coverage adequate?
+- Are the right things being tested?
+- Are tests maintainable?
+
+**Technical Debt:**
+- Does this introduce debt?
+- Does it pay down existing debt?
+- Are shortcuts documented and justified?
+
+**Output Format:**
+- ✅ **Architectural Strengths**: Good design decisions
+- 🔴 **Critical Issues**: Fundamental problems to fix
+- ⚠️ **Design Concerns**: Worth reconsidering
+- 💡 **Suggestions**: Ways to improve design
+
+Be specific with code examples and file:line references."
+
+Wait for the architecture review to complete.
+
+---
+
+### Step 6: Synthesize and Post Results
+
+After all three reviews are complete:
+
+1. **Analyze findings across all reviews:**
+  - Identify overlapping concerns (mentioned by multiple reviewers)
+  - Flag conflicts (if reviewers disagree)
+  - Highlight critical issues that appear in multiple perspectives
+
+2. **Create unified summary:**
+
+```markdown
+## Comprehensive PR Review - Multiple Perspectives
+
+### 🔴 Critical Issues (Must Fix Before Merge)
+
+[List all critical issues from all reviewers, grouped by theme]
+[Mark with [Security], [Product], or [Architecture] badges]
+[Note if multiple reviewers flagged the same issue]
+
+### ⚠️ Warnings & Concerns (Should Address)
+
+[List warnings from all reviewers, grouped by theme]
+
+### ✅ Strengths & Good Practices
+
+[Highlight what all reviewers praised]
+
+### 💡 Suggestions for Improvement
+
+[Compile suggestions, note if multiple reviewers suggested similar improvements]
+
+### 📊 Review Summary
+
+- **Security Review**: [X critical, Y warnings, Z suggestions]
+- **Product Review**: [X critical, Y warnings, Z suggestions]
+- **Architecture Review**: [X critical, Y warnings, Z suggestions]
+
+---
+
+**Recommendation:** [Clear merge/don't merge recommendation based on critical issues]
+
+---
+
+*Reviews conducted by specialized subagents: Security Specialist, Product Manager, Senior Architect*
+```
+
+3. **Post the synthesized review** as a comment on the PR using:
+
+```bash
+gh pr comment $ARGUMENTS --body "[markdown content from above]"
+```
+
+4. **Provide user summary:**
+  - Total critical issues found
+  - Key themes across reviews
+  - Clear next steps
+  - Link to PR comment
+
+---
+
+## Example Usage
+
+```
+/review-pr-team 1
+```
+
+This will:
+1. Fetch PR #1 details
+2. Run security review (sequential)
+3. Run product review (sequential)
+4. Run architecture review (sequential)
+5. Synthesize all findings
+6. Post comprehensive review to PR #1
+
+---
+
+## Tips for Best Results
+
+- **Use on non-trivial PRs** - Overkill for typo fixes
+- **Run before final approval** - Catch issues early
+- **Read individual reviews** - Each perspective provides unique value
+- **Address critical issues first** - Don't merge with red flags
+
+---
+
+<!-- NOTE: This is NOT part of the skill instructions -->
+
+## Future Enhancement: Parallel Execution (Option A)
+
+**Current implementation:** Reviews run sequentially (one after another)
+- Security → Product → Architecture
+- Total time: ~3-5 minutes depending on PR size
+
+**Future upgrade:** Agent Teams for parallel execution
+- All three reviewers analyze simultaneously
+- Total time: ~1-2 minutes (faster)
+- Requires: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in settings
+
+**When agent teams feature is stable**, this skill can be upgraded to spawn parallel reviewers instead of sequential ones. The skill structure and review criteria would remain the same—only the execution model changes.
+
+**To upgrade later:**
+1. Enable experimental flag in `.claude/settings.json`
+2. Modify Step 2-4 to spawn teammates instead of sequential subagents
+3. Teammates review in parallel
+4. Main agent still synthesizes results
+
+The sequential approach works perfectly fine for now and proves the concept.
+
+---
+
+[Request interrupted by user]
+
+---
+
+Base directory for this skill: /Users/magnus/Documents/Coding/MigrateHultbergOrg/hultberg-org/.claude/skills/review-pr-team
+
+# Multi-Perspective PR Review
+
+This skill provides comprehensive pull request review from three specialized perspectives:
+1. **Security Reviewer** - Authentication, secrets, XSS, CSRF, input validation, SQL injection
+2. **Product Manager** - Business value, market and customer fit, user experience, features, edge cases, requirements alignment
+3. **Senior Architect** - Design patterns, scalability, maintainability, tech debt, suitability for autonomous LLM agents, 100% code coverage
+
+## How This Works
+
+Three independent reviews are conducted **sequentially**:
+- Each reviewer analyzes the PR from their unique perspective
+- Reviews are independent (no bias from seeing others' feedback)
+- All findings are synthesized and posted to the PR
+- Conflicts or overlaps between reviews are highlighted
+
+---
+
+## Instructions for Claude
+
+When this skill is invoked with a PR number (e.g., `/review-pr-team 1`):
+
+### Step 1: Fetch PR Context
+
+Use GitHub CLI to gather PR information:
+
+```bash
+gh pr view 1
+gh pr diff 1
+gh pr view 1 --comments
+```
+
+Review the files changed, commit messages, and any existing comments.
+
+---
+
+### Step 2: Gather Specification Context
+
+Before reviewing, check if there are related specification documents in `SPECIFICATIONS/`:
+
+1. **Check PR description and commits** for references to specification files
+2. **Look in SPECIFICATIONS/** directory for relevant docs
+3. **Read specification files** to understand:
+  - Feature requirements and goals
+  - Security requirements (if security spec exists)
+  - Implementation approach (if implementation plan exists)
+  - Success criteria
+
+**Common specification patterns:**
+- Main spec: `SPECIFICATIONS/*.md` or `SPECIFICATIONS/requirements.md`
+- Security: `SPECIFICATIONS/*-security.md`
+- Implementation: `SPECIFICATIONS/*-implementation.md`
+
+**Create a context summary** including:
+- What is this PR supposed to achieve?
+- What are the key requirements?
+- What security measures were specified?
+- What architectural decisions were made?
+
+This context will be provided to each reviewer so they can evaluate whether the PR matches the intended design.
+
+**If no specifications found:** Note this and reviewers will evaluate based solely on best practices.
+
+---
+
+### Step 3: Security Review (Subagent 1)
+
+Spawn a **general-purpose** subagent with this task:
+
+**Task:** "Act as a security specialist reviewing PR #1 for security issues.
+
+**Specification Context:**
+[Paste the context summary from Step 2, including security requirements if specified]
+
+Focus on:
+
+**Authentication & Authorization:**
+- Are credentials/secrets properly protected?
+- Are authentication flows secure?
+- Is authorization checked on all protected endpoints?
+
+**Input Validation:**
+- Is user input validated and sanitized?
+- Are there SQL injection, XSS, or command injection risks?
+- Are file uploads validated (type, size)?
+
+**Data Protection:**
+- Are secrets stored securely (not in code)?
+- Is sensitive data encrypted/hashed appropriately?
+- Are API keys and tokens handled correctly?
+
+**CSRF & Session Management:**
+- Is CSRF protection implemented?
+- Are cookies configured securely (HttpOnly, Secure, SameSite)?
+- Is session management robust?
+
+**Dependencies:**
+- Are new dependencies from trusted sources?
+- Any known vulnerabilities in added packages?
+
+**Output Format:**
+- ✅ **Secure Practices**: What's done well
+- 🔴 **Critical Issues**: Must fix before merge
+- ⚠️ **Warnings**: Should fix, not blocking
+- 💡 **Suggestions**: Nice-to-haves
+
+Be specific with file:line references."
+
+Wait for the security review to complete.
+
+---
+
+### Step 4: Product Manager Review (Subagent 2)
+
+Spawn a **general-purpose** subagent with this task:
+
+**Task:** "Act as a product manager reviewing PR #1 for product quality and user experience.
+
+**Specification Context:**
+[Paste the context summary from Step 2, including feature requirements and success criteria]
+
+Focus on:
+
+**Requirements Alignment:**
+- Does this PR match the stated goals/requirements?
+- Are all acceptance criteria met?
+- Is anything out of scope or missing?
+
+**User Experience:**
+- Is the feature intuitive and user-friendly?
+- Are error messages clear and helpful?
+- Is the UI/UX consistent with existing patterns?
+
+**Edge Cases:**
+- Are edge cases handled (empty states, errors, etc.)?
+- What happens when things go wrong?
+- Are loading states and feedback clear?
+
+**Completeness:**
+- Is the feature fully functional?
+- Are there half-finished parts?
+- Is documentation updated (if needed)?
+
+**Future Impact:**
+- Does this create technical debt?
+- Will this be easy to extend later?
+- Any backward compatibility issues?
+
+**Output Format:**
+- ✅ **Well Done**: What meets/exceeds expectations
+- 🔴 **Blocking Issues**: Must address before ship
+- ⚠️ **Concerns**: Should address, worth discussing
+- 💡 **Enhancements**: Ideas for improvement
+
+Be specific with examples and file references."
+
+Wait for the product review to complete.
+
+---
+
+### Step 5: Senior Architect Review (Subagent 3)
+
+Spawn a **general-purpose** subagent with this task:
+
+**Task:** "Act as a senior software architect reviewing PR #1 for design quality and long-term maintainability.
+
+**Specification Context:**
+[Paste the context summary from Step 2, including architectural decisions and implementation approach]
+
+Focus on:
+
+**Architecture & Design:**
+- Does this fit well with existing architecture?
+- Are design patterns used appropriately?
+- Is the code organization logical?
+
+**Code Quality:**
+- Is the code readable and well-structured?
+- Are functions/components properly sized?
+- Are naming conventions clear and consistent?
+
+**Scalability & Performance:**
+- Will this perform well under load?
+- Are there potential bottlenecks?
+- Is caching/optimization appropriate?
+
+**Maintainability:**
+- Is the code easy to understand and modify?
+- Are abstractions appropriate (not over/under-engineered)?
+- Are there code smells or anti-patterns?
+
+**Testing:**
+- Is test coverage adequate?
+- Are the right things being tested?
+- Are tests maintainable?
+
+**Technical Debt:**
+- Does this introduce debt?
+- Does it pay down existing debt?
+- Are shortcuts documented and justified?
+
+**Output Format:**
+- ✅ **Architectural Strengths**: Good design decisions
+- 🔴 **Critical Issues**: Fundamental problems to fix
+- ⚠️ **Design Concerns**: Worth reconsidering
+- 💡 **Suggestions**: Ways to improve design
+
+Be specific with code examples and file:line references."
+
+Wait for the architecture review to complete.
+
+---
+
+### Step 6: Synthesize and Post Results
+
+After all three reviews are complete:
+
+1. **Analyze findings across all reviews:**
+  - Identify overlapping concerns (mentioned by multiple reviewers)
+  - Flag conflicts (if reviewers disagree)
+  - Highlight critical issues that appear in multiple perspectives
+
+2. **Create unified summary:**
+
+```markdown
+## Comprehensive PR Review - Multiple Perspectives
+
+### 🔴 Critical Issues (Must Fix Before Merge)
+
+[List all critical issues from all reviewers, grouped by theme]
+[Mark with [Security], [Product], or [Architecture] badges]
+[Note if multiple reviewers flagged the same issue]
+
+### ⚠️ Warnings & Concerns (Should Address)
+
+[List warnings from all reviewers, grouped by theme]
+
+### ✅ Strengths & Good Practices
+
+[Highlight what all reviewers praised]
+
+### 💡 Suggestions for Improvement
+
+[Compile suggestions, note if multiple reviewers suggested similar improvements]
+
+### 📊 Review Summary
+
+- **Security Review**: [X critical, Y warnings, Z suggestions]
+- **Product Review**: [X critical, Y warnings, Z suggestions]
+- **Architecture Review**: [X critical, Y warnings, Z suggestions]
+
+---
+
+**Recommendation:** [Clear merge/don't merge recommendation based on critical issues]
+
+---
+
+*Reviews conducted by specialized subagents: Security Specialist, Product Manager, Senior Architect*
+```
+
+3. **Post the synthesized review** as a comment on the PR using:
+
+```bash
+gh pr comment 1 --body "[markdown content from above]"
+```
+
+4. **Provide user summary:**
+  - Total critical issues found
+  - Key themes across reviews
+  - Clear next steps
+  - Link to PR comment
+
+---
+
+## Example Usage
+
+```
+/review-pr-team 1
+```
+
+This will:
+1. Fetch PR #1 details
+2. Run security review (sequential)
+3. Run product review (sequential)
+4. Run architecture review (sequential)
+5. Synthesize all findings
+6. Post comprehensive review to PR #1
+
+---
+
+## Tips for Best Results
+
+- **Use on non-trivial PRs** - Overkill for typo fixes
+- **Run before final approval** - Catch issues early
+- **Read individual reviews** - Each perspective provides unique value
+- **Address critical issues first** - Don't merge with red flags
+
+---
+
+<!-- NOTE: This is NOT part of the skill instructions -->
+
+## Future Enhancement: Parallel Execution (Option A)
+
+**Current implementation:** Reviews run sequentially (one after another)
+- Security → Product → Architecture
+- Total time: ~3-5 minutes depending on PR size
+
+**Future upgrade:** Agent Teams for parallel execution
+- All three reviewers analyze simultaneously
+- Total time: ~1-2 minutes (faster)
+- Requires: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in settings
+
+**When agent teams feature is stable**, this skill can be upgraded to spawn parallel reviewers instead of sequential ones. The skill structure and review criteria would remain the same—only the execution model changes.
+
+**To upgrade later:**
+1. Enable experimental flag in `.claude/settings.json`
+2. Modify Step 2-4 to spawn teammates instead of sequential subagents
+3. Teammates review in parallel
+4. Main agent still synthesizes results
+
+The sequential approach works perfectly fine for now and proves the concept.
+
+---
+
+I just tried running the new /review-pr-team skill and got this error message. Why?
+
+API Error: 404 {"type":"error","error":{"type":"not_found_error","message":"model: sonnet"},"request_id":"req_011CYAChfznjqFtgFhQ9Pm3G"}
+
+---
+
+Please hellp modifying the skill to fix the issue.
+
+---
+
+Base directory for this skill: /Users/magnus/Documents/Coding/MigrateHultbergOrg/hultberg-org/.claude/skills/review-pr-team
+
+# Multi-Perspective PR Review
+
+This skill provides comprehensive pull request review from three specialized perspectives:
+1. **Security Reviewer** - Authentication, secrets, XSS, CSRF, input validation, SQL injection
+2. **Product Manager** - Business value, market and customer fit, user experience, features, edge cases, requirements alignment
+3. **Senior Architect** - Design patterns, scalability, maintainability, tech debt, suitability for autonomous LLM agents, 100% code coverage
+
+## How This Works
+
+Three independent reviews are conducted **sequentially**:
+- Each reviewer analyzes the PR from their unique perspective
+- Reviews are independent (no bias from seeing others' feedback)
+- All findings are synthesized and posted to the PR
+- Conflicts or overlaps between reviews are highlighted
+
+---
+
+## Instructions for Claude
+
+When this skill is invoked with a PR number (e.g., `/review-pr-team 1`):
+
+### Step 1: Fetch PR Context
+
+Use GitHub CLI to gather PR information:
+
+```bash
+gh pr view 1
+gh pr diff 1
+gh pr view 1 --comments
+```
+
+Review the files changed, commit messages, and any existing comments.
+
+---
+
+### Step 2: Gather Specification Context
+
+Before reviewing, check if there are related specification documents in `SPECIFICATIONS/`:
+
+1. **Check PR description and commits** for references to specification files
+2. **Look in SPECIFICATIONS/** directory for relevant docs
+3. **Read specification files** to understand:
+  - Feature requirements and goals
+  - Security requirements (if security spec exists)
+  - Implementation approach (if implementation plan exists)
+  - Success criteria
+
+**Common specification patterns:**
+- Main spec: `SPECIFICATIONS/*.md` or `SPECIFICATIONS/requirements.md`
+- Security: `SPECIFICATIONS/*-security.md`
+- Implementation: `SPECIFICATIONS/*-implementation.md`
+
+**Create a context summary** including:
+- What is this PR supposed to achieve?
+- What are the key requirements?
+- What security measures were specified?
+- What architectural decisions were made?
+
+This context will be provided to each reviewer so they can evaluate whether the PR matches the intended design.
+
+**If no specifications found:** Note this and reviewers will evaluate based solely on best practices.
+
+---
+
+### Step 3: Security Review (Subagent 1)
+
+Spawn a **general-purpose** subagent with this task:
+
+**Task:** "Act as a security specialist reviewing PR #1 for security issues.
+
+**Specification Context:**
+[Paste the context summary from Step 2, including security requirements if specified]
+
+Focus on:
+
+**Authentication & Authorization:**
+- Are credentials/secrets properly protected?
+- Are authentication flows secure?
+- Is authorization checked on all protected endpoints?
+
+**Input Validation:**
+- Is user input validated and sanitized?
+- Are there SQL injection, XSS, or command injection risks?
+- Are file uploads validated (type, size)?
+
+**Data Protection:**
+- Are secrets stored securely (not in code)?
+- Is sensitive data encrypted/hashed appropriately?
+- Are API keys and tokens handled correctly?
+
+**CSRF & Session Management:**
+- Is CSRF protection implemented?
+- Are cookies configured securely (HttpOnly, Secure, SameSite)?
+- Is session management robust?
+
+**Dependencies:**
+- Are new dependencies from trusted sources?
+- Any known vulnerabilities in added packages?
+
+**Output Format:**
+- ✅ **Secure Practices**: What's done well
+- 🔴 **Critical Issues**: Must fix before merge
+- ⚠️ **Warnings**: Should fix, not blocking
+- 💡 **Suggestions**: Nice-to-haves
+
+Be specific with file:line references."
+
+Wait for the security review to complete.
+
+---
+
+### Step 4: Product Manager Review (Subagent 2)
+
+Spawn a **general-purpose** subagent with this task:
+
+**Task:** "Act as a product manager reviewing PR #1 for product quality and user experience.
+
+**Specification Context:**
+[Paste the context summary from Step 2, including feature requirements and success criteria]
+
+Focus on:
+
+**Requirements Alignment:**
+- Does this PR match the stated goals/requirements?
+- Are all acceptance criteria met?
+- Is anything out of scope or missing?
+
+**User Experience:**
+- Is the feature intuitive and user-friendly?
+- Are error messages clear and helpful?
+- Is the UI/UX consistent with existing patterns?
+
+**Edge Cases:**
+- Are edge cases handled (empty states, errors, etc.)?
+- What happens when things go wrong?
+- Are loading states and feedback clear?
+
+**Completeness:**
+- Is the feature fully functional?
+- Are there half-finished parts?
+- Is documentation updated (if needed)?
+
+**Future Impact:**
+- Does this create technical debt?
+- Will this be easy to extend later?
+- Any backward compatibility issues?
+
+**Output Format:**
+- ✅ **Well Done**: What meets/exceeds expectations
+- 🔴 **Blocking Issues**: Must address before ship
+- ⚠️ **Concerns**: Should address, worth discussing
+- 💡 **Enhancements**: Ideas for improvement
+
+Be specific with examples and file references."
+
+Wait for the product review to complete.
+
+---
+
+### Step 5: Senior Architect Review (Subagent 3)
+
+Spawn a **general-purpose** subagent with this task:
+
+**Task:** "Act as a senior software architect reviewing PR #1 for design quality and long-term maintainability.
+
+**Specification Context:**
+[Paste the context summary from Step 2, including architectural decisions and implementation approach]
+
+Focus on:
+
+**Architecture & Design:**
+- Does this fit well with existing architecture?
+- Are design patterns used appropriately?
+- Is the code organization logical?
+
+**Code Quality:**
+- Is the code readable and well-structured?
+- Are functions/components properly sized?
+- Are naming conventions clear and consistent?
+
+**Scalability & Performance:**
+- Will this perform well under load?
+- Are there potential bottlenecks?
+- Is caching/optimization appropriate?
+
+**Maintainability:**
+- Is the code easy to understand and modify?
+- Are abstractions appropriate (not over/under-engineered)?
+- Are there code smells or anti-patterns?
+
+**Testing:**
+- Is test coverage adequate?
+- Are the right things being tested?
+- Are tests maintainable?
+
+**Technical Debt:**
+- Does this introduce debt?
+- Does it pay down existing debt?
+- Are shortcuts documented and justified?
+
+**Output Format:**
+- ✅ **Architectural Strengths**: Good design decisions
+- 🔴 **Critical Issues**: Fundamental problems to fix
+- ⚠️ **Design Concerns**: Worth reconsidering
+- 💡 **Suggestions**: Ways to improve design
+
+Be specific with code examples and file:line references."
+
+Wait for the architecture review to complete.
+
+---
+
+### Step 6: Synthesize and Post Results
+
+After all three reviews are complete:
+
+1. **Analyze findings across all reviews:**
+  - Identify overlapping concerns (mentioned by multiple reviewers)
+  - Flag conflicts (if reviewers disagree)
+  - Highlight critical issues that appear in multiple perspectives
+
+2. **Create unified summary:**
+
+```markdown
+## Comprehensive PR Review - Multiple Perspectives
+
+### 🔴 Critical Issues (Must Fix Before Merge)
+
+[List all critical issues from all reviewers, grouped by theme]
+[Mark with [Security], [Product], or [Architecture] badges]
+[Note if multiple reviewers flagged the same issue]
+
+### ⚠️ Warnings & Concerns (Should Address)
+
+[List warnings from all reviewers, grouped by theme]
+
+### ✅ Strengths & Good Practices
+
+[Highlight what all reviewers praised]
+
+### 💡 Suggestions for Improvement
+
+[Compile suggestions, note if multiple reviewers suggested similar improvements]
+
+### 📊 Review Summary
+
+- **Security Review**: [X critical, Y warnings, Z suggestions]
+- **Product Review**: [X critical, Y warnings, Z suggestions]
+- **Architecture Review**: [X critical, Y warnings, Z suggestions]
+
+---
+
+**Recommendation:** [Clear merge/don't merge recommendation based on critical issues]
+
+---
+
+*Reviews conducted by specialized subagents: Security Specialist, Product Manager, Senior Architect*
+```
+
+3. **Post the synthesized review** as a comment on the PR using:
+
+```bash
+gh pr comment 1 --body "[markdown content from above]"
+```
+
+4. **Provide user summary:**
+  - Total critical issues found
+  - Key themes across reviews
+  - Clear next steps
+  - Link to PR comment
+
+---
+
+## Example Usage
+
+```
+/review-pr-team 1
+```
+
+This will:
+1. Fetch PR #1 details
+2. Run security review (sequential)
+3. Run product review (sequential)
+4. Run architecture review (sequential)
+5. Synthesize all findings
+6. Post comprehensive review to PR #1
+
+---
+
+## Tips for Best Results
+
+- **Use on non-trivial PRs** - Overkill for typo fixes
+- **Run before final approval** - Catch issues early
+- **Read individual reviews** - Each perspective provides unique value
+- **Address critical issues first** - Don't merge with red flags
+
+---
+
+<!-- NOTE: This is NOT part of the skill instructions -->
+
+## Future Enhancement: Parallel Execution (Option A)
+
+**Current implementation:** Reviews run sequentially (one after another)
+- Security → Product → Architecture
+- Total time: ~3-5 minutes depending on PR size
+
+**Future upgrade:** Agent Teams for parallel execution
+- All three reviewers analyze simultaneously
+- Total time: ~1-2 minutes (faster)
+- Requires: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in settings
+
+**When agent teams feature is stable**, this skill can be upgraded to spawn parallel reviewers instead of sequential ones. The skill structure and review criteria would remain the same—only the execution model changes.
+
+**To upgrade later:**
+1. Enable experimental flag in `.claude/settings.json`
+2. Modify Step 2-4 to spawn teammates instead of sequential subagents
+3. Teammates review in parallel
+4. Main agent still synthesizes results
+
+The sequential approach works perfectly fine for now and proves the concept.
+
+---
+
+I got what looks like the same error:
+
+API Error: 404 {"type":"error","error":{"type":"not_found_error","message":"model: sonnet"},"request_id":"req_011CYACuo6koEG52kG7F7Pqq"}

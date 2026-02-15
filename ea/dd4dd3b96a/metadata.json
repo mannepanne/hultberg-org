@@ -2,13 +2,17 @@
   "cli_version": "0.4.4",
   "checkpoint_id": "eadd4dd3b96a",
   "strategy": "manual-commit",
-  "branch": "feature/blog-updates-mvp",
+  "branch": "feature/blog-foundation",
   "checkpoints_count": 2,
   "files_touched": [
     ".claude/skills/review-pr-team/SKILL.md",
-    "SPECIFICATIONS/blog-style-updates-mvp.md",
-    "SPECIFICATIONS/blog-updates-implementation.md",
-    "SPECIFICATIONS/blog-updates-security.md"
+    "public/updates/data/index.json",
+    "public/updates/data/test-update.json",
+    "src/index.ts",
+    "src/test-markdown.ts",
+    "src/types.ts",
+    "src/utils.ts",
+    "test-marked.mjs"
   ],
   "sessions": [
     {
@@ -27,10 +31,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 419,
-    "cache_creation_tokens": 281326,
-    "cache_read_tokens": 3323746,
-    "output_tokens": 23313,
-    "api_call_count": 48
+    "input_tokens": 526,
+    "cache_creation_tokens": 263892,
+    "cache_read_tokens": 4634260,
+    "output_tokens": 12555,
+    "api_call_count": 49
   }
 }

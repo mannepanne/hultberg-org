@@ -1,0 +1,179 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+Please familiarise yourself with this project by reading @CLAUDE.md and checking out the project structure. Can you tell me what this project is about?
+
+### Prompt 2
+
+Hmm. But that can't be right. The project is deployed to CloudFlare on https://hultberg.org and is serving the pages as expected.
+
+### Prompt 3
+
+Excellent. Do you need to update something in @CLAUDE.md to make this clear? If a developer comes new to the project, they should be able to read the project top level @CLAUDE.md and quickly get up to speed so they can be productive.
+
+### Prompt 4
+
+Can I somehow run this site locally for purposes of checking development changes?
+
+### Prompt 5
+
+Yes please.
+
+### Prompt 6
+
+Excellent! Let's try updating the /now page. It's the file @public/now/index.html 
+
+First of all, make a copy of the file and save it as a backup using the same file name format at as the previous backups in the same folder, for example @public/now/index_20160926.CHANGED.html
+
+### Prompt 7
+
+I no longer work at Ocado Technology, so the first sentence and the first bullet in the list below need to change. I know work at char.gy (https://char.gy) where we design, manufacture, install and operate EV chargers. By strategically installing charge points along residential streets, we bring convenient, reliable, and affordable charging directly to drivers’ doorsteps.
+
+### Prompt 8
+
+There's a spelling mistake in the second bullet, change "abtch" to "batch". The age of my asparagus bed also needs to change from four years to five. And change "harvested my second batch" to "looking forward to harvesting more asparagus spears this year".
+
+### Prompt 9
+
+Third bullet also needs changing. I now work out 2 days a week while trying to repair the longitudinal splits in bicep tendons in my right arm... Over a year in the making, but slowly getting there. I hope.
+
+### Prompt 10
+
+Great! Please commit these changes (and other changes in the project, I have for example deleted two old files). The give me the command to push to GitHub.
+
+### Prompt 11
+
+Great, looks perfect. How do we work together using proper pull requests? I would like to understand how I can use you to create pull requests as well as review them.
+
+### Prompt 12
+
+Let's wait a bit, and discuss an actual new feature in the site first. And when we work on actually implementing it (after creating a specification together) we can move on to using pull requests.
+
+### Prompt 13
+
+I would like to introduce a super simple blog feature. Yes, let's talk this through, and save the plan for it as a Markdown file in @SPECIFICATIONS/ 
+
+The blog posts should all be listed with a title and excerpt on a sub page in the site, like /updates
+
+The title of each post should be linked to the post itself, and show the whole thing, mauybe we use a "slug" in the URL so a blog post with the title "Using Claude Code to implement a blog feature" is accessed on /updates/using-claude-code-to-imp...
+
+### Prompt 14
+
+Great questions! I'll answer the functionality questions first, and then we can talk about the storage, I'd like to understand the options better.
+
+It would be great to use the CloudFlare CDN for images. Is it free / included in my account? I have a subscription for "Workers Paid" in my account. I would like to upload quite large images, but on upload they should be resized to never be larger than fitting within a square of 800 by 800 picels (retaining the aspect ratio). So we can show a small v...
+
+### Prompt 15
+
+I agree with your recommendation. Let's not use the word "posts" anywhere though, let's call it "updates".
+
+In your quick check, yes, looks good. But a question: can we make sure I can add more than one image per post?
+
+### Prompt 16
+
+I like option 2, let's go with that.
+
+Yes, let's talk storage. I think KV storage sounds tricky. And I just thought of something else. Could we store the content (the updates themselves as json maybe, but also the images) using GitHub Pages? And still get URLs like "hultberg.org/updates/slug-here" to browse the content?
+
+### Prompt 17
+
+I love the sound of option 2! Let's do that. But the delay in publishing to the site means that it puts great emphasis on being able to work on updates and save them as drafts until done, and having a good preview. Will that be possible?
+
+### Prompt 18
+
+This sounds awesome. Put what we have said so far in a clear and well structured step by step implementation plain in the SPECIFICATIONS folder. Name the file "blog-style-updates-mvp.md". Start the file with epxlaining what the feature is.
+
+### Prompt 19
+
+I think that looks great! I'd love for us to do this using pull requests, so start a new branch before starting any implementation work. And I think the first commit to the branch should be the specification!
+
+Any questions on the implementation approach? I agree with using resend.com for emails.
+
+### Prompt 20
+
+Guide me through the GitHub access token please. 
+
+The Resend API key is: REDACTED
+
+Please make sure this is put in a config file that isn't commited to the repo. I assume this will be stored as a secret in CloudFlare?
+
+### Prompt 21
+
+For the GitHub token, I set it to work for the repo hultberg-org only, but it's asking for permissions. What permissions do I need to give it?
+
+### Prompt 22
+
+Ok! I have the token. Should I run the npx wrangler commands to set the GitHub toke and Resend API key now?
+
+### Prompt 23
+
+Ok, both secrets now set. What next? Admin UI approach? What are my options?
+
+### Prompt 24
+
+With regards to styling I agree with Option B. But for the Markdown editor I am quite intrigued by the SimpleMDE/EasyMDE Library option. I don't mind the dependency. But what's the main differences between SimpleMDE and EasyMDE?
+
+### Prompt 25
+
+Yes, go with EasyMDE! Please update the spec with these decisions we've done lately so it's up to date.
+
+### Prompt 26
+
+Let's push te branch and create a PR. I will review it, but I would also like to epxlore a concept where we spawn an agent (somehow, I am not sure how this works) that reviews the PR and critiques it. It needs to be done with the perspective of someone who is not you or me, so we get actual comments and criticism on things that may not be thought through, or thart are wrong.  How do we do that?
+
+### Prompt 27
+
+[Request interrupted by user]
+
+### Prompt 28
+
+I think I need to push it. If you give me the command I'll do it.
+
+### Prompt 29
+
+Ok, pushed! How do I create a pull request? And by the way, what is really the purpose of a PR? To raise a flag saying "I'm done with this work, I think, and now I like to merge it to main - can someone check it out please?"
+
+### Prompt 30
+
+This is great. I would prefer option A, but before we continue I have two questions:
+
+1. On the point about "current worker broken", we established at the start of our session that it is working fine at the moment to serve the static pages in the site. Are you saying it's "broken" from the perspective of the festure we want to add? Because it is not broken for the current version of the site.
+
+2. I don't see any comment from the reviewe on the pull request. Why not?
+
+### Prompt 31
+
+About the broken worker that isn't broken, do add a clarification about that to the spec. But it's already mentioned in our "onboarding" @CLAUDE.md, can we just link to that? I don't want information to be saved in many places.
+
+And about the review on the PR. I thought we could find a way to maybe spawn an actual sub agent with an instruction to understand the context of the project, then review the PR, and leave a comment with the opinions. And then I would expect you to take over, look at the...
+
+### Prompt 32
+
+Do Option A for this piece of work. And then we sort out the comments. For the next PR I'd love to set up a "review team" as you suggested.
+
+### Prompt 33
+
+What's best practice here? I would assume that we have to deal with all the concerns in the PR, and update the PR with fixes, before pushing? Right?
+
+### Prompt 34
+
+Ok, pushed! Cool. Yes, let's tackle the concerns, but first a question: there is now a banner on the "code" page of my repo saying "Your main branch isn't protected
+Protect this branch from force pushing or deletion, or require status checks before merging."
+
+Do I need to do something? That sounds serious?
+
+### Prompt 35
+
+Ah, I see! Let's ignore it for now.
+
+### Prompt 36
+
+Go ahead and update the spec, this sounds good to me. Do we also need endpoints to delete an image, changing dates on posts?
+
+### Prompt 37
+
+Perfect, go ahead.
+

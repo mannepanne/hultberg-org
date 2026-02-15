@@ -391,3 +391,11 @@ Ran the commands. Check now.
 ---
 
 Please resume.
+
+---
+
+Pushed! You make the PR please?
+
+---
+
+I have a suggestion. Can we make a copy of the /review-pr-team, but instead of a team we make it just one reviewer who is a very experienced full stack developer?

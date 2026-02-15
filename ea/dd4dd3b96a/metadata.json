@@ -6,13 +6,7 @@
   "checkpoints_count": 2,
   "files_touched": [
     ".claude/skills/review-pr-team/SKILL.md",
-    "public/updates/data/index.json",
-    "public/updates/data/test-update.json",
-    "src/index.ts",
-    "src/test-markdown.ts",
-    "src/types.ts",
-    "src/utils.ts",
-    "test-marked.mjs"
+    ".claude/skills/review-pr/SKILL.md"
   ],
   "sessions": [
     {
@@ -31,10 +25,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 526,
-    "cache_creation_tokens": 263892,
-    "cache_read_tokens": 4634260,
-    "output_tokens": 12555,
-    "api_call_count": 49
+    "input_tokens": 143,
+    "cache_creation_tokens": 265166,
+    "cache_read_tokens": 643662,
+    "output_tokens": 5556,
+    "api_call_count": 15
   }
 }

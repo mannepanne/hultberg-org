@@ -84,3 +84,11 @@ Ran the commands. Check now.
 
 Please resume.
 
+### Prompt 14
+
+Pushed! You make the PR please?
+
+### Prompt 15
+
+I have a suggestion. Can we make a copy of the /review-pr-team, but instead of a team we make it just one reviewer who is a very experienced full stack developer?
+

@@ -35,7 +35,8 @@ A simple, lightweight blog feature for hultberg.org that allows Magnus to publis
 
 ### Individual Update Page (`/updates/{slug}`)
 
-- Full update content rendered from Markdown
+- Full update content rendered from Markdown **server-side in Worker** (not browser)
+- HTML is sanitized and cached for performance
 - Metadata displayed:
   - Title
   - Author: Magnus Hultberg (linked to `/now` page)
@@ -205,14 +206,35 @@ public/
 
 ### NPM Packages (to be added)
 - `easymde` - Markdown editor (actively maintained fork of SimpleMDE, ~50KB)
-- `marked` - Markdown to HTML conversion
-- `dompurify` - Sanitize HTML output
-- `isomorphic-dompurify` - DOMPurify for Workers environment
+- `marked` - Markdown to HTML conversion (server-side in Worker)
+- `sanitize-html` or custom allowlist-based sanitizer - HTML sanitization (Workers-compatible)
+  - Note: `dompurify` is browser-only and won't work in Workers runtime
 
 ### Cloudflare Services
 - **Workers** (existing) - Main application runtime
 - **Workers Assets** (existing) - Serve static files
-- **Workers KV** (existing) - Store magic link tokens temporarily
+- **Workers KV** (existing) - Store magic link tokens and rate limit data
+
+**KV Namespace Configuration:**
+- Namespace name: `MAGIC_LINK_TOKENS`
+- Bind to Worker via `wrangler.toml`
+
+**Key Naming Scheme:**
+- Magic link tokens: `auth:token:{random_token}` → value: `{email_address}`
+- Rate limiting: `ratelimit:ip:{ip_address}` → value: `{request_count}`
+
+**TTL Strategy:**
+- Magic link tokens: 900 seconds (15 minutes) - set via `expirationTtl` on put
+- Rate limit counters: 60 seconds (1 minute window) - set via `expirationTtl` on put
+
+**Token Invalidation:**
+- Single-use: Token deleted from KV immediately after successful authentication
+- Expired tokens: Auto-deleted by KV TTL mechanism
+
+**Eventual Consistency Handling:**
+- KV propagates globally within 60 seconds
+- Magic links are short-lived (15 min) and single-use, so consistency delay is acceptable
+- If token already used/deleted, subsequent attempts fail gracefully (token not found)
 
 ### External Services
 - **Resend.com** (existing account) - Send magic link emails
@@ -238,6 +260,79 @@ npx wrangler secret put GITHUB_TOKEN
 env.RESEND_API_KEY
 env.GITHUB_TOKEN
 ```
+
+## Security
+
+### Authentication
+
+**Magic Link Flow:**
+1. User enters email address at `/admin`
+2. Worker generates cryptographically secure random token (32 bytes)
+3. Token stored in Workers KV with 15-minute TTL
+4. Email sent via Resend.com with link: `/admin?token={token}`
+5. User clicks link, Worker validates token from KV
+6. On success, token is deleted from KV (single use)
+7. Worker sets authentication cookie
+
+**Authentication Cookie:**
+```
+Name: auth_token
+Value: JWT signed with secret key
+HttpOnly: true (prevents JavaScript access)
+Secure: true (HTTPS only)
+SameSite: Strict (CSRF protection)
+Max-Age: 604800 (7 days)
+Path: /admin
+```
+
+### CSRF Protection
+
+**Strategy:** SameSite=Strict cookie + Origin header validation
+
+1. **SameSite=Strict** prevents cookie from being sent on cross-origin requests
+2. **Origin header check** on all admin POST/DELETE endpoints:
+```typescript
+   const origin = request.headers.get('Origin');
+   if (origin !== 'https://hultberg.org') {
+     return new Response('Forbidden', { status: 403 });
+   }
+```
+3. **No explicit CSRF tokens needed** due to SameSite=Strict
+
+### XSS Prevention
+
+**Content Sanitization:**
+- Markdown content is parsed and rendered **server-side in the Worker**
+- HTML output is sanitized before storage using a Workers-compatible library
+- Images are validated (file type, size) before upload
+- User input (title, excerpt) is HTML-escaped when rendered
+
+**Why not dompurify?**
+- `dompurify` is browser-only (DOM API dependency)
+- `isomorphic-dompurify` may not work in Workers runtime
+
+**Alternative approach:**
+1. Use `marked` to convert Markdown → HTML in Worker
+2. Use a simple allowlist-based sanitizer for Workers (custom or library like `sanitize-html`)
+3. Only allow safe HTML tags: `p, h1-h6, a, img, ul, ol, li, blockquote, code, pre, em, strong, br`
+4. Strip all attributes except: `href` (on `a`), `src`/`alt` (on `img`)
+5. Validate all URLs (must be https:// or relative paths)
+
+### Rate Limiting
+
+**Admin API endpoints:**
+- Maximum 10 requests per minute per IP address
+- Prevents brute force attempts on magic links
+- Uses Workers KV to track request counts
+
+### Input Validation
+
+**All admin API endpoints validate:**
+- Authentication cookie is present and valid
+- Request origin matches expected domain
+- Input data types and formats
+- Image file sizes (max 5MB before resize)
+- Slug format (alphanumeric + hyphens only)
 
 ## Future Enhancements (Not in MVP)
 

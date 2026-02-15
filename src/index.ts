@@ -1,8 +1,10 @@
 // ABOUT: The main entry point for the Cloudflare Worker.
 // ABOUT: This file handles all incoming requests and routes them accordingly.
 
+import { Env } from './types';
+
 export default {
-  async fetch(request: Request, env: any, ctx: any): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const notFoundHtml = `<!doctype html>
 <html class="no-js" lang="en-GB">
     <head>

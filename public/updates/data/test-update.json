@@ -1,0 +1,11 @@
+{
+  "slug": "test-update",
+  "title": "Test Update",
+  "excerpt": "",
+  "content": "# Test Update\n\nThis is test content in **Markdown** format.\n\n## Purpose\n\nThis file verifies the data structure works correctly.",
+  "status": "draft",
+  "publishedDate": "",
+  "editedDate": "2026-02-15T20:00:00Z",
+  "author": "Magnus Hultberg",
+  "images": []
+}

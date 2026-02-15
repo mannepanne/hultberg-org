@@ -172,10 +172,13 @@ public/
 
 ### Deployment Workflow
 
-1. **User creates/edits update in admin** → JavaScript commits to GitHub via GitHub API
-2. **GitHub receives commit** → Triggers GitHub Action
-3. **GitHub Action runs** → Executes `wrangler deploy`
-4. **Cloudflare Workers updated** → New content live (~2 min total)
+1. **User creates/edits update in admin** → Browser POSTs to Worker API endpoint
+2. **Worker backend** → Commits to GitHub via GitHub API using `env.GITHUB_TOKEN` (token never exposed to browser)
+3. **GitHub receives commit** → Triggers GitHub Action
+4. **GitHub Action runs** → Executes `wrangler deploy`
+5. **Cloudflare Workers updated** → New content live (~2 min total)
+
+**Security Note:** All GitHub API calls happen server-side in the Worker. The GitHub token is stored as a Cloudflare Secret and never sent to the browser.
 
 ### Authentication Flow
 
@@ -239,6 +242,7 @@ env.GITHUB_TOKEN
 ## Future Enhancements (Not in MVP)
 
 - Tags/categories for updates
+- Manual date editing (backdate posts, fix mistakes, migrate old content)
 - Search functionality
 - Comments system
 - Social sharing buttons
@@ -288,18 +292,31 @@ env.GITHUB_TOKEN
 18. Add custom image upload button to EasyMDE toolbar
 19. Implement client-side image resize before upload
 20. Create image gallery component
-21. Implement "Save as Draft" functionality
-22. Implement "Publish" functionality
-23. Build preview functionality
+21. Wire up editor to call Worker API endpoints (not GitHub directly)
+22. Build preview functionality
 
-### Phase 6: GitHub Integration
-24. Set up GitHub API authentication using GITHUB_TOKEN secret
-25. Implement commit functionality for:
-    - New updates (create JSON file)
-    - Updated updates (modify JSON file)
-    - Deleted updates (remove JSON file)
-    - Uploaded images (add to repo)
-26. Update index.json when updates change
+### Phase 6: Worker Backend API Endpoints
+23. Implement `POST /admin/api/save-update` endpoint:
+    - Receive update data from browser
+    - Validate and sanitize input
+    - Use `env.GITHUB_TOKEN` to commit JSON file to GitHub
+    - Update index.json atomically
+    - Return success/error response
+24. Implement `POST /admin/api/upload-image` endpoint:
+    - Receive image from browser
+    - Optionally resize server-side (or validate client-side resize)
+    - Commit to `public/images/updates/{slug}/` in GitHub
+    - Return image path
+25. Implement `DELETE /admin/api/delete-update` endpoint:
+    - Remove update JSON file via GitHub API
+    - Update index.json
+    - Return success/error response
+26. Implement `DELETE /admin/api/delete-image` endpoint:
+    - Remove image file via GitHub API
+    - Return success/error response
+27. Implement `GET /admin/api/updates` endpoint:
+    - Return all updates (including drafts) from index.json
+    - Used by admin dashboard to list updates
 
 ### Phase 7: Auto-Deployment
 27. Create GitHub Action workflow file

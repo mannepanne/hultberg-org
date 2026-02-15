@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "4d65d8f7b072",
+  "strategy": "manual-commit",
+  "branch": "feature/blog-updates-mvp",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "SPECIFICATIONS/blog-style-updates-mvp.md",
+    "SPECIFICATIONS/blog-updates-implementation.md",
+    "SPECIFICATIONS/blog-updates-security.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/4d/65d8f7b072/0/metadata.json",
+      "transcript": "/4d/65d8f7b072/0/full.jsonl",
+      "context": "/4d/65d8f7b072/0/context.md",
+      "content_hash": "/4d/65d8f7b072/0/content_hash.txt",
+      "prompt": "/4d/65d8f7b072/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 136,
+    "cache_creation_tokens": 117452,
+    "cache_read_tokens": 1187342,
+    "output_tokens": 6610,
+    "api_call_count": 11
+  }
+}

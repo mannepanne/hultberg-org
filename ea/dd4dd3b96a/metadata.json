@@ -2,8 +2,8 @@
   "cli_version": "0.4.4",
   "checkpoint_id": "eadd4dd3b96a",
   "strategy": "manual-commit",
-  "branch": "feature/blog-foundation",
-  "checkpoints_count": 2,
+  "branch": "main",
+  "checkpoints_count": 3,
   "files_touched": [
     ".claude/skills/review-pr-team/SKILL.md",
     ".claude/skills/review-pr/SKILL.md"
@@ -22,13 +22,20 @@
       "context": "/ea/dd4dd3b96a/1/context.md",
       "content_hash": "/ea/dd4dd3b96a/1/content_hash.txt",
       "prompt": "/ea/dd4dd3b96a/1/prompt.txt"
+    },
+    {
+      "metadata": "/ea/dd4dd3b96a/2/metadata.json",
+      "transcript": "/ea/dd4dd3b96a/2/full.jsonl",
+      "context": "/ea/dd4dd3b96a/2/context.md",
+      "content_hash": "/ea/dd4dd3b96a/2/content_hash.txt",
+      "prompt": "/ea/dd4dd3b96a/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 143,
-    "cache_creation_tokens": 265166,
-    "cache_read_tokens": 643662,
-    "output_tokens": 5556,
-    "api_call_count": 15
+    "input_tokens": 990,
+    "cache_creation_tokens": 405384,
+    "cache_read_tokens": 2711263,
+    "output_tokens": 16320,
+    "api_call_count": 54
   }
 }

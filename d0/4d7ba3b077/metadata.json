@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "d04d7ba3b077",
+  "strategy": "manual-commit",
+  "branch": "feature/blog-updates-mvp",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".claude/skills/review-pr-team/SKILL.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/d0/4d7ba3b077/0/metadata.json",
+      "transcript": "/d0/4d7ba3b077/0/full.jsonl",
+      "context": "/d0/4d7ba3b077/0/context.md",
+      "content_hash": "/d0/4d7ba3b077/0/content_hash.txt",
+      "prompt": "/d0/4d7ba3b077/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 273,
+    "cache_creation_tokens": 450720,
+    "cache_read_tokens": 2350880,
+    "output_tokens": 9326,
+    "api_call_count": 26
+  }
+}

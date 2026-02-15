@@ -12,11 +12,46 @@ This document details all security measures, authentication flows, and data prot
 
 1. User enters email address at `/admin`
 2. Worker generates cryptographically secure random token (32 bytes)
-3. Token stored in Workers KV with 15-minute TTL
+3. Token stored in Workers KV with 15-minute TTL and timestamp
 4. Email sent via Resend.com with link: `/admin?token={token}`
 5. User clicks link, Worker validates token from KV
-6. On success, token is deleted from KV (single use)
-7. Worker sets authentication cookie
+6. **Token reuse prevention:** Check if token was used recently (< 5 seconds ago)
+7. On success, token is deleted from KV (single use)
+8. Worker sets authentication cookie
+
+**Token reuse prevention (addresses KV eventual consistency):**
+
+Due to Workers KV eventual consistency (up to 60-second global propagation), there's a window where a deleted token might still appear valid in different regions. To prevent this:
+
+```typescript
+// Token value structure in KV
+{
+  "email": "user@example.com",
+  "timestamp": 1234567890000,  // When token was created/last used
+  "used": false
+}
+
+// On verification
+const tokenData = JSON.parse(await env.MAGIC_LINK_TOKENS.get(`auth:token:${token}`));
+if (!tokenData) {
+  return new Response('Invalid or expired token', { status: 403 });
+}
+
+// Check if token was recently used (< 5 seconds)
+const timeSinceCreation = Date.now() - tokenData.timestamp;
+if (tokenData.used || timeSinceCreation < 5000) {
+  return new Response('This link has already been used', { status: 403 });
+}
+
+// Mark as used and update timestamp
+await env.MAGIC_LINK_TOKENS.put(
+  `auth:token:${token}`,
+  JSON.stringify({ ...tokenData, used: true, timestamp: Date.now() }),
+  { expirationTtl: 60 }  // Keep for 60s to prevent reuse during propagation
+);
+```
+
+This prevents the same token from being used twice, even during KV propagation delays.
 
 ### Authentication Cookie Configuration
 
@@ -166,6 +201,88 @@ if (origin !== 'https://hultberg.org') {
 
 ---
 
+## Content Security Policy (CSP)
+
+### Purpose
+
+Content Security Policy headers provide defense-in-depth against XSS attacks, even if sanitization fails.
+
+### CSP Headers for Admin Pages
+
+**Admin interface** (`/admin/*` routes):
+
+```
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' cdn.jsdelivr.net;
+  style-src 'self' 'unsafe-inline' cdn.jsdelivr.net;
+  img-src 'self' data:;
+  connect-src 'self';
+  font-src 'self' cdn.jsdelivr.net;
+  frame-ancestors 'none';
+  base-uri 'self';
+```
+
+**Explanation:**
+- `default-src 'self'`: Default to same-origin only
+- `script-src`: Allow EasyMDE from CDN (jsdelivr.net) + inline scripts for editor
+- `style-src`: Allow EasyMDE CSS from CDN + inline styles
+- `img-src 'self' data:`: Allow images from site + data URLs (for image preview)
+- `connect-src 'self'`: XHR/fetch only to same origin
+- `frame-ancestors 'none'`: Prevent clickjacking
+- `base-uri 'self'`: Prevent base tag injection
+
+**Why `'unsafe-inline'` for admin?**
+- EasyMDE requires inline scripts/styles
+- Admin is single authenticated user (Magnus), not public-facing
+- Trade-off: usability over strict CSP for admin interface
+- Still blocks external script injection
+
+### CSP Headers for Public Pages
+
+**Public pages** (`/updates/*` routes):
+
+```
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self';
+  connect-src 'self';
+  frame-ancestors 'none';
+  base-uri 'self';
+```
+
+**Stricter policy for public:**
+- No external CDNs
+- No inline scripts
+- Only inline styles (for simple formatting)
+- Blocks all XSS attempts via CSP layer
+
+### Implementation
+
+Add CSP headers in Worker response:
+
+```typescript
+// Admin pages
+return new Response(html, {
+  headers: {
+    'Content-Type': 'text/html',
+    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; ..."
+  }
+});
+
+// Public pages
+return new Response(html, {
+  headers: {
+    'Content-Type': 'text/html',
+    'Content-Security-Policy': "default-src 'self'; script-src 'self'; ..."
+  }
+});
+```
+
+---
+
 ## Rate Limiting
 
 ### Admin API Endpoints
@@ -225,8 +342,12 @@ await env.MAGIC_LINK_TOKENS.put(
 **Data Types & Formats:**
 - Title: String, max 200 characters
 - Excerpt: String, max 300 characters (optional)
-- Content: String, max 100KB
-- Status: Enum (`draft` or `published`)
+- Content: String, max 100KB (102,400 bytes)
+  - **CRITICAL:** Enforce this limit BEFORE GitHub API call
+  - Reject requests with clear error: "Content exceeds 100KB limit"
+  - Validate on both client (for UX) and server (for security)
+  - Calculate size in bytes, not characters: `new TextEncoder().encode(content).length`
+- Status: Enum (`draft`, `published`, or `unpublished`)
 - Slug: Alphanumeric + hyphens only, validated with regex
 
 **File Uploads:**

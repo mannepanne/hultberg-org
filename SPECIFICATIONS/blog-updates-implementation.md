@@ -97,6 +97,135 @@ function generateSlug(title: string, existingSlugs: string[]): string {
 
 **Why:** Ensures unique, URL-safe slugs for all updates
 
+### Step 5: Create Environment Type Definitions
+
+Create `src/types.ts`:
+
+```typescript
+// ABOUT: Type definitions for Cloudflare Workers environment
+// ABOUT: Ensures type safety for environment variables and KV namespaces
+
+export interface Env {
+  // Workers KV namespace for auth tokens and rate limiting
+  MAGIC_LINK_TOKENS: KVNamespace;
+
+  // External service API keys
+  RESEND_API_KEY: string;
+  GITHUB_TOKEN: string;
+
+  // Configuration
+  ADMIN_EMAIL: string;
+  JWT_SECRET: string;
+}
+
+export interface Update {
+  slug: string;
+  title: string;
+  excerpt: string;  // Empty string if not provided
+  content: string;
+  status: 'draft' | 'published' | 'unpublished';
+  publishedDate: string;  // ISO 8601 format, empty string for drafts
+  editedDate: string;     // ISO 8601 format
+  author: string;
+  images: string[];       // Array of image paths
+}
+
+export interface UpdateIndex {
+  updates: {
+    slug: string;
+    title: string;
+    excerpt: string;
+    publishedDate: string;
+    status: 'published';  // Index only contains published updates
+  }[];
+}
+```
+
+Update `src/index.ts` to use types:
+
+```typescript
+import { Env } from './types';
+
+export default {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    // Now env.GITHUB_TOKEN is type-checked
+    // env.MAGIC_LINK_TOKENS is typed as KVNamespace
+  }
+}
+```
+
+**Why:** Type safety prevents runtime errors and provides autocomplete for environment variables
+
+### Step 6: Verify Markdown Library Compatibility
+
+**CRITICAL:** Before proceeding with implementation, verify that chosen libraries work in Cloudflare Workers runtime.
+
+**Test setup:**
+
+1. Create test Worker file `test-markdown.ts`:
+
+```typescript
+import { marked } from 'marked';
+// Try sanitize-html or alternative
+
+const testMarkdown = `
+# Test Heading
+This is **bold** and *italic*.
+[Link](https://example.com)
+![Image](/test.jpg)
+`;
+
+export default {
+  async fetch(request: Request): Promise<Response> {
+    try {
+      // Test marked
+      const html = marked.parse(testMarkdown);
+
+      // Test sanitization (if using sanitize-html)
+      // const clean = sanitizeHtml(html, { allowedTags: [...] });
+
+      return new Response(html, {
+        headers: { 'Content-Type': 'text/html' }
+      });
+    } catch (error) {
+      return new Response(`Error: ${error.message}`, { status: 500 });
+    }
+  }
+}
+```
+
+2. Run test:
+
+```bash
+npm install marked
+# npm install sanitize-html  # If using
+
+npx wrangler dev test-markdown.ts
+curl http://localhost:8787/
+```
+
+**If libraries don't work:**
+
+- **marked**: Try `markdown-it` or `micromark`
+- **sanitize-html**: Implement custom allowlist-based sanitizer (Workers-compatible)
+
+**Recommended custom sanitizer pattern:**
+
+```typescript
+function sanitizeHtml(html: string): string {
+  // Simple allowlist approach for Workers
+  const allowedTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'img', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'em', 'strong', 'br'];
+
+  // Use DOMParser-like approach or regex-based filtering
+  // This is simplified - use a proper sanitization library that works in Workers
+  return html;
+}
+```
+
+**Decision point:** Document which libraries work and update dependencies in main spec if needed.
+
+**Why:** Discovering incompatibilities late in development is costly. Verify now, adjust if needed.
+
 ---
 
 ## Phase 2: Public Pages
@@ -350,28 +479,89 @@ npm install easymde
 **Tasks:**
 - Validate authentication (middleware)
 - Validate input (title required, status enum, etc.)
-- Generate slug if new update
+- **CRITICAL: Validate content size BEFORE GitHub API call** (max 100KB)
+- Generate slug if new update (server-side, immutable after creation)
 - Parse and sanitize Markdown
 - Commit JSON file to GitHub using `env.GITHUB_TOKEN`
 - Return success response with slug
 
-**GitHub API call pattern:**
+**Complete GitHub API flow with SHA handling:**
+
 ```typescript
-await fetch(`https://api.github.com/repos/mannepanne/hultberg-org/contents/public/updates/data/${slug}.json`, {
-  method: 'PUT',
-  headers: {
-    'Authorization': `token ${env.GITHUB_TOKEN}`,
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    message: `Update: ${title}`,
-    content: btoa(JSON.stringify(updateData)), // Base64 encode
-    sha: existingSha // if updating existing file
-  })
-});
+async function saveUpdate(slug: string, updateData: Update, env: Env): Promise<Response> {
+  const githubUrl = `https://api.github.com/repos/mannepanne/hultberg-org/contents/public/updates/data/${slug}.json`;
+
+  try {
+    // Step 1: GET current file to retrieve SHA (for updates)
+    const existingFile = await fetch(githubUrl, {
+      headers: {
+        'Authorization': `token ${env.GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+      }
+    });
+
+    let existingSha: string | null = null;
+    if (existingFile.ok) {
+      const fileData = await existingFile.json();
+      existingSha = fileData.sha;
+    }
+    // If 404, this is a new file (no SHA needed)
+
+    // Step 2: PUT file with SHA if updating, without if new
+    const putBody: any = {
+      message: `Update: ${updateData.title}`,
+      content: btoa(JSON.stringify(updateData, null, 2)), // Base64 encode
+    };
+
+    if (existingSha) {
+      putBody.sha = existingSha;  // Required for updates
+    }
+
+    const putResponse = await fetch(githubUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${env.GITHUB_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.github.v3+json',
+      },
+      body: JSON.stringify(putBody)
+    });
+
+    // Step 3: Handle errors with retry logic
+    if (!putResponse.ok) {
+      const errorData = await putResponse.json();
+
+      if (putResponse.status === 409) {
+        // Conflict - SHA mismatch, retry once
+        return await saveUpdate(slug, updateData, env);  // Recursive retry
+      }
+
+      throw new Error(`GitHub API error: ${putResponse.status} - ${errorData.message}`);
+    }
+
+    return new Response(JSON.stringify({ success: true, slug }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('Failed to save update:', error);
+    return new Response(
+      JSON.stringify({ error: 'Failed to save update', details: error.message }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+}
 ```
 
-**Note:** index.json is generated at build time, not updated here
+**Key points:**
+- Always GET before PUT to retrieve current SHA
+- Include SHA in PUT body for existing files
+- Omit SHA for new files (GitHub creates them)
+- Handle 409 Conflict with one retry (recursive call)
+- Proper error handling and user feedback
+- Log errors for debugging
+
+**Note:** index.json is generated at build time by GitHub Action, not updated here
 
 ### Step 24: Implement `POST /admin/api/upload-image`
 
@@ -388,9 +578,104 @@ await fetch(`https://api.github.com/repos/mannepanne/hultberg-org/contents/publi
 **Tasks:**
 - Validate authentication
 - Receive slug in request
-- Delete JSON file from GitHub using DELETE API
+- **CASCADE DELETE:** Delete JSON file AND associated images directory
 - Return success/error response
 - Note: index.json regenerated at build time
+
+**Complete delete flow:**
+
+```typescript
+async function deleteUpdate(slug: string, env: Env): Promise<Response> {
+  const errors: string[] = [];
+
+  try {
+    // Step 1: Delete the update JSON file
+    const jsonUrl = `https://api.github.com/repos/mannepanne/hultberg-org/contents/public/updates/data/${slug}.json`;
+
+    // Get SHA first
+    const fileResponse = await fetch(jsonUrl, {
+      headers: {
+        'Authorization': `token ${env.GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+      }
+    });
+
+    if (fileResponse.ok) {
+      const fileData = await fileResponse.json();
+
+      // Delete file
+      const deleteResponse = await fetch(jsonUrl, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `token ${env.GITHUB_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: `Delete update: ${slug}`,
+          sha: fileData.sha
+        })
+      });
+
+      if (!deleteResponse.ok) {
+        errors.push(`Failed to delete JSON: ${deleteResponse.status}`);
+      }
+    }
+
+    // Step 2: Delete images directory (if exists)
+    const imagesUrl = `https://api.github.com/repos/mannepanne/hultberg-org/contents/public/images/updates/${slug}`;
+
+    const imagesResponse = await fetch(imagesUrl, {
+      headers: {
+        'Authorization': `token ${env.GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+      }
+    });
+
+    if (imagesResponse.ok) {
+      const imageFiles = await imagesResponse.json();
+
+      // Delete each image file
+      for (const file of imageFiles) {
+        const deleteImgResponse = await fetch(file.url, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `token ${env.GITHUB_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: `Delete image from update: ${slug}`,
+            sha: file.sha
+          })
+        });
+
+        if (!deleteImgResponse.ok) {
+          errors.push(`Failed to delete image ${file.name}`);
+        }
+      }
+    }
+
+    if (errors.length > 0) {
+      return new Response(
+        JSON.stringify({ success: false, errors }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('Failed to delete update:', error);
+    return new Response(
+      JSON.stringify({ error: 'Failed to delete update', details: error.message }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+}
+```
+
+**Important:** This prevents orphaned images when deleting updates.
 
 ### Step 26: Implement `DELETE /admin/api/delete-image`
 
@@ -459,25 +744,47 @@ const path = require('path');
 const dataDir = path.join(__dirname, '../public/updates/data');
 const files = fs.readdirSync(dataDir).filter(f => f.endsWith('.json') && f !== 'index.json');
 
-const updates = files.map(file => {
-  const content = JSON.parse(fs.readFileSync(path.join(dataDir, file), 'utf8'));
-  return {
+const updates = files
+  .map(file => {
+    try {
+      const content = JSON.parse(fs.readFileSync(path.join(dataDir, file), 'utf8'));
+      return content;
+    } catch (error) {
+      console.error(`Error parsing ${file}:`, error.message);
+      return null;
+    }
+  })
+  .filter(content => content !== null)  // Remove parse errors
+  .filter(content => content.status === 'published')  // ONLY published updates in index
+  .map(content => ({
     slug: content.slug,
     title: content.title,
     excerpt: content.excerpt || content.content.substring(0, 150),
     publishedDate: content.publishedDate,
     status: content.status
-  };
-});
+  }));
 
 // Sort by publishedDate descending
-updates.sort((a, b) => new Date(b.publishedDate) - new Date(a.publishedDate));
+// Filter out updates with empty publishedDate (shouldn't happen for published, but defensive)
+updates.sort((a, b) => {
+  const dateA = a.publishedDate ? new Date(a.publishedDate) : new Date(0);
+  const dateB = b.publishedDate ? new Date(b.publishedDate) : new Date(0);
+  return dateB - dateA;
+});
 
 fs.writeFileSync(
   path.join(dataDir, 'index.json'),
   JSON.stringify({ updates }, null, 2)
 );
+
+console.log(`Generated index.json with ${updates.length} published updates`);
 ```
+
+**Key changes:**
+- **Filter for `status === 'published'` ONLY** - Prevents draft metadata leakage
+- Error handling for malformed JSON files
+- Safe sort handling for empty publishedDate values
+- Logging for visibility
 
 **Why build-time generation?**
 - Prevents sync issues between individual files and index

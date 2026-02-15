@@ -86,9 +86,9 @@ A simple, lightweight blog feature for hultberg.org that allows Magnus to publis
 
 - **Fields:**
   - Title (required)
-  - Excerpt (optional - if empty, first 150 chars used automatically)
+  - Excerpt (optional - if empty, first 150 chars generated at display time)
   - Content (Markdown editor using EasyMDE)
-  - Status (Draft/Published toggle)
+  - Status (Draft/Published/Unpublished toggle)
 
 - **EasyMDE Editor Features:**
   - Split view (Markdown source + live preview side-by-side)
@@ -139,7 +139,7 @@ public/
 {
   "slug": "using-claude-code-to-implement-a-blog-feature",
   "title": "Using Claude Code to implement a blog feature",
-  "excerpt": "A custom excerpt if provided, otherwise empty string",
+  "excerpt": "",
   "content": "Full markdown content here...",
   "status": "published",
   "publishedDate": "2026-02-14T14:30:00Z",
@@ -151,6 +151,16 @@ public/
   ]
 }
 ```
+
+**Note on excerpt field:**
+- Stored as empty string `""` if user doesn't provide custom excerpt
+- First 150 characters of content generated at display time (listing page, RSS feed)
+- This preserves user intent and allows changing excerpt generation logic later
+
+**Note on status field:**
+- `draft` - Not visible to public, work in progress
+- `published` - Live on site, visible to all
+- `unpublished` - Previously published but now hidden (soft delete for rollback)
 
 ### Index JSON Format
 
@@ -178,6 +188,12 @@ Generated automatically by GitHub Action during deployment:
 - If duplicate slug exists, append `-2`, `-3`, etc.
 - Reserved slugs: `page` (used for pagination)
 
+**Important: Slugs are immutable after creation**
+- Once an update is created, its slug cannot be changed
+- This prevents broken links and simplifies image storage
+- To "rename" an update, delete and recreate it (or just change the title display text)
+- Slug generation happens server-side during first save
+
 ### Implementation Details
 
 **Admin Email Configuration:**
@@ -204,11 +220,31 @@ Generated automatically by GitHub Action during deployment:
 3. **GitHub receives commit** → Triggers GitHub Action
 4. **GitHub Action runs:**
   - Scans `public/updates/data/*.json` files
-  - Generates `index.json` automatically
+  - Generates `index.json` automatically (filtered to published updates only)
   - Executes `wrangler deploy`
 5. **Cloudflare Workers updated** → New content live (~2 min total)
 
 **Security Note:** All GitHub API calls happen server-side in the Worker. The GitHub token is stored as a Cloudflare Secret and never sent to the browser.
+
+**Architectural Decision: GitHub API Latency**
+
+The Worker makes direct GitHub API calls for all save operations, which introduces ~200-500ms latency per save. This is an **intentional design decision** based on the following:
+
+**Why we accept this latency:**
+- Personal blog with single admin user (not a team collaboration tool)
+- Save operations are infrequent (a few per day at most)
+- Simplicity: no need for additional storage layer (Workers KV buffer, queuing system)
+- Direct git commits provide immediate version control benefits
+- Preview mode allows instant viewing without waiting for deployment
+
+**Alternatives considered and rejected:**
+- Workers KV as write buffer: Adds complexity, eventual consistency issues, requires sync job
+- Queue-based batching: Over-engineered for single-user MVP
+- Direct file writes to R2: Would lose git version control benefits
+
+**For MVP scope:** The ~500ms save latency is acceptable and significantly simpler than alternatives.
+
+**If requirements change:** Future reviews should not revisit this decision unless there is a material change in usage patterns (e.g., multiple concurrent authors, high-frequency updates).
 
 ### Race Conditions & Eventual Consistency
 
@@ -219,10 +255,13 @@ Generated automatically by GitHub Action during deployment:
 
 **Mitigation Strategies:**
 - User feedback: "Update saved! Changes will be live in ~2 minutes."
-- Dashboard shows "Last deploy:" timestamp
+- **Per-update deploy status tracking:**
+  - Admin dashboard polls GitHub Actions API every 30 seconds
+  - Visual indicators: "Deploying..." (animated), "Live ✓", "Deploy failed ✗"
+  - Link to GitHub Action logs on failure
+  - Status persists in dashboard until deploy completes
 - Preview mode for immediate viewing (no deploy needed)
 - GitHub Actions queue handles multiple rapid saves automatically
-- Deploy status notifications via GitHub
 
 See [blog-updates-implementation.md](./blog-updates-implementation.md) for detailed deployment strategy.
 
@@ -237,7 +276,7 @@ See [blog-updates-implementation.md](./blog-updates-implementation.md) for detai
 - `GET /updates/feed.xml` → RSS feed
 
 ### Admin UI Routes (authentication required)
-- `GET /admin` → Admin dashboard
+- `GET /admin` → Admin dashboard (with deploy status polling)
 - `GET /admin/edit/{slug}` → Edit update form
 - `GET /admin/new` → Create new update form
 - `GET /admin/preview/{slug}` → Preview update
@@ -246,9 +285,10 @@ See [blog-updates-implementation.md](./blog-updates-implementation.md) for detai
 - `POST /admin/api/send-magic-link` → Send authentication email
 - `GET /admin/api/verify-token` → Verify magic link token and set cookie
 - `GET /admin/api/updates` → List all updates (including drafts)
+- `GET /admin/api/deploy-status` → Get latest GitHub Actions deploy status
 - `POST /admin/api/save-update` → Save or publish an update (commits to GitHub)
 - `POST /admin/api/upload-image` → Upload image (commits to GitHub)
-- `DELETE /admin/api/delete-update` → Delete an update (commits to GitHub)
+- `DELETE /admin/api/delete-update` → Delete an update AND associated images (commits to GitHub)
 - `DELETE /admin/api/delete-image` → Delete an image (commits to GitHub)
 
 ### Fallback

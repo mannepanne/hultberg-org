@@ -35,13 +35,21 @@ Review the files changed, commit messages, and any existing comments.
 
 ---
 
-### Step 2: Gather Specification Context
+### Step 2: Gather Project and Specification Context
 
-Before reviewing, check if there are related specification documents in `SPECIFICATIONS/`:
+Before reviewing, gather context about the project and any related specifications:
 
-1. **Check PR description and commits** for references to specification files
-2. **Look in SPECIFICATIONS/** directory for relevant docs
-3. **Read specification files** to understand:
+1. **Read project documentation** - Read `CLAUDE.md` in the repository root to understand:
+   - Project architecture and structure
+   - Development workflow and commands
+   - Key conventions and patterns
+   - Technology stack and dependencies
+
+2. **Check PR description and commits** for references to specification files
+
+3. **Look in SPECIFICATIONS/** directory for relevant docs
+
+4. **Read specification files** to understand:
    - Feature requirements and goals
    - Security requirements (if security spec exists)
    - Implementation approach (if implementation plan exists)
@@ -53,14 +61,15 @@ Before reviewing, check if there are related specification documents in `SPECIFI
 - Implementation: `SPECIFICATIONS/*-implementation.md`
 
 **Create a context summary** including:
+- Project architecture (from CLAUDE.md)
 - What is this PR supposed to achieve?
 - What are the key requirements?
 - What security measures were specified?
 - What architectural decisions were made?
 
-This context will be provided to the reviewer so they can evaluate whether the PR matches the intended design.
+This context will be provided to the reviewer so they can evaluate whether the PR matches the project architecture and intended design.
 
-**If no specifications found:** Note this and reviewer will evaluate based solely on best practices.
+**If no specifications found:** Reviewer will evaluate based on project architecture (from CLAUDE.md) and best practices.
 
 ---
 
@@ -70,8 +79,8 @@ Spawn a **general-purpose** subagent with this task:
 
 **Task:** "Act as an experienced full-stack developer reviewing PR #$ARGUMENTS.
 
-**Specification Context:**
-[Paste the context summary from Step 2, including requirements and architectural decisions]
+**Project Context:**
+[Paste the context summary from Step 2, including project architecture from CLAUDE.md, requirements, and architectural decisions]
 
 Review this PR comprehensively across all dimensions:
 

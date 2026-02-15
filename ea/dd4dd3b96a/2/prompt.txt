@@ -201,3 +201,7 @@ I think that was a really good idea for reviewing development work.
 ---
 
 Yes please, commit it.
+
+---
+
+Please make sure that  both the PR review skills also references @CLAUDE.md for context, since we decided to put information suitable for a new developer coming new to the project in that file. And then make sure @CLAUDE.md is suitable for that person, covering all the details a developer needs to know quickly get up to speed.

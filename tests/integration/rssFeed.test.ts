@@ -4,13 +4,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import worker from '@/index';
 import { createMockEnv } from '../mocks/env';
+import { createMockContext } from '../mocks/context';
 import type { UpdateIndex } from '@/types';
 
 describe('GET /updates/feed.xml', () => {
   let mockEnv: any;
+  let mockCtx: ExecutionContext;
 
   beforeEach(() => {
     mockEnv = createMockEnv();
+    mockCtx = createMockContext();
 
     // Mock global fetch to return test index data
     global.fetch = vi.fn(async (input: RequestInfo | URL | string) => {
@@ -46,14 +49,14 @@ describe('GET /updates/feed.xml', () => {
 
   it('returns 200 for /updates/feed.xml', async () => {
     const request = new Request('http://localhost/updates/feed.xml');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
 
     expect(response.status).toBe(200);
   });
 
   it('returns XML content type', async () => {
     const request = new Request('http://localhost/updates/feed.xml');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
 
     const contentType = response.headers.get('Content-Type');
     expect(contentType).toContain('application/rss+xml');
@@ -61,7 +64,7 @@ describe('GET /updates/feed.xml', () => {
 
   it('returns valid RSS 2.0 XML structure', async () => {
     const request = new Request('http://localhost/updates/feed.xml');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const xml = await response.text();
 
     // Check for RSS 2.0 root element
@@ -73,7 +76,7 @@ describe('GET /updates/feed.xml', () => {
 
   it('includes feed metadata (title, description, link)', async () => {
     const request = new Request('http://localhost/updates/feed.xml');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const xml = await response.text();
 
     expect(xml).toContain('<title>');
@@ -83,7 +86,7 @@ describe('GET /updates/feed.xml', () => {
 
   it('includes all published updates as items', async () => {
     const request = new Request('http://localhost/updates/feed.xml');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const xml = await response.text();
 
     expect(xml).toContain('Second Published Update');
@@ -93,7 +96,7 @@ describe('GET /updates/feed.xml', () => {
 
   it('includes update metadata in each item (title, link, description, pubDate)', async () => {
     const request = new Request('http://localhost/updates/feed.xml');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const xml = await response.text();
 
     // Each item should have required RSS elements
@@ -108,7 +111,7 @@ describe('GET /updates/feed.xml', () => {
 
   it('uses absolute URLs for update links', async () => {
     const request = new Request('http://localhost/updates/feed.xml');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const xml = await response.text();
 
     // Should contain absolute URLs, not relative
@@ -118,7 +121,7 @@ describe('GET /updates/feed.xml', () => {
 
   it('formats pubDate as RFC 822', async () => {
     const request = new Request('http://localhost/updates/feed.xml');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const xml = await response.text();
 
     // RFC 822 date format includes day of week (e.g., "Sat, 15 Feb 2026")
@@ -157,7 +160,7 @@ describe('GET /updates/feed.xml', () => {
     });
 
     const request = new Request('http://localhost/updates/feed.xml');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const xml = await response.text();
 
     expect(xml).toContain('Published Update');
@@ -166,7 +169,7 @@ describe('GET /updates/feed.xml', () => {
 
   it('includes items in reverse chronological order', async () => {
     const request = new Request('http://localhost/updates/feed.xml');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const xml = await response.text();
 
     // Second update (Feb 16) should appear before first update (Feb 15)
@@ -193,7 +196,7 @@ describe('GET /updates/feed.xml', () => {
     });
 
     const request = new Request('http://localhost/updates/feed.xml');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const xml = await response.text();
 
     // Should still return valid RSS with no items

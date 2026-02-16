@@ -1,14 +1,41 @@
 // ABOUT: The main entry point for the Cloudflare Worker.
 // ABOUT: This file handles all incoming requests and routes them accordingly.
 
+import type { Env } from './types';
 import { handleUpdatesListing } from './routes/updatesListing';
 import { handleUpdatePage } from './routes/updatePage';
 import { handleRSSFeed } from './routes/rssFeed';
+import { handleAdminLogin } from './routes/adminLogin';
+import { handleSendMagicLink } from './routes/sendMagicLink';
+import { handleVerifyToken } from './routes/verifyToken';
+import { handleAdminDashboard } from './routes/adminDashboard';
 
 export default {
-  async fetch(request: Request, env: any, ctx: any): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
+    // Admin routes
+    // API endpoint: POST /admin/api/send-magic-link
+    if (url.pathname === '/admin/api/send-magic-link' && request.method === 'POST') {
+      return handleSendMagicLink(request, env);
+    }
+
+    // API endpoint: GET /admin/api/verify-token
+    if (url.pathname === '/admin/api/verify-token' && request.method === 'GET') {
+      return handleVerifyToken(request, env);
+    }
+
+    // Dashboard: GET /admin/dashboard (authenticated)
+    if (url.pathname === '/admin/dashboard' && request.method === 'GET') {
+      return handleAdminDashboard(request, env);
+    }
+
+    // Login page: GET /admin
+    if (url.pathname === '/admin' && request.method === 'GET') {
+      return handleAdminLogin(request);
+    }
+
+    // Public routes
     // Route: /updates/feed.xml RSS feed
     if (url.pathname === '/updates/feed.xml') {
       return handleRSSFeed(request);

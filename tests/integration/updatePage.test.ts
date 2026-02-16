@@ -4,13 +4,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import worker from '@/index';
 import { createMockEnv } from '../mocks/env';
+import { createMockContext } from '../mocks/context';
 import type { Update } from '@/types';
 
 describe('GET /updates/{slug}', () => {
   let mockEnv: any;
+  let mockCtx: ExecutionContext;
 
   beforeEach(() => {
     mockEnv = createMockEnv();
+    mockCtx = createMockContext();
 
     // Mock global fetch to return test update data
     global.fetch = vi.fn(async (input: RequestInfo | URL | string) => {
@@ -76,21 +79,21 @@ describe('GET /updates/{slug}', () => {
 
   it('returns 200 for published update', async () => {
     const request = new Request('http://localhost/updates/published-update-1');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
 
     expect(response.status).toBe(200);
   });
 
   it('returns HTML content type', async () => {
     const request = new Request('http://localhost/updates/published-update-1');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
 
     expect(response.headers.get('Content-Type')).toContain('text/html');
   });
 
   it('displays update title', async () => {
     const request = new Request('http://localhost/updates/published-update-1');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     expect(html).toContain('Test Published Update');
@@ -98,7 +101,7 @@ describe('GET /updates/{slug}', () => {
 
   it('displays author name', async () => {
     const request = new Request('http://localhost/updates/published-update-1');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     expect(html).toContain('Magnus Hultberg');
@@ -106,7 +109,7 @@ describe('GET /updates/{slug}', () => {
 
   it('renders markdown to HTML', async () => {
     const request = new Request('http://localhost/updates/published-update-1');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     // Check for HTML rendering of markdown
@@ -117,21 +120,21 @@ describe('GET /updates/{slug}', () => {
 
   it('returns 404 for draft update (public user)', async () => {
     const request = new Request('http://localhost/updates/draft-update');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
 
     expect(response.status).toBe(404);
   });
 
   it('returns 404 for non-existent update', async () => {
     const request = new Request('http://localhost/updates/does-not-exist');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
 
     expect(response.status).toBe(404);
   });
 
   it('displays published date', async () => {
     const request = new Request('http://localhost/updates/published-update-1');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     // Should contain formatted date (e.g., "15 February 2026")
@@ -164,7 +167,7 @@ describe('GET /updates/{slug}', () => {
     });
 
     const request = new Request('http://localhost/updates/edited-update');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     // Should show edited date indication
@@ -173,7 +176,7 @@ describe('GET /updates/{slug}', () => {
 
   it('includes link back to updates listing', async () => {
     const request = new Request('http://localhost/updates/published-update-1');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     expect(html).toContain('/updates');
@@ -204,7 +207,7 @@ describe('GET /updates/{slug}', () => {
     });
 
     const request = new Request('http://localhost/updates/html-test');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     // Should not contain dangerous script tags or javascript: links in content
@@ -236,7 +239,7 @@ describe('GET /updates/{slug}', () => {
     });
 
     const request = new Request('http://localhost/updates/xss-img-onerror');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     expect(html).not.toContain('onerror=alert(1)');
@@ -267,7 +270,7 @@ describe('GET /updates/{slug}', () => {
     });
 
     const request = new Request('http://localhost/updates/xss-case-variation');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     expect(html).not.toMatch(/javascript:/i);
@@ -297,7 +300,7 @@ describe('GET /updates/{slug}', () => {
     });
 
     const request = new Request('http://localhost/updates/xss-alt-protocols');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     expect(html).not.toMatch(/vbscript:/i);
@@ -328,7 +331,7 @@ describe('GET /updates/{slug}', () => {
     });
 
     const request = new Request('http://localhost/updates/xss-dangerous-tags');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     expect(html).not.toContain('<iframe');
@@ -360,7 +363,7 @@ describe('GET /updates/{slug}', () => {
     });
 
     const request = new Request('http://localhost/updates/xss-event-spacing');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     expect(html).not.toContain('alert(1)');
@@ -392,7 +395,7 @@ describe('GET /updates/{slug}', () => {
     });
 
     const request = new Request('http://localhost/updates/xss-style');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     // Check that the malicious style content was removed

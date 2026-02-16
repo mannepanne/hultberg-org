@@ -4,14 +4,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import worker from '@/index';
 import { createMockEnv } from '../mocks/env';
+import { createMockContext } from '../mocks/context';
 import type { UpdateIndex } from '@/types';
 
 describe('GET /updates', () => {
   let mockEnv: any;
   let mockFetch: any;
+  let mockCtx: ExecutionContext;
 
   beforeEach(() => {
     mockEnv = createMockEnv();
+    mockCtx = createMockContext();
 
     // Mock global fetch to return test fixtures
     mockFetch = vi.fn(async (input: RequestInfo | URL | string) => {
@@ -50,21 +53,21 @@ describe('GET /updates', () => {
 
   it('returns 200 for /updates', async () => {
     const request = new Request('http://localhost/updates');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
 
     expect(response.status).toBe(200);
   });
 
   it('returns HTML content type', async () => {
     const request = new Request('http://localhost/updates');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
 
     expect(response.headers.get('Content-Type')).toContain('text/html');
   });
 
   it('displays all published updates', async () => {
     const request = new Request('http://localhost/updates');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     expect(html).toContain('Second Published Update');
@@ -73,7 +76,7 @@ describe('GET /updates', () => {
 
   it('displays updates in reverse chronological order (newest first)', async () => {
     const request = new Request('http://localhost/updates');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     // Second update (Feb 16) should appear before first update (Feb 15)
@@ -87,7 +90,7 @@ describe('GET /updates', () => {
 
   it('displays excerpts for each update', async () => {
     const request = new Request('http://localhost/updates');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     expect(html).toContain('This update has no custom excerpt');
@@ -96,7 +99,7 @@ describe('GET /updates', () => {
 
   it('links each update title to individual page', async () => {
     const request = new Request('http://localhost/updates');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     expect(html).toContain('/updates/published-update-1');
@@ -135,7 +138,7 @@ describe('GET /updates', () => {
     global.fetch = mockFetch;
 
     const request = new Request('http://localhost/updates');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     expect(html).toContain('Published Update');
@@ -145,9 +148,11 @@ describe('GET /updates', () => {
 
 describe('GET /updates - Empty State', () => {
   let mockEnv: any;
+  let mockCtx: ExecutionContext;
 
   beforeEach(() => {
     mockEnv = createMockEnv();
+    mockCtx = createMockContext();
 
     // Mock fetch to return empty index
     global.fetch = vi.fn(async (input: RequestInfo | URL | string) => {
@@ -165,7 +170,7 @@ describe('GET /updates - Empty State', () => {
 
   it('displays empty state message when no updates exist', async () => {
     const request = new Request('http://localhost/updates');
-    const response = await worker.fetch(request, mockEnv, {});
+    const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
     expect(html).toContain('No updates yet');

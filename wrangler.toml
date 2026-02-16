@@ -10,20 +10,15 @@ enabled = true
 directory = "./public"
 
 # KV Namespaces for blog updates feature
-# Note: Commented out until Phase 3 (Authentication) when they're actually needed
-# To enable: Create namespaces and uncomment the bindings below
-# Commands:
-#   wrangler kv namespace create AUTH_KV
-#   wrangler kv namespace create AUTH_KV --preview
-#   wrangler kv namespace create RATE_LIMIT_KV
-#   wrangler kv namespace create RATE_LIMIT_KV --preview
+# AUTH_KV: Stores magic link tokens for authentication
+# RATE_LIMIT_KV: Stores rate limiting counters per IP address
 
-# [[kv_namespaces]]
-# binding = "AUTH_KV"
-# id = "YOUR_KV_NAMESPACE_ID"
-# preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID"
+[[kv_namespaces]]
+binding = "AUTH_KV"
+id = "df4d84d51edd4103b0657860ecfa8453"
+preview_id = "c3b1ac5eaae44f56b2aca621d87160ef"
 
-# [[kv_namespaces]]
-# binding = "RATE_LIMIT_KV"
-# id = "YOUR_KV_NAMESPACE_ID"
-# preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID"
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "67fa0308c3614932a44c29c64e48b1c8"
+preview_id = "ad999a0cd6394a6ba1ce76e6cebe4e0a"

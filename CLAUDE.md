@@ -186,13 +186,134 @@ Common secrets (check `src/types.ts` for the `Env` interface):
 
 ## Testing
 
-**Current State:** Test infrastructure is not yet implemented.
+### Philosophy: Tests as Development Guardrails
 
-**Future:** Tests should cover:
-- 100% code coverage
-- Unit tests for utility functions
-- Integration tests for Worker endpoints
-- TypeScript compilation validation
+**Critical Concept:** Tests in this project serve a dual purpose beyond traditional validation:
+
+1. **Validation** - Verify code works correctly (traditional testing)
+2. **Directional Context** - Guide AI agents on what to build and how to build it
+
+Tests act as **executable specifications** that provide guardrails for agent-driven development. When an AI agent makes changes, tests should:
+- Immediately signal if changes break existing functionality
+- Provide clear context about what each component should do
+- Make it obvious when a change is going in the wrong direction
+- Serve as living documentation that agents can read and understand
+
+**This approach is inspired by [OpenAI's Harness Engineering](https://openai.com/index/harness-engineering/)** and is essential for productive collaboration between human developers and AI agents.
+
+**For complete testing strategy, philosophy, and implementation details:** [testing-strategy-plan.md](./SPECIFICATIONS/testing-strategy-plan.md)
+
+### Test-Driven Development Workflow
+
+**For new features:**
+1. Write tests first that describe expected behavior
+2. Implement minimum code to make tests pass
+3. Refactor while keeping tests green
+4. Verify 100% coverage of new code
+
+**For bug fixes:**
+1. Write failing test that reproduces the bug
+2. Fix the bug to make test pass
+3. Add edge case tests to prevent regression
+
+### Running Tests
+
+```bash
+npm test                  # Run all tests once
+npm run test:watch        # Watch mode for development
+npm run test:coverage     # Generate coverage report
+npm run test:ui           # Interactive UI for test exploration
+npm run test:changed      # Run tests for changed files only
+```
+
+### Test Structure
+
+```
+tests/
+├── unit/          # Unit tests for individual functions
+├── integration/   # Integration tests for routes and APIs
+├── e2e/           # End-to-end workflow tests
+└── mocks/         # Reusable mock implementations
+```
+
+**Test files mirror source structure:**
+- `src/utils/slugGeneration.ts` → `tests/unit/slugGeneration.test.ts`
+- `src/routes/updatesList.ts` → `tests/integration/updatesList.test.ts`
+
+### Coverage Requirements
+
+**Target:** 100% code coverage (every line should have a clear purpose)
+
+**Enforced minimums:**
+- 95% lines, functions, statements
+- 90% branches
+
+**Why 100%?** Untested code is unclear about its purpose and constraints. If we can't test it, maybe we don't need it. Agents need complete context about all code paths.
+
+### Path Alias Configuration
+
+Tests and source code use the `@/` path alias for clean imports:
+
+```typescript
+// Instead of: import { Env } from '../../src/types';
+import { Env } from '@/types';
+```
+
+This improves readability and prevents brittle relative path imports.
+
+### Clear Naming: Essential for Agent Context
+
+**Critical principle:** Variable, parameter, function, and file names must communicate what they are about without needing additional documentation.
+
+**Good naming examples:**
+- `AUTH_KV` and `RATE_LIMIT_KV` (clear purpose) vs `KV1` and `KV2` (ambiguous)
+- `generateSlugFromTitle()` vs `generate()`
+- `isUserAuthenticated()` vs `check()`
+- `tests/unit/slugGeneration.test.ts` vs `tests/test1.ts`
+
+**Why this matters for agents:**
+- Agents rely heavily on names to understand context and intent
+- Descriptive names reduce the need for agents to read full implementations
+- Clear names make tests self-documenting
+- Good names prevent agents from making incorrect assumptions
+
+**General naming conventions:**
+- Use descriptive, meaningful names (not abbreviations unless standard)
+- Follow TypeScript conventions (camelCase for variables/functions, PascalCase for types)
+- Avoid temporal references (no "new", "improved", "old", etc.)
+- Test files: `{module}.test.ts` format
+
+### Test Principles
+
+1. **Tests define expected behavior** - Living specifications
+2. **Tests are self-contained** - Each test sets up and cleans up
+3. **Tests fail fast with clear messages** - Explain what/where/why
+4. **Tests are runnable in isolation** - No dependencies on other tests
+5. **100% coverage goal** - Every line has clear purpose
+
+### Mocking Strategy
+
+**Reusable mocks in `tests/mocks/`:**
+- `createMockKV()` - In-memory KVNamespace for testing
+- `createMockEnv()` - Test environment configuration with sensible defaults
+
+**What to mock:**
+- External services (GitHub API, Resend API, Cloudflare KV)
+- Static assets (file system reads)
+
+**What NOT to mock:**
+- Core logic (slug generation, markdown parsing, validation)
+- These are the primary value of our code
+
+### Pre-Commit Validation
+
+Before committing, run:
+```bash
+npm test              # Verify all tests pass
+npx tsc --noEmit      # Check TypeScript compilation
+```
+
+Future: Pre-commit hooks will automate this validation.
 
 ## Troubleshooting
 

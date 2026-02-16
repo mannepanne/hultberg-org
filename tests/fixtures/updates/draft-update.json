@@ -1,0 +1,11 @@
+{
+  "slug": "draft-update",
+  "title": "Draft Update",
+  "excerpt": "This is a draft",
+  "content": "# Draft Update\n\nThis update is still in draft status and should not be visible to public users.",
+  "status": "draft",
+  "publishedDate": "",
+  "editedDate": "2026-02-16T11:00:00Z",
+  "author": "Magnus Hultberg",
+  "images": []
+}

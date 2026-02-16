@@ -1,0 +1,11 @@
+{
+  "slug": "published-update-2",
+  "title": "Second Published Update",
+  "excerpt": "",
+  "content": "# Second Published Update\n\nThis update has no custom excerpt, so it should use the first 150 characters of content.",
+  "status": "published",
+  "publishedDate": "2026-02-16T10:00:00Z",
+  "editedDate": "2026-02-16T10:00:00Z",
+  "author": "Magnus Hultberg",
+  "images": ["/images/updates/published-update-2/image1.jpg"]
+}

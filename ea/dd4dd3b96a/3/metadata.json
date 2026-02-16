@@ -3,33 +3,36 @@
   "checkpoint_id": "eadd4dd3b96a",
   "session_id": "7219632c-9566-4c5e-8d69-77ec91affca3",
   "strategy": "manual-commit",
-  "created_at": "2026-02-16T10:43:20.158412Z",
-  "branch": "main",
-  "checkpoints_count": 2,
+  "created_at": "2026-02-16T10:52:48.947524Z",
+  "branch": "feature/testing-infrastructure",
+  "checkpoints_count": 1,
   "files_touched": [
-    "SPECIFICATIONS/blog-updates-implementation.md",
-    "SPECIFICATIONS/testing-strategy-plan.md",
-    "wrangler.toml"
+    ".gitignore",
+    "package.json",
+    "tests/mocks/env.ts",
+    "tests/mocks/kvNamespace.ts",
+    "tests/unit/types.test.ts",
+    "vitest.config.ts"
   ],
   "agent": "Claude Code",
-  "transcript_identifier_at_start": "8b2f6ac8-f827-427a-804f-be25f78a5d4a",
-  "checkpoint_transcript_start": 245,
-  "transcript_lines_at_start": 245,
+  "transcript_identifier_at_start": "04b8ddf1-ed3a-4f0d-a7b8-3f2c656a4239",
+  "checkpoint_transcript_start": 341,
+  "transcript_lines_at_start": 341,
   "token_usage": {
-    "input_tokens": 311,
-    "cache_creation_tokens": 65516,
-    "cache_read_tokens": 1941076,
-    "output_tokens": 6656,
-    "api_call_count": 28
+    "input_tokens": 319,
+    "cache_creation_tokens": 12433,
+    "cache_read_tokens": 2626761,
+    "output_tokens": 8893,
+    "api_call_count": 31
   },
   "initial_attribution": {
-    "calculated_at": "2026-02-16T10:43:19.847291Z",
-    "agent_lines": 15,
-    "human_added": 0,
-    "human_modified": 98,
-    "human_removed": 696,
-    "total_committed": 113,
-    "agent_percentage": 13.274336283185843
+    "calculated_at": "2026-02-16T10:52:48.601245Z",
+    "agent_lines": 0,
+    "human_added": 1033,
+    "human_modified": 1,
+    "human_removed": 0,
+    "total_committed": 1033,
+    "agent_percentage": 0
   },
   "transcript_path": ".claude/projects/-Users-magnus-Documents-Coding-MigrateHultbergOrg-hultberg-org/7219632c-9566-4c5e-8d69-77ec91affca3.jsonl"
 }

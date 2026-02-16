@@ -2,15 +2,18 @@
   "cli_version": "0.4.4",
   "checkpoint_id": "eadd4dd3b96a",
   "strategy": "manual-commit",
-  "branch": "main",
-  "checkpoints_count": 5,
+  "branch": "feature/testing-infrastructure",
+  "checkpoints_count": 4,
   "files_touched": [
     ".claude/skills/review-pr-team/SKILL.md",
     ".claude/skills/review-pr/SKILL.md",
+    ".gitignore",
     "CLAUDE.md",
-    "SPECIFICATIONS/blog-updates-implementation.md",
-    "SPECIFICATIONS/testing-strategy-plan.md",
-    "wrangler.toml"
+    "package.json",
+    "tests/mocks/env.ts",
+    "tests/mocks/kvNamespace.ts",
+    "tests/unit/types.test.ts",
+    "vitest.config.ts"
   ],
   "sessions": [
     {
@@ -43,10 +46,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 616,
-    "cache_creation_tokens": 342539,
-    "cache_read_tokens": 4066655,
-    "output_tokens": 19930,
-    "api_call_count": 63
+    "input_tokens": 624,
+    "cache_creation_tokens": 289456,
+    "cache_read_tokens": 4752340,
+    "output_tokens": 22167,
+    "api_call_count": 66
   }
 }

@@ -3,6 +3,7 @@
 **Related Documents:**
 - [blog-updates-security.md](./blog-updates-security.md)
 - [blog-updates-implementation.md](./blog-updates-implementation.md)
+- [CLAUDE.md](./CLAUDE.md)  for general project structure and developer onboarding notes
 
 ---
 

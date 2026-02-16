@@ -14,6 +14,8 @@ This is a personal website for Magnus Hultberg (hultberg.org) built as a Cloudfl
 - Static assets in the `public/` directory served through Cloudflare's asset handling
 - Historical content including "now" pages with timestamped updates
 
+We are currently implementing a blog feature in the site, see specification in [blog-style-updates-mvp.md](./SPECIFICATIONS/blog-style-updates-mvp.md) 
+
 ## Getting Started
 
 ### Prerequisites
@@ -102,7 +104,8 @@ hultberg-org/
 │   ├── types.ts              # TypeScript type definitions
 │   └── utils.ts              # Utility functions
 ├── SPECIFICATIONS/           # Feature specifications and requirements
-│   ├── *-mvp.md              # Feature MVP specifications
+│   ├── *-plan.md             # Feature / project specification core documents
+│   ├── *-mvp.md              # Feature / project MVP specifications
 │   ├── *-security.md         # Security requirements
 │   └── *-implementation.md   # Implementation plans
 ├── CLAUDE.md                 # This file - project documentation
@@ -160,7 +163,7 @@ This project has two PR review skills available:
 - **`/review-pr-team`** - Comprehensive multi-perspective review (~3-5 min)
   - Use for critical infrastructure changes
   - Security-sensitive features
-  - Major architectural decisions
+  - Major architectural decisions and initial review of new feature / project plans
 
 ### Deployment
 Deployment to Cloudflare Workers happens via:
@@ -185,6 +188,7 @@ Common secrets (check `src/types.ts` for the `Env` interface):
 **Current State:** Test infrastructure is not yet implemented.
 
 **Future:** Tests should cover:
+- 100% code coverage
 - Unit tests for utility functions
 - Integration tests for Worker endpoints
 - TypeScript compilation validation

@@ -40,23 +40,23 @@ Review the files changed, commit messages, and any existing comments.
 Before reviewing, gather context about the project and any related specifications:
 
 1. **Read project documentation** - Read `CLAUDE.md` in the repository root to understand:
-   - Project architecture and structure
-   - Development workflow and commands
-   - Key conventions and patterns
-   - Technology stack and dependencies
+  - Project architecture and structure
+  - Development workflow and commands
+  - Key conventions and patterns
+  - Technology stack and dependencies
 
 2. **Check PR description and commits** for references to specification files
 
 3. **Look in SPECIFICATIONS/** directory for relevant docs
 
 4. **Read specification files** to understand:
-   - Feature requirements and goals
-   - Security requirements (if security spec exists)
-   - Implementation approach (if implementation plan exists)
-   - Success criteria
+  - Feature requirements and goals
+  - Security requirements (if security spec exists)
+  - Implementation approach (if implementation plan exists)
+  - Success criteria
 
 **Common specification patterns:**
-- Main spec: `SPECIFICATIONS/*.md` or `SPECIFICATIONS/requirements.md`
+- Main spec: `SPECIFICATIONS/*-plan.md` or `SPECIFICATIONS/*-mvp.md` or `SPECIFICATIONS/requirements.md`
 - Security: `SPECIFICATIONS/*-security.md`
 - Implementation: `SPECIFICATIONS/*-implementation.md`
 
@@ -185,13 +185,13 @@ This will:
 
 ## When to Use Which Review
 
-**Use `/review-pr`:**
+**Use ****`/review-pr`****:**
 - Regular implementation PRs
 - Quick sanity checks
 - You want fast feedback
 - Standard feature work
 
-**Use `/review-pr-team`:**
+**Use ****`/review-pr-team`****:**
 - Critical infrastructure changes
 - Security-sensitive features
 - Major architectural decisions

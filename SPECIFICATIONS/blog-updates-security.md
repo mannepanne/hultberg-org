@@ -1,8 +1,10 @@
 # Blog Updates - Security Implementation
 
-**Related:** [Main Specification](./blog-style-updates-mvp.md) | [Implementation Plan](./blog-updates-implementation.md)
+**Related:** [blog-style-updates-mvp.md](./blog-style-updates-mvp.md) | [blog-updates-implementation.md](./blog-updates-implementation.md)
 
 This document details all security measures, authentication flows, and data protection strategies for the blog updates feature.
+See also:
+- [CLAUDE.md](./CLAUDE.md)  for general project structure and developer onboarding notes
 
 ---
 
@@ -232,7 +234,7 @@ Content-Security-Policy:
 - `frame-ancestors 'none'`: Prevent clickjacking
 - `base-uri 'self'`: Prevent base tag injection
 
-**Why `'unsafe-inline'` for admin?**
+**Why ****`'unsafe-inline'`**** for admin?**
 - EasyMDE requires inline scripts/styles
 - Admin is single authenticated user (Magnus), not public-facing
 - Trade-off: usability over strict CSP for admin interface

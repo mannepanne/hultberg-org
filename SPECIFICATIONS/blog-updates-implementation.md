@@ -1,8 +1,10 @@
 # Blog Updates - Implementation Plan
 
-**Related:** [Main Specification](./blog-style-updates-mvp.md) | [Security Details](./blog-updates-security.md)
+**Related:** [blog-style-updates-mvp.md](./blog-style-updates-mvp.md) | [blog-updates-security.md](./blog-updates-security.md)
 
 This document provides a detailed, phase-by-phase implementation plan for building the blog updates feature.
+See also :
+- [CLAUDE.md](./CLAUDE.md)  for general project structure and developer onboarding notes
 
 ---
 
@@ -781,7 +783,7 @@ console.log(`Generated index.json with ${updates.length} published updates`);
 ```
 
 **Key changes:**
-- **Filter for `status === 'published'` ONLY** - Prevents draft metadata leakage
+- **Filter for ****`status === 'published'`**** ONLY** - Prevents draft metadata leakage
 - Error handling for malformed JSON files
 - Safe sort handling for empty publishedDate values
 - Logging for visibility

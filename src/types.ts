@@ -4,17 +4,20 @@
 /**
  * Cloudflare Worker environment bindings
  * Contains secrets, KV namespaces, and other runtime configuration
+ * All properties are optional to support incremental implementation across phases
  */
 export interface Env {
-  // Authentication secrets
-  ADMIN_EMAIL: string;
-  JWT_SECRET: string;
-  RESEND_API_KEY: string;
-  GITHUB_TOKEN: string;
+  // Authentication secrets (Phase 3+)
+  ADMIN_EMAIL?: string;
+  JWT_SECRET?: string;
+  RESEND_API_KEY?: string;
 
-  // KV namespaces
-  AUTH_KV: KVNamespace; // Stores magic link tokens
-  RATE_LIMIT_KV: KVNamespace; // Stores rate limit data
+  // GitHub integration (Phase 6+)
+  GITHUB_TOKEN?: string;
+
+  // KV namespaces (Phase 3+)
+  AUTH_KV?: KVNamespace; // Stores magic link tokens
+  RATE_LIMIT_KV?: KVNamespace; // Stores rate limit data
 }
 
 /**

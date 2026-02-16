@@ -134,6 +134,7 @@ All TypeScript files should start with `// ABOUT:` comments explaining the file'
 ```
 
 ### Naming Conventions
+- **Always provide context through naming** - Variable and parameter names should supply relevant context without needing additional documentation. Names like `AUTH_KV` and `RATE_LIMIT_KV` are preferable to generic names like `KV1` or `storage`.
 - Use descriptive, meaningful names for variables and functions
 - Follow TypeScript naming conventions (camelCase for variables/functions, PascalCase for types/interfaces)
 - Avoid temporal references in names (no "new", "improved", "old", etc.)

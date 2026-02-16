@@ -10,15 +10,20 @@ enabled = true
 directory = "./public"
 
 # KV Namespaces for blog updates feature
-# Note: KV namespace IDs must be created via: wrangler kv namespace create <NAMESPACE_NAME>
-# Then update the id values below with the actual namespace IDs
+# Note: Commented out until Phase 3 (Authentication) when they're actually needed
+# To enable: Create namespaces and uncomment the bindings below
+# Commands:
+#   wrangler kv namespace create AUTH_KV
+#   wrangler kv namespace create AUTH_KV --preview
+#   wrangler kv namespace create RATE_LIMIT_KV
+#   wrangler kv namespace create RATE_LIMIT_KV --preview
 
-[[kv_namespaces]]
-binding = "AUTH_KV"
-id = "TODO_CREATE_NAMESPACE" # Run: wrangler kv namespace create AUTH_KV
-preview_id = "TODO_CREATE_NAMESPACE" # Run: wrangler kv namespace create AUTH_KV --preview
+# [[kv_namespaces]]
+# binding = "AUTH_KV"
+# id = "YOUR_KV_NAMESPACE_ID"
+# preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID"
 
-[[kv_namespaces]]
-binding = "RATE_LIMIT_KV"
-id = "TODO_CREATE_NAMESPACE" # Run: wrangler kv namespace create RATE_LIMIT_KV
-preview_id = "TODO_CREATE_NAMESPACE" # Run: wrangler kv namespace create RATE_LIMIT_KV --preview
+# [[kv_namespaces]]
+# binding = "RATE_LIMIT_KV"
+# id = "YOUR_KV_NAMESPACE_ID"
+# preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID"

@@ -1,0 +1,43 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "44d4b1707a45",
+  "strategy": "manual-commit",
+  "branch": "feature/phase3-authentication",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".claude/settings.local.json",
+    ".dev.vars.example",
+    ".gitignore",
+    "CLAUDE.md",
+    "src/auth.ts",
+    "src/email.ts",
+    "src/index.ts",
+    "src/routes/adminDashboard.ts",
+    "src/routes/adminLogin.ts",
+    "src/routes/sendMagicLink.ts",
+    "src/routes/verifyToken.ts",
+    "tests/integration/adminAuth.test.ts",
+    "tests/integration/rssFeed.test.ts",
+    "tests/integration/updatePage.test.ts",
+    "tests/integration/updatesListing.test.ts",
+    "tests/mocks/context.ts",
+    "tests/unit/auth.test.ts",
+    "wrangler.toml"
+  ],
+  "sessions": [
+    {
+      "metadata": "/44/d4b1707a45/0/metadata.json",
+      "transcript": "/44/d4b1707a45/0/full.jsonl",
+      "context": "/44/d4b1707a45/0/context.md",
+      "content_hash": "/44/d4b1707a45/0/content_hash.txt",
+      "prompt": "/44/d4b1707a45/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 743,
+    "cache_creation_tokens": 423352,
+    "cache_read_tokens": 9938792,
+    "output_tokens": 37020,
+    "api_call_count": 85
+  }
+}

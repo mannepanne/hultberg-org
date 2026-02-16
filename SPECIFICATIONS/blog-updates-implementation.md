@@ -10,8 +10,8 @@ See also :
 
 ## Implementation Overview
 
-**Total Phases:** 9
-**Total Steps:** 39
+**Total Phases:** 10 (added Phase 1.5: Testing Infrastructure)
+**Total Steps:** 44 (5 new testing setup steps)
 **Estimated Complexity:** Medium (MVP scope)
 
 **Key Dependencies:**
@@ -227,6 +227,228 @@ function sanitizeHtml(html: string): string {
 **Decision point:** Document which libraries work and update dependencies in main spec if needed.
 
 **Why:** Discovering incompatibilities late in development is costly. Verify now, adjust if needed.
+
+---
+
+## Phase 1.5: Testing Infrastructure
+
+**Goal:** Establish testing framework and guardrails for agent-driven development
+
+**Related Documentation:** [testing-strategy-plan.md](./testing-strategy-plan.md)
+
+**Why this phase:** Tests act as guardrails that guide development and catch issues early. Setting up testing infrastructure now ensures all subsequent phases are built with testability in mind.
+
+### Step T1: Install Testing Dependencies
+
+Install Vitest and coverage tools:
+
+```bash
+npm install -D vitest @vitest/coverage-v8 @cloudflare/workers-types
+```
+
+**Why:** Vitest is fast, modern, and works well with TypeScript and Cloudflare Workers (unlike Jest)
+
+### Step T2: Create Vitest Configuration
+
+Create `vitest.config.ts` in project root:
+
+```typescript
+import { defineConfig } from 'vitest/config';
+import path from 'path';
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        '**/*.config.ts',
+        '**/*.d.ts',
+        'tests/**',
+      ],
+      all: true,
+      lines: 95,
+      functions: 95,
+      branches: 90,
+      statements: 95,
+    },
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+});
+```
+
+**Why:** Configures coverage thresholds (95%+ target) and path aliases for clean imports
+
+### Step T3: Set Up Test Directory Structure
+
+Create test directory structure:
+
+```bash
+mkdir -p tests/unit
+mkdir -p tests/integration
+mkdir -p tests/e2e
+mkdir -p tests/mocks
+```
+
+**Why:** Mirrors the testing strategy organization (unit, integration, E2E)
+
+### Step T4: Create Reusable Test Mocks
+
+Create `tests/mocks/kvNamespace.ts`:
+
+```typescript
+// ABOUT: Mock KVNamespace for testing
+// ABOUT: Provides in-memory implementation of Cloudflare KV operations
+
+export function createMockKV(): KVNamespace {
+  const store = new Map<string, string>();
+
+  return {
+    get: async (key: string) => store.get(key) ?? null,
+    put: async (key: string, value: string, options?: any) => {
+      store.set(key, value);
+    },
+    delete: async (key: string) => {
+      store.delete(key);
+    },
+    list: async (options?: any) => ({
+      keys: Array.from(store.keys()).map(name => ({ name })),
+      list_complete: true,
+      cursor: '',
+    }),
+  } as unknown as KVNamespace;
+}
+```
+
+Create `tests/mocks/env.ts`:
+
+```typescript
+// ABOUT: Mock Env for testing
+// ABOUT: Provides test environment configuration
+
+import { Env } from '@/types';
+import { createMockKV } from './kvNamespace';
+
+export function createMockEnv(overrides?: Partial<Env>): Env {
+  return {
+    ADMIN_EMAIL: 'test@example.com',
+    JWT_SECRET: 'test-secret-key',
+    RESEND_API_KEY: 'test-resend-key',
+    GITHUB_TOKEN: 'test-github-token',
+    AUTH_KV: createMockKV(),
+    RATE_LIMIT_KV: createMockKV(),
+    ...overrides,
+  };
+}
+```
+
+**Why:** Reusable mocks for KV and Env used across all tests
+
+### Step T5: Write First Test Suite
+
+Create `tests/unit/types.test.ts`:
+
+```typescript
+// ABOUT: Tests for TypeScript type definitions
+// ABOUT: Validates data structure compliance
+
+import { describe, it, expect } from 'vitest';
+import type { Update, UpdateStatus, UpdateIndexEntry, UpdateIndex } from '@/types';
+
+describe('Type Definitions', () => {
+  describe('UpdateStatus', () => {
+    it('allows valid status values', () => {
+      const validStatuses: UpdateStatus[] = ['draft', 'published', 'unpublished'];
+
+      validStatuses.forEach(status => {
+        const update: Partial<Update> = { status };
+        expect(update.status).toBe(status);
+      });
+    });
+  });
+
+  describe('Update interface', () => {
+    it('enforces required fields', () => {
+      const validUpdate: Update = {
+        slug: 'test-slug',
+        title: 'Test Title',
+        excerpt: '',
+        content: '# Test Content',
+        status: 'draft',
+        publishedDate: '',
+        editedDate: '2026-02-16T10:00:00Z',
+        author: 'Magnus Hultberg',
+        images: [],
+      };
+
+      expect(validUpdate.slug).toBe('test-slug');
+      expect(validUpdate.images).toEqual([]);
+    });
+  });
+
+  describe('UpdateIndex interface', () => {
+    it('contains array of update entries', () => {
+      const index: UpdateIndex = {
+        updates: [
+          {
+            slug: 'test',
+            title: 'Test',
+            excerpt: 'Test excerpt',
+            publishedDate: '2026-02-16T10:00:00Z',
+            status: 'published',
+          },
+        ],
+      };
+
+      expect(index.updates).toHaveLength(1);
+      expect(index.updates[0].status).toBe('published');
+    });
+  });
+});
+```
+
+**Why:** First test validates our foundational type definitions
+
+### Step T6: Add NPM Test Scripts
+
+Update `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test:changed": "vitest related"
+  }
+}
+```
+
+**Why:** Convenient commands for different testing workflows
+
+### Step T7: Verify Test Infrastructure
+
+Run tests to verify setup:
+
+```bash
+npm test
+```
+
+Expected output:
+- All tests pass ✓
+- Coverage report generated
+- No configuration errors
+
+**Why:** Confirms testing infrastructure is working before continuing development
 
 ---
 

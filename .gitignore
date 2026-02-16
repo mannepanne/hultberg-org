@@ -6,3 +6,6 @@ package-lock.json
 # Local development directories
 .entire/
 nimbalyst-local/
+
+# Test coverage
+coverage/

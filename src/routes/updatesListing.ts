@@ -2,6 +2,7 @@
 // ABOUT: Displays published updates in reverse chronological order
 
 import type { UpdateIndex } from '@/types';
+import { escapeHtml } from '@/utils';
 
 /**
  * Handles GET requests to /updates
@@ -34,6 +35,7 @@ export async function handleUpdatesListing(request: Request): Promise<Response> 
       status: 200,
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
+        'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self';",
       },
     });
   } catch (error) {
@@ -111,16 +113,4 @@ function renderUpdatesListingHTML(updates: UpdateIndex['updates']): string {
     </body>
 </html>
 `;
-}
-
-/**
- * Escape HTML special characters to prevent XSS
- */
-function escapeHtml(unsafe: string): string {
-  return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }

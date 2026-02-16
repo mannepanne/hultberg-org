@@ -41,41 +41,64 @@ Review the files changed, commit messages, and any existing comments.
 
 ---
 
-### Step 2: Gather Project and Specification Context
+### Step 2: Intelligently Gather Relevant Context
 
-Before reviewing, gather context about the project and any related specifications:
+Use this systematic approach to gather just enough context for a thorough review:
 
-1. **Read project documentation** - Read `CLAUDE.md` in the repository root to understand:
-  - Project architecture and structure
-  - Development workflow and commands
-  - Key conventions and patterns
-  - Technology stack and dependencies
+**A. Always Read Foundation (MANDATORY):**
 
-2. **Check PR description and commits** for references to specification files
+1. Read `CLAUDE.md` in repository root for:
+   - Project architecture and structure
+   - Development workflow and conventions
+   - Key patterns and technology stack
+   - Testing philosophy
 
-3. **Look in SPECIFICATIONS/** directory for relevant docs
+**B. Extract PR Keywords:**
 
-4. **Read specification files** to understand:
-  - Feature requirements and goals
-  - Security requirements (if security spec exists)
-  - Implementation approach (if implementation plan exists)
-  - Success criteria
+From PR title, description, and changed file paths, extract relevant keywords:
+- Feature names (blog, auth, admin, api, etc.)
+- Component types (routes, utils, components, etc.)
+- Phase numbers (phase-1, phase-2, etc.)
+- Technical areas (security, testing, deployment, etc.)
 
-**Common specification patterns:**
-- Main spec: `SPECIFICATIONS/*-plan.md` or `SPECIFICATIONS/*-mvp.md` or `SPECIFICATIONS/requirements.md`
-- Security: `SPECIFICATIONS/*-security.md`
-- Implementation: `SPECIFICATIONS/*-implementation.md`
+Examples:
+- PR title "Phase 2: Public pages" → keywords: "public", "pages", "phase", "2"
+- Changed files include `src/routes/updatesList.ts` → keywords: "updates", "routes", "list"
+- PR mentions "authentication" → keywords: "auth", "login", "security"
 
-**Create a context summary** including:
-- Project architecture (from CLAUDE.md)
-- What is this PR supposed to achieve?
-- What are the key requirements?
-- What security measures were specified?
-- What architectural decisions were made?
+**C. Discover Relevant Specifications:**
+
+1. List files in `SPECIFICATIONS/` directory using Bash or Glob
+2. Match spec filenames against PR keywords
+3. Read specifications that match, prioritizing:
+   - Files matching feature names (e.g., `*blog*.md` if PR involves blog)
+   - `*-implementation.md` if PR implements a feature
+   - `*-security.md` if security-related changes detected
+   - `testing-*.md` if tests are included or test files changed
+   - `*-mvp.md` or `*-plan.md` for main feature specs
+
+**D. Follow Relevant Links (Selective):**
+
+- In each spec read, check "Related Documents" sections
+- Follow links to specs that match PR keywords
+- Don't read every linked doc - be selective based on relevance
+- Example: If spec links to testing strategy and PR includes tests, read it
+
+**E. Create Context Summary:**
+
+Synthesize gathered information into a structured summary including:
+- Project architecture and conventions (from CLAUDE.md)
+- What this PR should achieve (from specs and PR description)
+- Key requirements and success criteria
+- Security requirements (if applicable)
+- Testing expectations (if applicable)
+- Architectural decisions made
 
 This context will be provided to each reviewer so they can evaluate whether the PR matches the project architecture and intended design.
 
-**If no specifications found:** Note this and reviewers will evaluate based on project architecture (from CLAUDE.md) and best practices.
+**If no specifications found:** Note this and reviewers will evaluate based on project architecture (from CLAUDE.md) and general best practices.
+
+**Note:** This approach is future-proof - it discovers relevant context for any PR without hard-coding specific files.
 
 ---
 

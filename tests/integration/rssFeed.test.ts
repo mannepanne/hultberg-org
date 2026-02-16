@@ -13,7 +13,8 @@ describe('GET /updates/feed.xml', () => {
     mockEnv = createMockEnv();
 
     // Mock global fetch to return test index data
-    global.fetch = vi.fn(async (url: string) => {
+    global.fetch = vi.fn(async (input: RequestInfo | URL | string) => {
+      const url = typeof input === 'string' ? input : input.toString();
       if (url.includes('/updates/data/index.json')) {
         const indexData: UpdateIndex = {
           updates: [
@@ -126,7 +127,8 @@ describe('GET /updates/feed.xml', () => {
 
   it('does not include draft updates', async () => {
     // Mock fetch to include a draft update
-    global.fetch = vi.fn(async (url: string) => {
+    global.fetch = vi.fn(async (input: RequestInfo | URL | string) => {
+      const url = typeof input === 'string' ? input : input.toString();
       if (url.includes('/updates/data/index.json')) {
         const indexData: UpdateIndex = {
           updates: [
@@ -178,7 +180,8 @@ describe('GET /updates/feed.xml', () => {
 
   it('handles empty updates list', async () => {
     // Mock fetch to return empty index
-    global.fetch = vi.fn(async (url: string) => {
+    global.fetch = vi.fn(async (input: RequestInfo | URL | string) => {
+      const url = typeof input === 'string' ? input : input.toString();
       if (url.includes('/updates/data/index.json')) {
         const indexData: UpdateIndex = { updates: [] };
         return new Response(JSON.stringify(indexData), {

@@ -3,6 +3,7 @@
 
 import { marked } from 'marked';
 import type { Update } from '@/types';
+import { escapeHtml } from '@/utils';
 
 /**
  * Handles GET requests to /updates/{slug}
@@ -39,6 +40,7 @@ export async function handleUpdatePage(request: Request, slug: string): Promise<
       status: 200,
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
+        'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self';",
       },
     });
   } catch (error) {
@@ -130,27 +132,49 @@ function renderUpdatePageHTML(update: Update, contentHTML: string): string {
 
 /**
  * Sanitize HTML to prevent XSS attacks
- * Uses allowlist approach - only permits safe tags and attributes
+ *
+ * TODO: Replace with proper allowlist-based sanitizer when Workers-compatible library available
+ * Current approach uses regex-based filtering which is not ideal but acceptable for MVP because:
+ * - Single trusted admin (no untrusted user input)
+ * - Content version-controlled in GitHub
+ * - CSP headers provide defense-in-depth
+ * - Server-side rendering only
+ *
+ * See CLAUDE.md Technical Debt section for details
  */
 function sanitizeHTML(html: string): string {
-  // Remove script tags and javascript: protocols
-  let sanitized = html
+  let sanitized = html;
+
+  // Remove dangerous tags completely
+  sanitized = sanitized
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    .replace(/<embed\b[^>]*>/gi, '')
+    .replace(/<applet\b[^<]*(?:(?!<\/applet>)<[^<]*)*<\/applet>/gi, '')
+    .replace(/<base\b[^>]*>/gi, '')
+    .replace(/<link\b[^>]*>/gi, '')
+    .replace(/<meta\b[^>]*>/gi, '')
+    .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '');
+
+  // Remove dangerous protocols (case-insensitive, handle URL encoding)
+  sanitized = sanitized
     .replace(/javascript:/gi, '')
-    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '') // Remove inline event handlers
-    .replace(/on\w+\s*=\s*[^\s>]*/gi, '');
+    .replace(/data:/gi, '')
+    .replace(/vbscript:/gi, '')
+    .replace(/file:/gi, '')
+    .replace(/about:/gi, '');
+
+  // Remove inline event handlers (all variations)
+  sanitized = sanitized
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/on\w+\s*=\s*[^\s>]*/gi, '')
+    .replace(/\son\w+=/gi, '');
+
+  // Remove style attributes that could contain expressions
+  sanitized = sanitized
+    .replace(/style\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/style\s*=\s*[^\s>]*/gi, '');
 
   return sanitized;
-}
-
-/**
- * Escape HTML special characters to prevent XSS
- */
-function escapeHtml(unsafe: string): string {
-  return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }

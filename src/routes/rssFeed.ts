@@ -34,6 +34,7 @@ export async function handleRSSFeed(request: Request): Promise<Response> {
       status: 200,
       headers: {
         'Content-Type': 'application/rss+xml; charset=utf-8',
+        'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self';",
       },
     });
   } catch (error) {

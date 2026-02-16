@@ -2,7 +2,7 @@
   "cli_version": "0.4.4",
   "checkpoint_id": "eadd4dd3b96a",
   "strategy": "manual-commit",
-  "branch": "main",
+  "branch": "feature/phase2-public-pages",
   "checkpoints_count": 5,
   "files_touched": [
     ".claude/skills/review-pr-team/SKILL.md",
@@ -10,10 +10,20 @@
     ".gitignore",
     "CLAUDE.md",
     "package.json",
+    "src/index.ts",
+    "src/routes/rssFeed.ts",
+    "src/routes/updatePage.ts",
+    "src/routes/updatesListing.ts",
+    "tests/fixtures/updates/draft-update.json",
+    "tests/fixtures/updates/index.json",
+    "tests/fixtures/updates/published-update-1.json",
+    "tests/fixtures/updates/published-update-2.json",
+    "tests/integration/rssFeed.test.ts",
+    "tests/integration/updatePage.test.ts",
+    "tests/integration/updatesListing.test.ts",
     "tests/mocks/env.ts",
     "tests/mocks/kvNamespace.ts",
     "tests/unit/types.test.ts",
-    "tsconfig.json",
     "vitest.config.ts"
   ],
   "sessions": [
@@ -54,10 +64,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 779,
-    "cache_creation_tokens": 379214,
-    "cache_read_tokens": 5627109,
-    "output_tokens": 30501,
-    "api_call_count": 83
+    "input_tokens": 2651,
+    "cache_creation_tokens": 385201,
+    "cache_read_tokens": 7497602,
+    "output_tokens": 38923,
+    "api_call_count": 97
   }
 }

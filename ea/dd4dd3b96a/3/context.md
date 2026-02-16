@@ -102,3 +102,33 @@ For #2 go with the dual naming for clarity. Always, always, always name variable
 
 Fix issues, commit, and then we can merge this PR and move on to the testing discussion.
 
+### Prompt 16
+
+Looks good, go ahead and merge and tidy up.
+
+### Prompt 17
+
+Yes, let's make a doc. But call it "testing-strategy-plan.md". Also update the implementation plan adding phase 1.5.
+
+Key for me is for the testing strategy to act as guardrails for agent driven development. It needs to not just check the output, but also make sure it acts as directional context for when changing things.
+
+There's some writing about this in this article I read the other day, it's really interesting. A much more advanced use case than what we do, but it's inspirational:
+
+https://o...
+
+### Prompt 18
+
+Before we continue, I just noticed that the action that runs for deploying the site every time we push to main failed. It failed on the step to deploy to CloudFlare Workers with this output:
+
+16s
+Run cloudflare/wrangler-action@v3
+🔍 Checking for existing Wrangler installation
+📥 Installing Wrangler
+🚀 Running Wrangler Commands
+Error: The process '/opt/hostedtoolcache/node/18.20.8/x64/bin/npx' failed with exit code 1
+Error: 🚨 Action failed
+
+### Prompt 19
+
+Yes, go with option 2.
+

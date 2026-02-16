@@ -2,14 +2,15 @@
   "cli_version": "0.4.4",
   "checkpoint_id": "eadd4dd3b96a",
   "strategy": "manual-commit",
-  "branch": "feature/blog-foundation",
+  "branch": "main",
   "checkpoints_count": 5,
   "files_touched": [
     ".claude/skills/review-pr-team/SKILL.md",
     ".claude/skills/review-pr/SKILL.md",
-    ".claude/skills/review-pr/skill.md",
     "CLAUDE.md",
-    "src/types.ts"
+    "SPECIFICATIONS/blog-updates-implementation.md",
+    "SPECIFICATIONS/testing-strategy-plan.md",
+    "wrangler.toml"
   ],
   "sessions": [
     {
@@ -42,10 +43,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 672,
-    "cache_creation_tokens": 329621,
-    "cache_read_tokens": 3761091,
-    "output_tokens": 21728,
-    "api_call_count": 69
+    "input_tokens": 616,
+    "cache_creation_tokens": 342539,
+    "cache_read_tokens": 4066655,
+    "output_tokens": 19930,
+    "api_call_count": 63
   }
 }

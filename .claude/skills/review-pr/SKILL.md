@@ -5,7 +5,6 @@ disable-model-invocation: true
 user-invocable: true
 argument-hint:
   - PR-number
-model: sonnet
 ---
 # Full-Stack Developer PR Review
 
@@ -185,13 +184,13 @@ This will:
 
 ## When to Use Which Review
 
-**Use ****`/review-pr`****:**
+**Use \****`/review-pr`**\*\*:**
 - Regular implementation PRs
 - Quick sanity checks
 - You want fast feedback
 - Standard feature work
 
-**Use ****`/review-pr-team`****:**
+**Use \****`/review-pr-team`**\*\*:**
 - Critical infrastructure changes
 - Security-sensitive features
 - Major architectural decisions

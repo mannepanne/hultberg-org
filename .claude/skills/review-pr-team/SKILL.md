@@ -5,7 +5,6 @@ disable-model-invocation: true
 user-invocable: true
 argument-hint:
   - PR-number
-model: sonnet
 ---
 # Multi-Perspective PR Review
 

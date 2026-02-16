@@ -1,8 +1,32 @@
 // ABOUT: The main entry point for the Cloudflare Worker.
 // ABOUT: This file handles all incoming requests and routes them accordingly.
 
+import { handleUpdatesListing } from './routes/updatesListing';
+import { handleUpdatePage } from './routes/updatePage';
+import { handleRSSFeed } from './routes/rssFeed';
+
 export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {
+    const url = new URL(request.url);
+
+    // Route: /updates/feed.xml RSS feed
+    if (url.pathname === '/updates/feed.xml') {
+      return handleRSSFeed(request);
+    }
+
+    // Route: /updates listing page
+    if (url.pathname === '/updates') {
+      return handleUpdatesListing(request);
+    }
+
+    // Route: /updates/{slug} individual page
+    const updateSlugMatch = url.pathname.match(/^\/updates\/([a-z0-9-]+)$/);
+    if (updateSlugMatch) {
+      const slug = updateSlugMatch[1];
+      return handleUpdatePage(request, slug);
+    }
+
+    // Default 404 handler for unmatched routes
     const notFoundHtml = `<!doctype html>
 <html class="no-js" lang="en-GB">
     <head>
@@ -40,8 +64,7 @@ export default {
         <div>
             <img src="/errors/bazinga.gif" alt="bazinga!" /><br /><br />
             sorry, the page or file you are looking for isn't here...<br />
-            <a href="javascript:history.back()">go back from whence you came</a
-            >, or tell me what a klutz I am by messaging me on
+            <a href="/" onclick="history.back(); return false;">go back from whence you came</a>, or tell me what a klutz I am by messaging me on
             <a href="https://uk.linkedin.com/in/hultberg">LinkedIn</a>
         </div>
     </body>

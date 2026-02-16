@@ -1,0 +1,11 @@
+{
+  "slug": "published-update-1",
+  "title": "First Published Update",
+  "excerpt": "This is the first published update",
+  "content": "# First Published Update\n\nThis is the **first** published update with some content.",
+  "status": "published",
+  "publishedDate": "2026-02-15T10:00:00Z",
+  "editedDate": "2026-02-15T10:00:00Z",
+  "author": "Magnus Hultberg",
+  "images": []
+}

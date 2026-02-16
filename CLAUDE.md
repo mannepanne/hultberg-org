@@ -352,3 +352,60 @@ wrangler login
 - Check TypeScript compilation with `npx tsc --noEmit`
 - Ensure all dependencies are in `package.json`
 - Verify `wrangler.toml` configuration is valid
+
+## Technical Debt
+
+This section tracks known technical debt and decisions to accept certain risks for MVP, with plans for future improvement.
+
+### HTML Sanitization (XSS Prevention)
+
+**Status:** Accepted risk for MVP (February 2026)
+
+**Current Implementation:**
+- Regex-based HTML sanitization in `src/routes/updatePage.ts`
+- Removes dangerous tags (`script`, `iframe`, `object`, `embed`, etc.)
+- Removes dangerous protocols (`javascript:`, `data:`, `vbscript:`, etc.)
+- Removes inline event handlers and style attributes
+- Located in `sanitizeHTML()` function with TODO comment
+
+**Known Limitations:**
+- Regex-based approach can potentially be bypassed with edge cases
+- Does not implement proper allowlist-based tag/attribute filtering
+- Industry best practice would be allowlist parser, not regex filtering
+
+**Why This Is Acceptable for MVP:**
+
+1. **Threat Model:** Single trusted admin (Magnus) - no untrusted user input
+2. **Defense-in-Depth:**
+   - Content Security Policy (CSP) headers block XSS execution even if sanitization fails
+   - Server-side rendering only (no client-side markdown parsing)
+   - HTML escaping for all metadata (title, author, excerpt)
+   - Content version-controlled in GitHub (easy rollback)
+3. **Risk Assessment:**
+   - Main risk: Admin accidentally pastes malicious content into own blog
+   - Secondary risk: GitHub account compromise (but then bigger problems exist)
+   - CSP headers provide strong secondary defense
+
+**Future Improvement Plan:**
+
+Monitor these libraries for Cloudflare Workers compatibility:
+- `isomorphic-dompurify` - Currently fails in Workers (as of Dec 2025)
+- `sanitize-html` - Requires node::process, not available in Workers
+- `worker-tools/html` - Templating library with built-in sanitization (requires rewrite)
+
+**Decision Made:** February 2026 by Magnus (project owner)
+
+**When to Revisit:**
+- Before adding multi-user admin access
+- Before accepting any form of public user input (comments, submissions)
+- When Workers-compatible sanitization library becomes available
+- If CSP headers are removed for any reason
+
+**Testing:**
+Comprehensive XSS test suite in `tests/integration/updatePage.test.ts` covering:
+- Script tags and event handlers
+- Case variation attacks
+- Alternative protocols (vbscript:, data:)
+- Dangerous tags (iframe, object, embed)
+- Event handlers with unusual spacing
+- Style attribute expressions

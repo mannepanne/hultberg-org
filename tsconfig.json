@@ -10,7 +10,9 @@
     "sourceMap": true,
     "outDir": "dist",
     "types": [
-      "@cloudflare/workers-types"
+      "@cloudflare/workers-types",
+      "vitest/globals",
+      "node"
     ],
     "baseUrl": ".",
     "paths": {

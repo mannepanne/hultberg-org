@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "e91a320c1781",
+  "session_id": "447b8583-8795-4f3b-ac35-6f108e4d2398",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-16T14:27:38.835079Z",
+  "branch": "feature/phase2-public-pages",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".claude/skills/review-pr-team/skill.md",
+    ".claude/skills/review-pr/skill.md"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "ab5a62c1-1d47-4b2b-937d-52e99daf432b",
+  "token_usage": {
+    "input_tokens": 81,
+    "cache_creation_tokens": 106068,
+    "cache_read_tokens": 475626,
+    "output_tokens": 6220,
+    "api_call_count": 9
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-16T14:27:38.572419Z",
+    "agent_lines": 0,
+    "human_added": 440,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 440,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-magnus-Documents-Coding-MigrateHultbergOrg-hultberg-org/447b8583-8795-4f3b-ac35-6f108e4d2398.jsonl"
+}

@@ -2,8 +2,8 @@
   "cli_version": "0.4.4",
   "checkpoint_id": "eadd4dd3b96a",
   "strategy": "manual-commit",
-  "branch": "feature/testing-infrastructure",
-  "checkpoints_count": 4,
+  "branch": "main",
+  "checkpoints_count": 5,
   "files_touched": [
     ".claude/skills/review-pr-team/SKILL.md",
     ".claude/skills/review-pr/SKILL.md",
@@ -13,6 +13,7 @@
     "tests/mocks/env.ts",
     "tests/mocks/kvNamespace.ts",
     "tests/unit/types.test.ts",
+    "tsconfig.json",
     "vitest.config.ts"
   ],
   "sessions": [
@@ -43,13 +44,20 @@
       "context": "/ea/dd4dd3b96a/3/context.md",
       "content_hash": "/ea/dd4dd3b96a/3/content_hash.txt",
       "prompt": "/ea/dd4dd3b96a/3/prompt.txt"
+    },
+    {
+      "metadata": "/ea/dd4dd3b96a/4/metadata.json",
+      "transcript": "/ea/dd4dd3b96a/4/full.jsonl",
+      "context": "/ea/dd4dd3b96a/4/context.md",
+      "content_hash": "/ea/dd4dd3b96a/4/content_hash.txt",
+      "prompt": "/ea/dd4dd3b96a/4/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 624,
-    "cache_creation_tokens": 289456,
-    "cache_read_tokens": 4752340,
-    "output_tokens": 22167,
-    "api_call_count": 66
+    "input_tokens": 779,
+    "cache_creation_tokens": 379214,
+    "cache_read_tokens": 5627109,
+    "output_tokens": 30501,
+    "api_call_count": 83
   }
 }

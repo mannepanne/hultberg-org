@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "3b98b40f27fa",
+  "strategy": "manual-commit",
+  "branch": "feature/phase3-authentication",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".claude/settings.local.json",
+    "SPECIFICATIONS/technical-debt.md",
+    "src/auth.ts",
+    "src/routes/sendMagicLink.ts",
+    "tests/integration/adminAuth.test.ts",
+    "tests/unit/auth.test.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/3b/98b40f27fa/0/metadata.json",
+      "transcript": "/3b/98b40f27fa/0/full.jsonl",
+      "context": "/3b/98b40f27fa/0/context.md",
+      "content_hash": "/3b/98b40f27fa/0/content_hash.txt",
+      "prompt": "/3b/98b40f27fa/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 94,
+    "cache_creation_tokens": 105406,
+    "cache_read_tokens": 2130186,
+    "output_tokens": 22648,
+    "api_call_count": 31
+  }
+}

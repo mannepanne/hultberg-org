@@ -193,12 +193,12 @@ describe('GET /admin/api/verify-token', () => {
   });
 
   it('redirects to dashboard and sets cookie when token is valid', async () => {
-    // Store a valid token
+    // Store a valid token with timestamp 6 seconds in the past to clear the reuse protection window
     const email = 'test@example.com';
     const token = 'valid-test-token';
     await mockEnv.AUTH_KV!.put(
       `auth:token:${token}`,
-      JSON.stringify({ email, timestamp: Date.now(), used: false }),
+      JSON.stringify({ email, timestamp: Date.now() - 6000, used: false }),
       { expirationTtl: 900 }
     );
 
@@ -217,12 +217,12 @@ describe('GET /admin/api/verify-token', () => {
   });
 
   it('prevents token reuse', async () => {
-    // Store a valid token
+    // Store a valid token with timestamp 6 seconds in the past to clear the reuse protection window
     const email = 'test@example.com';
     const token = 'reuse-test-token';
     await mockEnv.AUTH_KV!.put(
       `auth:token:${token}`,
-      JSON.stringify({ email, timestamp: Date.now(), used: false }),
+      JSON.stringify({ email, timestamp: Date.now() - 6000, used: false }),
       { expirationTtl: 900 }
     );
 

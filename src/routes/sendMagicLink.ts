@@ -70,7 +70,7 @@ export async function handleSendMagicLink(request: Request, env: Env): Promise<R
       }
     } else {
       // Not admin email, but pretend we sent it (prevent enumeration)
-      console.log('Non-admin email attempted login:', email);
+      // Do not log the email address to avoid leaking it in production logs
     }
 
     // Always return success

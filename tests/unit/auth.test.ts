@@ -1,7 +1,7 @@
 // ABOUT: Unit tests for authentication utilities
 // ABOUT: Tests magic link generation, JWT handling, and middleware
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   generateMagicLinkToken,
   storeMagicLinkToken,
@@ -42,7 +42,10 @@ describe('Magic Link Token Storage and Verification', () => {
     const token = 'test-token-123';
     const email = 'test@example.com';
 
+    // Store with a timestamp 6 seconds in the past to clear the reuse protection window
+    vi.spyOn(Date, 'now').mockReturnValueOnce(Date.now() - 6000);
     await storeMagicLinkToken(env, token, email);
+
     const retrievedEmail = await verifyMagicLinkToken(env, token);
 
     expect(retrievedEmail).toBe(email);
@@ -57,6 +60,8 @@ describe('Magic Link Token Storage and Verification', () => {
     const token = 'test-token-456';
     const email = 'test@example.com';
 
+    // Store with a timestamp 6 seconds in the past to clear the reuse protection window
+    vi.spyOn(Date, 'now').mockReturnValueOnce(Date.now() - 6000);
     await storeMagicLinkToken(env, token, email);
 
     // First verification succeeds
@@ -115,6 +120,19 @@ describe('JWT Generation and Verification', () => {
     const verifiedEmail = await verifyJWT(differentEnv, jwt);
 
     expect(verifiedEmail).toBeNull();
+  });
+
+  it('rejects expired JWT', async () => {
+    const email = 'test@example.com';
+    const jwt = await generateJWT(env, email);
+
+    // Advance time past the 7-day expiry
+    vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 604800 * 1000 + 1000);
+
+    const verifiedEmail = await verifyJWT(env, jwt);
+    expect(verifiedEmail).toBeNull();
+
+    vi.restoreAllMocks();
   });
 });
 

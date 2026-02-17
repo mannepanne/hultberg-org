@@ -1,0 +1,19 @@
+# Local development environment variables
+# Copy this file to .dev.vars and fill in your values
+# .dev.vars is already in .gitignore - DO NOT COMMIT IT
+
+# Admin email address (authorized for login)
+ADMIN_EMAIL=magnus.hultberg@gmail.com
+
+# JWT secret for signing session tokens
+# Generate with: openssl rand -base64 32
+JWT_SECRET=your-local-dev-secret-key-replace-this
+
+# Resend.com API key for sending magic link emails
+# Get from: https://resend.com/api-keys
+RESEND_API_KEY=re_your_resend_api_key_here
+
+# GitHub Personal Access Token (Phase 6+)
+# Generate at: https://github.com/settings/tokens
+# Permissions: Contents (Read and write) for hultberg-org repo
+GITHUB_TOKEN=github_pat_your_token_here

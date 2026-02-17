@@ -179,10 +179,100 @@ Cloudflare Workers use secrets for sensitive configuration:
 - Never commit secrets to the repository
 - Secrets are accessed via the `env` parameter in the Worker's fetch handler
 
-Common secrets (check `src/types.ts` for the `Env` interface):
-- API keys
-- Authentication tokens
-- Service credentials
+### Required Secrets (Phase 3+)
+
+The following secrets must be configured for the admin authentication system to work:
+
+#### ADMIN_EMAIL
+**Purpose:** Email address authorized for admin access (single admin user)
+**Value:** `magnus.hultberg@gmail.com`
+**Setup:**
+```bash
+npx wrangler secret put ADMIN_EMAIL
+# Enter: magnus.hultberg@gmail.com
+```
+
+#### JWT_SECRET
+**Purpose:** Secret key for signing authentication JWTs (session tokens)
+**Security:** Must be a strong random string (32+ characters recommended)
+**Setup:**
+```bash
+npx wrangler secret put JWT_SECRET
+# Enter: <generate a strong random string>
+```
+
+**Generate a strong JWT secret:**
+```bash
+# On macOS/Linux:
+openssl rand -base64 32
+
+# Or Node.js:
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+#### RESEND_API_KEY
+**Purpose:** API key for Resend.com email service (magic link emails)
+**Obtain:** Sign up at https://resend.com and create an API key
+**Setup:**
+```bash
+npx wrangler secret put RESEND_API_KEY
+# Enter: re_xxxxxxxxx (your Resend API key)
+```
+
+**Resend.com Setup:**
+1. Sign up at https://resend.com
+2. Verify your domain (hultberg.org) or use Resend's test domain
+3. Create an API key in the dashboard
+4. Copy the key and paste when prompted
+
+#### GITHUB_TOKEN (Phase 6+)
+**Purpose:** GitHub Personal Access Token for committing updates via API
+**Obtain:** Generate at https://github.com/settings/tokens (fine-grained token)
+**Permissions:** Contents (Read and write) for `hultberg-org` repository
+**Setup:**
+```bash
+npx wrangler secret put GITHUB_TOKEN
+# Enter: github_pat_xxxxxxxxx (your GitHub token)
+```
+
+**Note:** This secret is only required in Phase 6 (Worker Backend API). Not needed for Phase 3-5.
+
+### Verifying Secrets Configuration
+
+Check which secrets are configured:
+```bash
+npx wrangler secret list
+```
+
+Delete a secret (if needed):
+```bash
+npx wrangler secret delete SECRET_NAME
+```
+
+### Local Development with Secrets
+
+For local development (`npm run dev`), create a `.dev.vars` file (already in `.gitignore`):
+
+```bash
+# .dev.vars (DO NOT COMMIT)
+ADMIN_EMAIL=magnus.hultberg@gmail.com
+JWT_SECRET=local-dev-secret-key-not-for-production
+RESEND_API_KEY=re_your_resend_api_key
+GITHUB_TOKEN=github_pat_your_token
+```
+
+Wrangler automatically loads `.dev.vars` during local development.
+
+### KV Namespaces
+
+In addition to secrets, the following KV namespaces are configured in `wrangler.toml`:
+
+- **AUTH_KV** - Stores magic link tokens (15-minute TTL)
+- **RATE_LIMIT_KV** - Stores rate limiting counters (1-minute TTL)
+
+These are automatically available in the Worker via `env.AUTH_KV` and `env.RATE_LIMIT_KV`.
+
+See `src/types.ts` for the complete `Env` interface with all available bindings.
 
 ## Testing
 

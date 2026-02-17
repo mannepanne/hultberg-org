@@ -9,3 +9,6 @@ nimbalyst-local/
 
 # Test coverage
 coverage/
+
+# Secrets for local development
+.dev.vars

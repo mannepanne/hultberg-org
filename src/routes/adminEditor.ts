@@ -250,8 +250,8 @@ function renderEditor(email: string, update: Partial<Update> | null, images: Ima
       var gallery = document.getElementById('img-gallery');
       if (!gallery) return;
       var slug = document.getElementById('slug-value').value;
-      var filename = name.replace(/.*\//, '');
-      var altText = filename.replace(/\.[^.]+$/, '');
+      var filename = name.replace(/.*\\//, '');
+      var altText = filename.replace(/\\.[^.]+$/, '');
 
       var img = document.createElement('img');
       img.src = path;

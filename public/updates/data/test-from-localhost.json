@@ -2,10 +2,10 @@
   "slug": "test-from-localhost",
   "title": "Test from localhost",
   "excerpt": "This is the excerpt on localhost",
-  "content": "Here comes the *content* body. **Lorem** ipso etc.\n\n![Magnus_Hultberg](/images/updates/test-from-localhost/magnus_hultberg.jpg)",
+  "content": "Here comes the *content* body. **Lorem** ipso etc.\n\n![Magnus_Hultberg](/images/updates/test-from-localhost/magnus_hultberg.jpg)\n\n![magnus_hultberg](/images/updates/test-from-localhost/magnus_hultberg.jpg)",
   "status": "draft",
   "publishedDate": "",
-  "editedDate": "2026-02-18T14:28:46.125Z",
+  "editedDate": "2026-02-18T14:29:03.841Z",
   "author": "Magnus Hultberg",
   "images": []
 }

@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "78862fa6de2a",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "SPECIFICATIONS/technical-debt.md",
+    "src/auth.ts",
+    "src/index.ts",
+    "src/routes/verifyToken.ts",
+    "tests/integration/adminAuth.test.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/78/862fa6de2a/0/metadata.json",
+      "transcript": "/78/862fa6de2a/0/full.jsonl",
+      "context": "/78/862fa6de2a/0/context.md",
+      "content_hash": "/78/862fa6de2a/0/content_hash.txt",
+      "prompt": "/78/862fa6de2a/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 29,
+    "cache_creation_tokens": 40867,
+    "cache_read_tokens": 2408008,
+    "output_tokens": 17338,
+    "api_call_count": 25
+  }
+}

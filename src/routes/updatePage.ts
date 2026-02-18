@@ -17,14 +17,14 @@ export async function handleUpdatePage(request: Request, env: Env, slug: string)
     const updateResponse = await (env.ASSETS?.fetch(new Request(updateUrl)) ?? fetch(updateUrl));
 
     if (!updateResponse.ok) {
-      return new Response('Update not found', { status: 404 });
+      return fetchNotFoundPage(request, env);
     }
 
     const update: Update = await updateResponse.json();
 
     // Return 404 for draft updates (public users shouldn't see them)
     if (update.status === 'draft') {
-      return new Response('Update not found', { status: 404 });
+      return fetchNotFoundPage(request, env);
     }
 
     return renderUpdatePage(update);
@@ -32,6 +32,20 @@ export async function handleUpdatePage(request: Request, env: Env, slug: string)
     console.error('Error handling update page:', error);
     return new Response('Error loading update', { status: 500 });
   }
+}
+
+/**
+ * Fetches and returns the site's 404 page from static assets with a 404 status code.
+ */
+async function fetchNotFoundPage(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const notFoundUrl = `${url.origin}/errors/not_found.html`;
+  const response = await (env.ASSETS?.fetch(new Request(notFoundUrl)) ?? fetch(notFoundUrl));
+  const html = await response.text();
+  return new Response(html, {
+    status: 404,
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  });
 }
 
 /**

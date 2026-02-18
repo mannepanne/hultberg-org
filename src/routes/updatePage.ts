@@ -7,7 +7,7 @@ import { escapeHtml } from '@/utils';
 
 /**
  * Handles GET requests to /updates/{slug}
- * Fetches update JSON, renders markdown, and returns HTML
+ * Fetches update JSON from static assets, checks visibility, and renders the page
  */
 export async function handleUpdatePage(request: Request, slug: string): Promise<Response> {
   try {
@@ -27,26 +27,34 @@ export async function handleUpdatePage(request: Request, slug: string): Promise<
       return new Response('Update not found', { status: 404 });
     }
 
-    // Convert markdown to HTML
-    const contentHTML = await marked(update.content);
-
-    // Sanitize HTML to prevent XSS
-    const sanitizedHTML = sanitizeHTML(contentHTML);
-
-    // Render the page
-    const html = renderUpdatePageHTML(update, sanitizedHTML);
-
-    return new Response(html, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self';",
-      },
-    });
+    return renderUpdatePage(update);
   } catch (error) {
     console.error('Error handling update page:', error);
     return new Response('Error loading update', { status: 500 });
   }
+}
+
+/**
+ * Renders an Update object to a full HTML Response.
+ * Used by both the public route and the admin preview route.
+ */
+export async function renderUpdatePage(update: Update): Promise<Response> {
+  // Convert markdown to HTML
+  const contentHTML = await marked(update.content);
+
+  // Sanitize HTML to prevent XSS
+  const sanitizedHTML = sanitizeHTML(contentHTML);
+
+  // Render the page
+  const html = renderUpdatePageHTML(update, sanitizedHTML);
+
+  return new Response(html, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self';",
+    },
+  });
 }
 
 /**

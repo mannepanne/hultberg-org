@@ -53,6 +53,7 @@ function renderEditor(email: string, update: Partial<Update> | null, images: Ima
   <meta name="robots" content="noindex, nofollow" />
   <title>${isNew ? 'New Update' : `Edit: ${escapeHtml(title)}`} - hultberg.org admin</title>
   <link rel="stylesheet" href="${CDN}/easymde.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.5; color: #333; margin: 0; background: #f8f9fa; }

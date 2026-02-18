@@ -250,16 +250,35 @@ function renderEditor(email: string, update: Partial<Update> | null, images: Ima
       var gallery = document.getElementById('img-gallery');
       if (!gallery) return;
       var slug = document.getElementById('slug-value').value;
-      var filename = name.replace(/.*\\//, '');
+      var filename = name.replace(/.*\//, '');
+      var altText = filename.replace(/\.[^.]+$/, '');
+
+      var img = document.createElement('img');
+      img.src = path;
+      img.alt = filename;
+      img.loading = 'lazy';
+
+      var insertBtn = document.createElement('button');
+      insertBtn.type = 'button';
+      insertBtn.textContent = 'Insert';
+      insertBtn.addEventListener('click', function() { insertImage(path, altText); });
+
+      var deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'del';
+      deleteBtn.textContent = '\u2715';
+      deleteBtn.addEventListener('click', function() { deleteImage(slug, filename); });
+
+      var actions = document.createElement('div');
+      actions.className = 'img-actions';
+      actions.appendChild(insertBtn);
+      actions.appendChild(deleteBtn);
+
       var div = document.createElement('div');
       div.className = 'img-thumb';
       div.id = 'img-' + filename;
-      div.innerHTML =
-        '<img src="' + path + '" alt="' + filename + '" loading="lazy" />' +
-        '<div class="img-actions">' +
-          '<button type="button" onclick="insertImage(\'' + path + '\',\'' + filename.replace(/\\.[^.]+$/, '') + '\')">Insert</button>' +
-          '<button type="button" class="del" onclick="deleteImage(\'' + slug + '\',\'' + filename + '\')">✕</button>' +
-        '</div>';
+      div.appendChild(img);
+      div.appendChild(actions);
       gallery.appendChild(div);
     }
 

@@ -87,13 +87,9 @@ Items here are accepted risks or pragmatic choices made during development, not 
 
 ---
 
-### TD-009: `addImageToGallery` Uses Unescaped `innerHTML`
-- **Location:** `src/routes/adminEditor.ts` — `addImageToGallery()` client-side JS
-- **Issue:** `div.innerHTML` is built via string concatenation using `path` and `filename` from the API response. The server sanitises filenames before returning them, but the pattern is inherently unsafe. `'unsafe-inline'` is in the CSP for EasyMDE, so injected event handlers would execute.
-- **Why accepted:** The `path` and `filename` values in the upload response are constructed server-side from sanitised inputs (slug regex + filename regex), so the attack surface is narrow.
-- **Risk:** Low. Requires a compromise of the server-side validation chain. The server-side `renderImageGallery()` function correctly uses `escapeHtml()` — the client-side path does not.
-- **Future fix:** Add a `jsEscape()` helper in the client-side script and apply it to `path` and `filename` before inserting into `innerHTML`. Alternatively, use `createElement` / `textContent` / `setAttribute` to build the DOM without string interpolation.
-- **Phase introduced:** 5/6
+### ~~TD-009~~: `addImageToGallery` Uses Unescaped `innerHTML` — **RESOLVED**
+- **Resolution:** Replaced `innerHTML` string concatenation with `createElement` / `textContent` / `setAttribute` / `addEventListener`. No HTML string interpolation remains in `addImageToGallery`.
+- **Phase resolved:** 5/6
 
 ---
 

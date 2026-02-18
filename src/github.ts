@@ -5,7 +5,7 @@ import type { Env } from './types';
 import type { Update } from './types';
 import { encodeBase64 } from './utils';
 
-const GITHUB_REPO = 'mannepanne/hultberg-org';
+export const GITHUB_REPO = 'mannepanne/hultberg-org';
 const GITHUB_API_BASE = 'https://api.github.com';
 const UPDATES_DATA_PATH = 'public/updates/data';
 const IMAGES_PATH = 'public/images/updates';

@@ -17,6 +17,7 @@ import { handleAdminPreview } from './routes/adminPreview';
 import { handleSaveUpdate } from './routes/saveUpdate';
 import { handleUploadImage } from './routes/uploadImage';
 import { handleDeleteImage } from './routes/deleteImage';
+import { GITHUB_REPO } from './github';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -109,6 +110,26 @@ export default {
     if (updateSlugMatch) {
       const slug = updateSlugMatch[1];
       return handleUpdatePage(request, slug);
+    }
+
+    // Route: /images/updates/* - proxy uploaded images from GitHub raw content
+    // Images are stored in GitHub via the admin API; this route serves them without
+    // requiring a full site redeploy after each upload.
+    const imagesMatch = url.pathname.match(/^\/images\/updates\/(.+)$/);
+    if (imagesMatch) {
+      const imagePath = imagesMatch[1];
+      const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/public/images/updates/${imagePath}`;
+      const imageResponse = await fetch(rawUrl);
+      if (!imageResponse.ok) {
+        return new Response('Not Found', { status: 404 });
+      }
+      return new Response(imageResponse.body, {
+        status: 200,
+        headers: {
+          'Content-Type': imageResponse.headers.get('Content-Type') ?? 'image/jpeg',
+          'Cache-Control': 'public, max-age=86400',
+        },
+      });
     }
 
     // Default 404 handler for unmatched routes

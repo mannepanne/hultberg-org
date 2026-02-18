@@ -356,19 +356,13 @@ This feature implements comprehensive security measures including:
 
 ## Implementation
 
-The implementation is organized into 9 phases with 39 detailed steps:
+The implementation was organized into 9 phases with 39 detailed steps. Phases 1–7 and 9 are complete; Phase 8 (Testing & Polish) is partially complete.
 
-1. **Storage & Data Structure** - Set up files and formats
-2. **Public Pages** - Listing, individual updates, RSS feed
-3. **Authentication** - Magic link system
-4. **Admin Dashboard** - Management interface
-5. **Update Editor** - EasyMDE integration and image handling
-6. **Worker Backend API** - Server-side endpoints for all operations
-7. **Auto-Deployment** - GitHub Actions with build-time index generation
-8. **Testing & Polish** - Comprehensive testing and validation
-9. **Documentation** - Update project docs and create admin guide
+**Known gaps vs. original spec:**
+- Pagination on `/updates` not yet implemented (listing renders all updates)
+- Deploy status polling (`GET /admin/api/deploy-status`) not implemented
 
-**For detailed phase-by-phase instructions, see:** [blog-updates-implementation.md](./blog-updates-implementation.md)
+**For detailed phase-by-phase instructions and deviations, see:** [blog-updates-implementation.md](./blog-updates-implementation.md)
 
 ---
 
@@ -391,10 +385,16 @@ Before considering the MVP complete, verify:
 
 ---
 
-## Future Enhancements (Not in MVP)
+## Features Added Beyond Original MVP Scope
+
+The following items were added during implementation:
+
+- **Backdating** — A published date picker in the editor allows setting a custom publish date. Useful for migrating posts from other platforms. Dates stored at noon UTC to avoid timezone display issues.
+- **Image proxy route** — Worker serves uploaded images at `/images/updates/*` by proxying from GitHub raw content. Required because images are not in the static asset bundle.
+
+## Future Enhancements
 
 - Tags/categories for updates
-- Manual date editing (backdate posts, fix mistakes, migrate old content)
 - Search functionality
 - Comments system
 - Social sharing buttons
@@ -407,5 +407,5 @@ Before considering the MVP complete, verify:
 ---
 
 **Last Updated:** February 2026
-**Status:** Specification complete, ready for implementation
+**Status:** Implemented and live in production
 **Reviewed By:** Independent agent review (ID: ad0e372)

@@ -3,8 +3,34 @@
 **Related:** [blog-style-updates-mvp.md](./blog-style-updates-mvp.md) | [blog-updates-security.md](./blog-updates-security.md)
 
 This document provides a detailed, phase-by-phase implementation plan for building the blog updates feature.
-See also :
-- [CLAUDE.md](./CLAUDE.md)  for general project structure and developer onboarding notes
+See also:
+- [CLAUDE.md](../CLAUDE.md) for general project structure and developer onboarding notes
+
+---
+
+## Status
+
+**Phases 1–7 are complete and live in production** (as of February 2026). Phases 8 (Testing & Polish) and 9 (Documentation) are partially complete. Phase 10 (not originally planned) remains future work.
+
+### Implementation Deviations from Plan
+
+The following deviations from the original plan were made during implementation:
+
+1. **`env.ASSETS` binding requires explicit declaration** — `wrangler.toml` must include `binding = "ASSETS"` under `[assets]`. Without this, `env.ASSETS` is undefined and all static file reads from the Worker fail silently by falling through to the 404 handler.
+
+2. **Static file reads use `env.ASSETS.fetch()` pattern** — All three public route handlers (`updatesListing.ts`, `updatePage.ts`, `rssFeed.ts`) use `env.ASSETS?.fetch(new Request(url)) ?? fetch(url)` instead of plain `fetch(url)`. A plain `fetch()` on the same origin re-enters Worker routing and bypasses the static asset store.
+
+3. **Image proxy route added** — Images uploaded to GitHub at `public/images/updates/{slug}/{filename}` are served via a new Worker route (`/images/updates/*`) that proxies from `raw.githubusercontent.com`. This was not in the original plan but is required because uploaded images are not in the static asset bundle.
+
+4. **`index.json` is gitignored** — The index file is never committed to git. Instead it is generated at build time (GitHub Actions) and at dev time (`predev` npm script). This prevents committed `index.json` from drifting out of sync with individual update files.
+
+5. **Admin route structure differs from spec** — Spec defined `/admin/edit/{slug}` and `/admin/new`; actual routes are `/admin/updates/{slug}/edit` and `/admin/updates/new`, and the dashboard is at `/admin/dashboard` (not `/admin`). The `/admin` path serves the login page.
+
+6. **Backdating feature added** — A published date picker was added to the editor (not in original MVP spec) allowing updates to be backdated using a `YYYY-MM-DD` input. Dates are stored at noon UTC (`T12:00:00.000Z`) to prevent timezone-driven date display errors.
+
+7. **`GET /admin/api/deploy-status` not implemented** — The deploy status polling endpoint described in the spec was not built for MVP. The dashboard does not poll GitHub Actions.
+
+8. **No pagination on `/updates`** — The listing page renders all published updates without pagination. Not yet implemented.
 
 ---
 
@@ -22,7 +48,7 @@ See also :
 
 ---
 
-## Phase 1: Storage & Data Structure
+## Phase 1: Storage & Data Structure ✅ Complete
 
 **Goal:** Set up the foundational file structure and data formats
 
@@ -230,7 +256,7 @@ function sanitizeHtml(html: string): string {
 
 ---
 
-## Phase 1.5: Testing Infrastructure
+## Phase 1.5: Testing Infrastructure ✅ Complete
 
 **Goal:** Establish testing framework and guardrails for agent-driven development
 
@@ -452,7 +478,7 @@ Expected output:
 
 ---
 
-## Phase 2: Public Pages
+## Phase 2: Public Pages ✅ Complete
 
 **Goal:** Implement the public-facing update pages
 
@@ -504,7 +530,7 @@ if (url.pathname === '/updates' || url.pathname.startsWith('/updates/page/')) {
 
 ---
 
-## Phase 3: Authentication
+## Phase 3: Authentication ✅ Complete
 
 **Goal:** Implement magic link authentication system
 
@@ -582,7 +608,7 @@ async function requireAuth(request: Request, env: Env): Promise<string | Respons
 
 ---
 
-## Phase 4: Admin Dashboard
+## Phase 4: Admin Dashboard ✅ Complete
 
 **Goal:** Build the admin interface for managing updates
 
@@ -614,7 +640,7 @@ async function requireAuth(request: Request, env: Env): Promise<string | Respons
 
 ---
 
-## Phase 5: Update Editor
+## Phase 5: Update Editor ✅ Complete
 
 **Goal:** Build the editor interface for creating/editing updates
 
@@ -683,7 +709,7 @@ npm install easymde
 
 ---
 
-## Phase 6: Worker Backend API Endpoints
+## Phase 6: Worker Backend API Endpoints ✅ Complete
 
 **Goal:** Implement server-side API for all admin operations
 
@@ -918,7 +944,7 @@ async function deleteUpdate(slug: string, env: Env): Promise<Response> {
 
 ---
 
-## Phase 7: Auto-Deployment with Build-Time Index Generation
+## Phase 7: Auto-Deployment with Build-Time Index Generation ✅ Complete
 
 **Goal:** Set up GitHub Actions to auto-deploy and generate index.json
 
@@ -1035,9 +1061,11 @@ console.log(`Generated index.json with ${updates.length} published updates`);
 
 ---
 
-## Phase 8: Testing & Polish
+## Phase 8: Testing & Polish ⚠️ Partially Complete
 
 **Goal:** Comprehensive testing and refinement
+
+**Note:** Unit and integration tests are in place (185+ tests as of February 2026). Full end-to-end tests and exhaustive manual scenario testing from this phase have not been completed.
 
 ### Step 31: Test Full Workflow End-to-End
 
@@ -1119,7 +1147,7 @@ console.log(`Generated index.json with ${updates.length} published updates`);
 
 ---
 
-## Phase 9: Documentation
+## Phase 9: Documentation ✅ Complete
 
 **Goal:** Document the implementation for future reference
 
@@ -1175,10 +1203,8 @@ Before considering the MVP complete, verify all of these:
 
 ## Notes
 
-**Estimated Timeline:** Implementation can proceed phase-by-phase, with each phase building on the previous.
-
 **Testing Strategy:** Test each phase thoroughly before moving to the next.
 
 **Deployment Strategy:** Use feature branch and PRs for each phase, merge to main when stable.
 
-**Last Updated:** February 2026
+**Last Updated:** February 2026 (Phases 1–7 and 9 complete; Phase 8 partially complete)

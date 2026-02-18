@@ -9,12 +9,14 @@ Claude collaboration and ways of working instructions: @.claude/CLAUDE.md
 When asked to remember anything, always add project memory in this CLAUDE.md (in the project root), not @.claude/CLAUDE.md, leave @.claude/CLAUDE.md as it is.
 
 ## Project Overview
-This is a personal website for Magnus Hultberg (hultberg.org) built as a Cloudflare Worker. The architecture consists of:
-- A TypeScript-based Cloudflare Worker (`src/index.ts`) that serves as the main entry point
-- Static assets in the `public/` directory served through Cloudflare's asset handling
-- Historical content including "now" pages with timestamped updates
 
-We are currently implementing a blog feature in the site, see specification in [blog-style-updates-mvp.md](./SPECIFICATIONS/blog-style-updates-mvp.md) 
+This is the personal website for Magnus Hultberg (hultberg.org), built as a Cloudflare Worker. The site includes:
+- A homepage and static pages (`/now`, error pages) served directly from Cloudflare Assets
+- A blog-style **Updates** feature (`/updates`) for publishing personal updates
+- A password-protected **Admin** interface (`/admin`) for creating, editing, and managing updates
+- Content stored as JSON files in the GitHub repository, deployed automatically via GitHub Actions
+
+The blog feature is fully implemented and live in production. See [blog-style-updates-mvp.md](./SPECIFICATIONS/blog-style-updates-mvp.md) for the complete feature specification.
 
 ## Getting Started
 
@@ -40,11 +42,13 @@ npm run dev
 
 The site will be available at `http://localhost:8787`
 
+**Note:** `npm run dev` runs `predev` first, which generates `public/updates/data/index.json` from the individual update JSON files. This is required for the updates listing page to work locally.
+
 ### Commands
 
 #### Development
 ```bash
-npm run dev        # Start local development server using Wrangler
+npm run dev        # Generate index.json then start local dev server (Wrangler)
 ```
 
 #### Deployment
@@ -52,39 +56,77 @@ npm run dev        # Start local development server using Wrangler
 wrangler deploy    # Deploy to Cloudflare Workers (requires Wrangler authentication)
 ```
 
-#### Testing
-Note: The project currently has a placeholder test script that needs implementation.
+Deployment also happens automatically via GitHub Actions on push to `main`.
 
+#### Testing
 ```bash
-npm test           # Currently exits with placeholder message
+npm test                  # Run all tests once
+npm run test:watch        # Watch mode for development
+npm run test:coverage     # Generate coverage report
+npm run test:ui           # Interactive UI for test exploration
+npm run test:changed      # Run tests for changed files only
 ```
 
 ## Architecture
 
 ### Cloudflare Worker Structure
-- **Entry Point**: `src/index.ts` - Main Worker export with fetch handler
-- **Asset Handling**: Uses `@cloudflare/kv-asset-handler` for serving static files from `public/`
-- **Configuration**: `wrangler.toml` defines Worker settings, compatibility date, and asset directory
+- **Entry Point**: `src/index.ts` - Main Worker fetch handler; routes all requests
+- **Asset Handling**: Cloudflare Workers Assets serves static files from `public/` **before** the Worker runs (`run_worker_first = false`)
+- **Configuration**: `wrangler.toml` defines Worker settings, KV bindings, and asset handling
+- **ASSETS binding**: `binding = "ASSETS"` in `wrangler.toml` exposes `env.ASSETS` (type `Fetcher`) in the Worker — **this must be explicitly declared or `env.ASSETS` will be undefined**
 
-### Static Content Organization
-- **Public Directory**: Contains all static assets served by the Worker
-- **Now Pages**: Historical snapshots in `public/now/` with timestamped filenames (format: `index_YYYYMMDD.CHANGED.html`)
-- **Error Pages**: Custom 404 handling with `public/errors/not_found.html` and assets
-- **SEO Files**: Standard web files like `sitemap_base.xml`, `foaf.rdf`, verification files
+### Request Routing
+- Static assets (homepage, `/now`, images) → served directly by Cloudflare, Worker never runs
+- Dynamic routes → Worker's fetch handler in `src/index.ts`
+  - `/updates` → updates listing page
+  - `/updates/{slug}` → individual update page
+  - `/updates/feed.xml` → RSS feed
+  - `/images/updates/*` → proxied from GitHub raw content (so images are served without needing a full redeploy after each upload)
+  - `/admin/*` → admin UI and API
+  - Everything else → custom 404 page
 
-### Current Implementation Notes
-Cloudflare Workers Assets serves static files from `public/` **before** the Worker's fetch handler runs (default `run_worker_first = false`). This means:
-- Static assets (index.html, /now pages, images, etc.) are served directly by Cloudflare
-- The Worker's fetch handler (`src/index.ts`) only executes for requests that don't match static files
-- The Worker provides a custom 404 page with branding and helpful navigation for missing resources
+### Static File Serving Gotcha
+When the Worker needs to read JSON data files (like `index.json` or individual update files), it must use `env.ASSETS.fetch()` rather than plain `fetch()`. A plain `fetch()` on the same origin re-enters Worker routing and bypasses the static asset store, causing 404s.
 
-The site is fully functional - there's no KV asset handler code needed in the Worker itself.
+```typescript
+// Correct: goes directly to Cloudflare's asset store
+const response = await (env.ASSETS?.fetch(new Request(url)) ?? fetch(url));
+
+// Wrong: re-enters Worker routing, misses static files
+const response = await fetch(url);
+```
+
+### Content Storage
+Updates are stored as JSON files committed to the GitHub repository:
+```
+public/
+  updates/
+    data/
+      {slug}.json      # Individual update data (committed by Worker via GitHub API)
+      index.json       # Generated at build time — never commit this file
+  images/
+    updates/
+      {slug}/          # Images for a specific update
+        image1.jpg
+```
+
+`index.json` is gitignored and generated automatically:
+- **Locally**: by `predev` script before `npm run dev`
+- **On deploy**: by GitHub Actions before `wrangler deploy`
+
+### Deployment Pipeline
+1. Admin saves/publishes an update via the browser editor
+2. Worker commits the update JSON to GitHub via the GitHub API (`env.GITHUB_TOKEN`)
+3. GitHub Actions triggers on push to `main`
+4. Action runs `node scripts/generate-index.js` to rebuild `index.json`
+5. Action runs `wrangler deploy` — new content is live within ~2 minutes
 
 ## TypeScript Configuration
 - Target: ESNext modules for Cloudflare Workers runtime
 - Strict mode enabled
 - Cloudflare Workers types included
 - Source maps enabled for debugging
+- Path alias `@/` maps to `./src/` for clean imports
 
 ## Project Structure
 
@@ -94,39 +136,72 @@ hultberg-org/
 │   └── skills/               # Custom Claude Code skills
 │       ├── review-pr/        # Single-reviewer PR review skill
 │       └── review-pr-team/   # Multi-reviewer PR review skill
-├── public/                   # Static assets (served by Cloudflare)
-│   ├── images/               # Site images
+├── .github/
+│   └── workflows/
+│       └── deploy.yml        # GitHub Actions: generate index, deploy to Cloudflare
+├── public/                   # Static assets (served by Cloudflare Assets)
+│   ├── images/               # Site images (including /images/updates/ for blog images)
 │   ├── now/                  # Historical /now pages
-│   ├── errors/               # Error pages (404, etc.)
-│   └── index.html            # Homepage
-├── src/                      # TypeScript source code
-│   ├── index.ts              # Main Worker entry point
-│   ├── types.ts              # TypeScript type definitions
-│   └── utils.ts              # Utility functions
+│   ├── errors/               # Error pages (404 etc.)
+│   ├── index.html            # Homepage
+│   └── updates/
+│       └── data/             # Update JSON files (index.json gitignored, others committed)
+├── scripts/
+│   └── generate-index.js     # Builds index.json from individual update files
+├── src/                      # TypeScript source code (Cloudflare Worker)
+│   ├── index.ts              # Main Worker entry point and request router
+│   ├── types.ts              # TypeScript interfaces (Env, Update, UpdateIndex)
+│   ├── utils.ts              # Shared utilities (slug generation, HTML escaping)
+│   ├── auth.ts               # JWT-based authentication middleware
+│   ├── email.ts              # Resend.com email sending (magic links)
+│   ├── github.ts             # GitHub API client (read/write update files)
+│   └── routes/               # Route handlers (one file per route)
+│       ├── adminDashboard.ts # GET /admin/dashboard
+│       ├── adminEditor.ts    # GET /admin/updates/new and /admin/updates/{slug}/edit
+│       ├── adminLogin.ts     # GET /admin (login page)
+│       ├── adminLogout.ts    # POST /admin/logout
+│       ├── adminPreview.ts   # GET /admin/preview/{slug}
+│       ├── deleteImage.ts    # DELETE /admin/api/delete-image
+│       ├── deleteUpdate.ts   # DELETE /admin/api/delete-update
+│       ├── listUpdates.ts    # GET /admin/api/updates
+│       ├── rssFeed.ts        # GET /updates/feed.xml
+│       ├── saveUpdate.ts     # POST /admin/api/save-update
+│       ├── sendMagicLink.ts  # POST /admin/api/send-magic-link
+│       ├── updatePage.ts     # GET /updates/{slug}
+│       ├── updatesListing.ts # GET /updates
+│       ├── uploadImage.ts    # POST /admin/api/upload-image
+│       └── verifyToken.ts    # GET|POST /admin/api/verify-token
+├── tests/                    # Test suite (Vitest)
+│   ├── unit/                 # Unit tests for individual functions
+│   ├── integration/          # Integration tests for routes and APIs
+│   ├── e2e/                  # End-to-end workflow tests
+│   ├── fixtures/             # Test data and fixtures
+│   └── mocks/                # Reusable mocks (KVNamespace, Env, GitHub API)
 ├── SPECIFICATIONS/           # Feature specifications and requirements
-│   ├── *-plan.md             # Feature / project specification core documents
-│   ├── *-mvp.md              # Feature / project MVP specifications
-│   ├── *-security.md         # Security requirements
-│   └── *-implementation.md   # Implementation plans
-├── CLAUDE.md                 # This file - project documentation
-├── package.json              # Dependencies and scripts
+│   ├── blog-style-updates-mvp.md       # Blog feature MVP spec
+│   ├── blog-updates-implementation.md  # Phase-by-phase implementation plan
+│   ├── blog-updates-security.md        # Security design and requirements
+│   ├── technical-debt.md               # Known tech debt and accepted risks
+│   └── testing-strategy-plan.md        # Testing philosophy and approach
+├── CLAUDE.md                 # This file — project documentation and onboarding
+├── package.json              # Dependencies and npm scripts
 ├── tsconfig.json             # TypeScript configuration
+├── vitest.config.ts          # Vitest test runner configuration
 └── wrangler.toml             # Cloudflare Workers configuration
 ```
 
 ### Key Files
 
-- **`src/index.ts`** - Main Worker fetch handler, processes requests not matched by static assets
-- **`src/types.ts`** - TypeScript interfaces for Worker environment and data structures
-- **`src/utils.ts`** - Shared utility functions (slug generation, etc.)
-- **`public/index.html`** - Homepage, served directly by Cloudflare
-- **`wrangler.toml`** - Worker configuration including routes and asset handling
-- **`SPECIFICATIONS/`** - Contains detailed feature specs, security requirements, and implementation plans
+- **`src/index.ts`** - All routes registered here; add new routes to the appropriate section
+- **`src/types.ts`** - `Env`, `Update`, `UpdateIndex`, `UpdateStatus` interfaces; update when adding new bindings or data fields
+- **`src/github.ts`** - `GITHUB_REPO` constant and all GitHub API operations (fetch, save, delete updates and images)
+- **`src/auth.ts`** - `requireAuth()` middleware; returns the authed email string or a 401/302 Response
+- **`wrangler.toml`** - KV namespace bindings and `binding = "ASSETS"` declaration
 
 ## Code Conventions
 
 ### File Comments
-All TypeScript files should start with `// ABOUT:` comments explaining the file's purpose:
+All TypeScript files start with `// ABOUT:` comments explaining the file's purpose:
 
 ```typescript
 // ABOUT: Brief description of file purpose
@@ -134,14 +209,14 @@ All TypeScript files should start with `// ABOUT:` comments explaining the file'
 ```
 
 ### Naming Conventions
-- **Always provide context through naming** - Variable and parameter names should supply relevant context without needing additional documentation. Names like `AUTH_KV` and `RATE_LIMIT_KV` are preferable to generic names like `KV1` or `storage`.
+- **Always provide context through naming** — `AUTH_KV` and `RATE_LIMIT_KV` over `KV1` or `storage`
 - Use descriptive, meaningful names for variables and functions
 - Follow TypeScript naming conventions (camelCase for variables/functions, PascalCase for types/interfaces)
 - Avoid temporal references in names (no "new", "improved", "old", etc.)
 
 ### Comments
-- Keep comments evergreen (describe what code does, not recent changes)
-- Avoid over-commenting - code should be self-documenting where possible
+- Keep comments evergreen (describe what the code does, not recent changes)
+- Avoid over-commenting — code should be self-documenting where possible
 - Add comments for complex logic or non-obvious decisions
 
 ## Development Workflow
@@ -150,8 +225,9 @@ All TypeScript files should start with `// ABOUT:` comments explaining the file'
 1. Create a feature branch from `main`: `git checkout -b feature/feature-name`
 2. Check `SPECIFICATIONS/` for relevant feature specs
 3. Implement following the specification and code conventions
-4. Test locally with `npm run dev`
-5. Create a PR when ready for review
+4. Write tests alongside implementation
+5. Run `npm test && npx tsc --noEmit` before committing
+6. Create a PR when ready for review
 
 ### Pull Request Review
 This project has two PR review skills available:
@@ -164,134 +240,88 @@ This project has two PR review skills available:
 - **`/review-pr-team`** - Comprehensive multi-perspective review (~3-5 min)
   - Use for critical infrastructure changes
   - Security-sensitive features
-  - Major architectural decisions and initial review of new feature / project plans
+  - Major architectural decisions and initial review of new feature/project plans
 
 ### Deployment
-Deployment to Cloudflare Workers happens via:
-- Manual: `wrangler deploy`
-- Automated: GitHub Actions (if configured)
+- **Manual**: `wrangler deploy`
+- **Automated**: GitHub Actions deploys on every push to `main`
 
 ## Environment & Secrets
 
-Cloudflare Workers use secrets for sensitive configuration:
+Cloudflare Workers use secrets for sensitive configuration. Secrets are configured via `wrangler secret put <SECRET_NAME>` and accessed via the `env` parameter in the Worker's fetch handler.
 
-- Secrets are configured via `wrangler secret put <SECRET_NAME>`
-- Never commit secrets to the repository
-- Secrets are accessed via the `env` parameter in the Worker's fetch handler
-
-### Required Secrets (Phase 3+)
-
-The following secrets must be configured for the admin authentication system to work:
+### Required Secrets
 
 #### ADMIN_EMAIL
-**Purpose:** Email address authorized for admin access (single admin user)
-**Value:** `magnus.hultberg@gmail.com`
-**Setup:**
+Email address authorized for admin access (single admin user).
 ```bash
 npx wrangler secret put ADMIN_EMAIL
 # Enter: magnus.hultberg@gmail.com
 ```
 
 #### JWT_SECRET
-**Purpose:** Secret key for signing authentication JWTs (session tokens)
-**Security:** Must be a strong random string (32+ characters recommended)
-**Setup:**
+Secret key for signing authentication JWTs. Must be a strong random string (32+ characters).
 ```bash
 npx wrangler secret put JWT_SECRET
-# Enter: <generate a strong random string>
-```
-
-**Generate a strong JWT secret:**
-```bash
-# On macOS/Linux:
-openssl rand -base64 32
-
-# Or Node.js:
-node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+# Generate a strong value with: openssl rand -base64 32
 ```
 
 #### RESEND_API_KEY
-**Purpose:** API key for Resend.com email service (magic link emails)
-**Obtain:** Sign up at https://resend.com and create an API key
-**Setup:**
+API key for Resend.com email service (magic link emails).
 ```bash
 npx wrangler secret put RESEND_API_KEY
 # Enter: re_xxxxxxxxx (your Resend API key)
 ```
 
-**Resend.com Setup:**
-1. Sign up at https://resend.com
-2. Verify your domain (hultberg.org) or use Resend's test domain
-3. Create an API key in the dashboard
-4. Copy the key and paste when prompted
-
-#### GITHUB_TOKEN (Phase 6+)
-**Purpose:** GitHub Personal Access Token for committing updates via API
-**Obtain:** Generate at https://github.com/settings/tokens (fine-grained token)
-**Permissions:** Contents (Read and write) for `hultberg-org` repository
-**Setup:**
+#### GITHUB_TOKEN
+GitHub Personal Access Token for committing updates via API.
+- Scope: fine-grained token, Contents (Read and write) for the `hultberg-org` repository
 ```bash
 npx wrangler secret put GITHUB_TOKEN
 # Enter: github_pat_xxxxxxxxx (your GitHub token)
 ```
 
-**Note:** This secret is only required in Phase 6 (Worker Backend API). Not needed for Phase 3-5.
-
-### Verifying Secrets Configuration
-
-Check which secrets are configured:
+### Verifying Secrets
 ```bash
-npx wrangler secret list
-```
-
-Delete a secret (if needed):
-```bash
-npx wrangler secret delete SECRET_NAME
+npx wrangler secret list    # List configured secrets
+npx wrangler secret delete SECRET_NAME  # Remove a secret
 ```
 
 ### Local Development with Secrets
 
-For local development (`npm run dev`), create a `.dev.vars` file (already in `.gitignore`):
-
-```bash
-# .dev.vars (DO NOT COMMIT)
+Create a `.dev.vars` file (already in `.gitignore`):
+```
 ADMIN_EMAIL=magnus.hultberg@gmail.com
 JWT_SECRET=local-dev-secret-key-not-for-production
 RESEND_API_KEY=re_your_resend_api_key
 GITHUB_TOKEN=github_pat_your_token
 ```
 
-Wrangler automatically loads `.dev.vars` during local development.
+Wrangler automatically loads `.dev.vars` during `npm run dev`.
 
 ### KV Namespaces
 
-In addition to secrets, the following KV namespaces are configured in `wrangler.toml`:
+Two KV namespaces are declared in `wrangler.toml` and automatically available in the Worker:
 
-- **AUTH_KV** - Stores magic link tokens (15-minute TTL)
-- **RATE_LIMIT_KV** - Stores rate limiting counters (1-minute TTL)
+- **AUTH_KV** (`env.AUTH_KV`) - Stores magic link tokens (15-minute TTL)
+- **RATE_LIMIT_KV** (`env.RATE_LIMIT_KV`) - Stores rate limiting counters (1-minute TTL)
 
-These are automatically available in the Worker via `env.AUTH_KV` and `env.RATE_LIMIT_KV`.
+The ASSETS binding (`env.ASSETS`) is also declared in `wrangler.toml` — this is required to access static files from the Worker (see [Static File Serving Gotcha](#static-file-serving-gotcha) above).
 
-See `src/types.ts` for the complete `Env` interface with all available bindings.
+See `src/types.ts` for the complete `Env` interface.
 
 ## Testing
 
 ### Philosophy: Tests as Development Guardrails
 
-**Critical Concept:** Tests in this project serve a dual purpose beyond traditional validation:
+Tests in this project serve a dual purpose beyond traditional validation:
 
-1. **Validation** - Verify code works correctly (traditional testing)
-2. **Directional Context** - Guide AI agents on what to build and how to build it
+1. **Validation** — Verify code works correctly
+2. **Directional Context** — Guide AI agents on what to build and how to build it
 
-Tests act as **executable specifications** that provide guardrails for agent-driven development. When an AI agent makes changes, tests should:
-- Immediately signal if changes break existing functionality
-- Provide clear context about what each component should do
-- Make it obvious when a change is going in the wrong direction
-- Serve as living documentation that agents can read and understand
+Tests act as **executable specifications** that provide guardrails for agent-driven development. When an AI agent makes changes, tests should immediately signal if changes break existing functionality.
 
-**This approach is inspired by [OpenAI's Harness Engineering](https://openai.com/index/harness-engineering/)** and is essential for productive collaboration between human developers and AI agents.
-
-**For complete testing strategy, philosophy, and implementation details:** [testing-strategy-plan.md](./SPECIFICATIONS/testing-strategy-plan.md)
+**For the complete testing strategy:** [testing-strategy-plan.md](./SPECIFICATIONS/testing-strategy-plan.md)
 
 ### Test-Driven Development Workflow
 
@@ -323,12 +353,13 @@ tests/
 ├── unit/          # Unit tests for individual functions
 ├── integration/   # Integration tests for routes and APIs
 ├── e2e/           # End-to-end workflow tests
+├── fixtures/      # Test data (sample update JSON, etc.)
 └── mocks/         # Reusable mock implementations
 ```
 
 **Test files mirror source structure:**
-- `src/utils/slugGeneration.ts` → `tests/unit/slugGeneration.test.ts`
-- `src/routes/updatesList.ts` → `tests/integration/updatesList.test.ts`
+- `src/utils.ts` → `tests/unit/utils.test.ts`
+- `src/routes/updatePage.ts` → `tests/integration/updatePage.test.ts`
 
 ### Coverage Requirements
 
@@ -337,8 +368,6 @@ tests/
 **Enforced minimums:**
 - 95% lines, functions, statements
 - 90% branches
-
-**Why 100%?** Untested code is unclear about its purpose and constraints. If we can't test it, maybe we don't need it. Agents need complete context about all code paths.
 
 ### Path Alias Configuration
 
@@ -349,51 +378,19 @@ Tests and source code use the `@/` path alias for clean imports:
 import { Env } from '@/types';
 ```
 
-This improves readability and prevents brittle relative path imports.
-
-### Clear Naming: Essential for Agent Context
-
-**Critical principle:** Variable, parameter, function, and file names must communicate what they are about without needing additional documentation.
-
-**Good naming examples:**
-- `AUTH_KV` and `RATE_LIMIT_KV` (clear purpose) vs `KV1` and `KV2` (ambiguous)
-- `generateSlugFromTitle()` vs `generate()`
-- `isUserAuthenticated()` vs `check()`
-- `tests/unit/slugGeneration.test.ts` vs `tests/test1.ts`
-
-**Why this matters for agents:**
-- Agents rely heavily on names to understand context and intent
-- Descriptive names reduce the need for agents to read full implementations
-- Clear names make tests self-documenting
-- Good names prevent agents from making incorrect assumptions
-
-**General naming conventions:**
-- Use descriptive, meaningful names (not abbreviations unless standard)
-- Follow TypeScript conventions (camelCase for variables/functions, PascalCase for types)
-- Avoid temporal references (no "new", "improved", "old", etc.)
-- Test files: `{module}.test.ts` format
-
-### Test Principles
-
-1. **Tests define expected behavior** - Living specifications
-2. **Tests are self-contained** - Each test sets up and cleans up
-3. **Tests fail fast with clear messages** - Explain what/where/why
-4. **Tests are runnable in isolation** - No dependencies on other tests
-5. **100% coverage goal** - Every line has clear purpose
-
 ### Mocking Strategy
 
 **Reusable mocks in `tests/mocks/`:**
 - `createMockKV()` - In-memory KVNamespace for testing
 - `createMockEnv()` - Test environment configuration with sensible defaults
+- GitHub API responses mocked via `vi.stubGlobal('fetch', ...)` or similar
 
 **What to mock:**
-- External services (GitHub API, Resend API, Cloudflare KV)
-- Static assets (file system reads)
+- External services (GitHub API, Resend API, Cloudflare KV, ASSETS binding)
+- `fetch()` calls to external URLs
 
 **What NOT to mock:**
 - Core logic (slug generation, markdown parsing, validation)
-- These are the primary value of our code
 
 ### Pre-Commit Validation
 
@@ -403,15 +400,12 @@ npm test              # Verify all tests pass
 npx tsc --noEmit      # Check TypeScript compilation
 ```
 
-Future: Pre-commit hooks will automate this validation.
-
 ## Troubleshooting
 
 ### Local Development Issues
 
 **Port already in use:**
 ```bash
-# Kill existing Wrangler process
 pkill -f wrangler
 # Or specify a different port
 wrangler dev --port 8788
@@ -419,13 +413,16 @@ wrangler dev --port 8788
 
 **TypeScript errors:**
 ```bash
-# Check TypeScript compilation
 npx tsc --noEmit
+```
+
+**Updates listing shows no content locally:**
+```bash
+node scripts/generate-index.js   # Regenerate index.json from local update files
 ```
 
 **Dependency issues:**
 ```bash
-# Clean install
 rm -rf node_modules package-lock.json
 npm install
 ```
@@ -434,7 +431,6 @@ npm install
 
 **Authentication errors:**
 ```bash
-# Re-authenticate with Cloudflare
 wrangler login
 ```
 
@@ -443,59 +439,19 @@ wrangler login
 - Ensure all dependencies are in `package.json`
 - Verify `wrangler.toml` configuration is valid
 
+**Images not loading after upload:**
+- Images are served via the Worker's image proxy route (`/images/updates/*`)
+- The proxy fetches from `raw.githubusercontent.com` — newly committed images may take a few minutes to propagate
+- Check that the `GITHUB_REPO` constant in `src/github.ts` matches your actual repo path
+
+**`env.ASSETS` is undefined:**
+- Ensure `wrangler.toml` has `binding = "ASSETS"` under `[assets]`
+- Without this, `env.ASSETS?.fetch()` silently falls back to `fetch()`, which re-enters Worker routing
+
 ## Technical Debt
 
-This section tracks known technical debt and decisions to accept certain risks for MVP, with plans for future improvement.
+Known technical debt and accepted risks are tracked in [technical-debt.md](./SPECIFICATIONS/technical-debt.md).
 
-### HTML Sanitization (XSS Prevention)
-
-**Status:** Accepted risk for MVP (February 2026)
-
-**Current Implementation:**
-- Regex-based HTML sanitization in `src/routes/updatePage.ts`
-- Removes dangerous tags (`script`, `iframe`, `object`, `embed`, etc.)
-- Removes dangerous protocols (`javascript:`, `data:`, `vbscript:`, etc.)
-- Removes inline event handlers and style attributes
-- Located in `sanitizeHTML()` function with TODO comment
-
-**Known Limitations:**
-- Regex-based approach can potentially be bypassed with edge cases
-- Does not implement proper allowlist-based tag/attribute filtering
-- Industry best practice would be allowlist parser, not regex filtering
-
-**Why This Is Acceptable for MVP:**
-
-1. **Threat Model:** Single trusted admin (Magnus) - no untrusted user input
-2. **Defense-in-Depth:**
-   - Content Security Policy (CSP) headers block XSS execution even if sanitization fails
-   - Server-side rendering only (no client-side markdown parsing)
-   - HTML escaping for all metadata (title, author, excerpt)
-   - Content version-controlled in GitHub (easy rollback)
-3. **Risk Assessment:**
-   - Main risk: Admin accidentally pastes malicious content into own blog
-   - Secondary risk: GitHub account compromise (but then bigger problems exist)
-   - CSP headers provide strong secondary defense
-
-**Future Improvement Plan:**
-
-Monitor these libraries for Cloudflare Workers compatibility:
-- `isomorphic-dompurify` - Currently fails in Workers (as of Dec 2025)
-- `sanitize-html` - Requires node::process, not available in Workers
-- `worker-tools/html` - Templating library with built-in sanitization (requires rewrite)
-
-**Decision Made:** February 2026 by Magnus (project owner)
-
-**When to Revisit:**
-- Before adding multi-user admin access
-- Before accepting any form of public user input (comments, submissions)
-- When Workers-compatible sanitization library becomes available
-- If CSP headers are removed for any reason
-
-**Testing:**
-Comprehensive XSS test suite in `tests/integration/updatePage.test.ts` covering:
-- Script tags and event handlers
-- Case variation attacks
-- Alternative protocols (vbscript:, data:)
-- Dangerous tags (iframe, object, embed)
-- Event handlers with unusual spacing
-- Style attribute expressions
+Key items:
+- **HTML Sanitization**: Regex-based XSS prevention in `src/routes/updatePage.ts` — acceptable for single trusted admin, defended in depth by CSP headers. Replace when a Workers-compatible allowlist sanitizer becomes available.
+- **No pagination on /updates**: The listing page renders all published updates. Not an issue at low volume, but will need pagination as content grows.

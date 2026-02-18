@@ -5,12 +5,19 @@ import type { Env } from '@/types';
 import { requireAuth } from '@/auth';
 import { deleteUpdateFile, deleteImagesDirectory } from '@/github';
 
+const ALLOWED_ORIGIN = 'https://hultberg.org';
+
 /**
  * Handle DELETE /admin/api/delete-update
  * Deletes the update JSON file and associated images directory from GitHub
  * Authentication required
  */
 export async function handleDeleteUpdate(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get('Origin');
+  if (origin !== ALLOWED_ORIGIN) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+  }
+
   const authResult = await requireAuth(request, env);
   if (authResult instanceof Response) return authResult;
 

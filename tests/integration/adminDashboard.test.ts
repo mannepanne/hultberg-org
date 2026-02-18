@@ -150,6 +150,20 @@ describe('GET /admin/dashboard', () => {
     expect(response.headers.get('Content-Security-Policy')).toBeTruthy();
   });
 
+  it('escapes HTML special characters in update title', async () => {
+    const xssUpdate = { ...MOCK_UPDATE, title: '<script>alert(1)</script>' };
+    mockGitHubForDashboard([xssUpdate]);
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+    const request = new Request('http://localhost/admin/dashboard', {
+      headers: { Cookie: `auth_token=${jwt}` },
+    });
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+    const html = await response.text();
+
+    expect(html).not.toContain('<script>alert(1)</script>');
+    expect(html).toContain('&lt;script&gt;');
+  });
+
   it('shows empty state when GitHub token is not configured', async () => {
     const envWithoutToken = createMockEnv({ GITHUB_TOKEN: undefined });
     const jwt = await generateJWT(envWithoutToken, 'test@example.com');
@@ -174,7 +188,10 @@ describe('POST /admin/logout', () => {
   });
 
   it('redirects to /admin', async () => {
-    const request = new Request('http://localhost/admin/logout', { method: 'POST' });
+    const request = new Request('http://localhost/admin/logout', {
+      method: 'POST',
+      headers: { Origin: 'https://hultberg.org' },
+    });
     const response = await worker.fetch(request, mockEnv, mockCtx);
 
     expect(response.status).toBe(302);
@@ -182,11 +199,31 @@ describe('POST /admin/logout', () => {
   });
 
   it('clears the auth_token cookie', async () => {
-    const request = new Request('http://localhost/admin/logout', { method: 'POST' });
+    const request = new Request('http://localhost/admin/logout', {
+      method: 'POST',
+      headers: { Origin: 'https://hultberg.org' },
+    });
     const response = await worker.fetch(request, mockEnv, mockCtx);
 
     const setCookie = response.headers.get('Set-Cookie');
     expect(setCookie).toContain('auth_token=');
     expect(setCookie).toContain('Max-Age=0');
+  });
+
+  it('returns 403 when Origin header is missing', async () => {
+    const request = new Request('http://localhost/admin/logout', { method: 'POST' });
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(403);
+  });
+
+  it('returns 403 when Origin header is wrong', async () => {
+    const request = new Request('http://localhost/admin/logout', {
+      method: 'POST',
+      headers: { Origin: 'https://evil.com' },
+    });
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(403);
   });
 });

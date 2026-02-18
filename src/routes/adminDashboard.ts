@@ -8,6 +8,15 @@ import { fetchAllUpdates } from '@/github';
 
 const CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self';";
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function formatDate(isoDate: string): string {
   if (!isoDate) return '—';
   return new Date(isoDate).toLocaleDateString('en-GB', {
@@ -28,14 +37,16 @@ function statusBadge(status: string): string {
 function updateRow(update: Update): string {
   return `
     <tr id="row-${update.slug}">
-      <td><a href="/updates/${update.slug}" target="_blank">${update.title}</a></td>
+      <td><a href="/updates/${update.slug}" target="_blank">${escapeHtml(update.title)}</a></td>
       <td>${statusBadge(update.status)}</td>
       <td>${formatDate(update.publishedDate)}</td>
       <td>${formatDate(update.editedDate)}</td>
       <td style="white-space:nowrap">
         <a href="/admin/updates/${update.slug}/edit" style="margin-right:8px">Edit</a>
         <button
-          onclick="confirmDelete('${update.slug}', '${update.title.replace(/'/g, "\\'")}')"
+          data-slug="${update.slug}"
+          data-title="${escapeHtml(update.title)}"
+          onclick="confirmDelete(this.dataset.slug, this.dataset.title)"
           style="background:none;border:none;color:#dc3545;cursor:pointer;padding:0;font-size:inherit">
           Delete
         </button>

@@ -8,11 +8,12 @@ import { createMockContext } from '../mocks/context';
 import { generateJWT } from '@/auth';
 import type { Env } from '@/types';
 
-function makeDeleteRequest(slug: string, jwt?: string): Request {
+function makeDeleteRequest(slug: string, jwt?: string, origin = 'https://hultberg.org'): Request {
   return new Request('http://localhost/admin/api/delete-update', {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
+      'Origin': origin,
       ...(jwt ? { Cookie: `auth_token=${jwt}` } : {}),
     },
     body: JSON.stringify({ slug }),
@@ -28,6 +29,26 @@ describe('DELETE /admin/api/delete-update', () => {
     mockCtx = createMockContext();
   });
 
+  it('returns 403 when Origin header is missing', async () => {
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+    const request = new Request('http://localhost/admin/api/delete-update', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', Cookie: `auth_token=${jwt}` },
+      body: JSON.stringify({ slug: 'test-update' }),
+    });
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(403);
+  });
+
+  it('returns 403 when Origin header is wrong', async () => {
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+    const request = makeDeleteRequest('test-update', jwt, 'https://evil.com');
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(403);
+  });
+
   it('returns 401 when not authenticated', async () => {
     const request = makeDeleteRequest('test-update');
     const response = await worker.fetch(request, mockEnv, mockCtx);
@@ -39,7 +60,7 @@ describe('DELETE /admin/api/delete-update', () => {
     const jwt = await generateJWT(mockEnv, 'test@example.com');
     const request = new Request('http://localhost/admin/api/delete-update', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', Cookie: `auth_token=${jwt}` },
+      headers: { 'Content-Type': 'application/json', 'Origin': 'https://hultberg.org', Cookie: `auth_token=${jwt}` },
       body: JSON.stringify({}),
     });
     const response = await worker.fetch(request, mockEnv, mockCtx);

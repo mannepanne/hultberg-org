@@ -5,7 +5,14 @@
  * Handle POST /admin/logout
  * Clears the auth_token cookie and redirects to /admin login page
  */
+const ALLOWED_ORIGIN = 'https://hultberg.org';
+
 export function handleAdminLogout(request: Request): Response {
+  const origin = request.headers.get('Origin');
+  if (origin !== ALLOWED_ORIGIN) {
+    return new Response('Forbidden', { status: 403 });
+  }
+
   return new Response(null, {
     status: 302,
     headers: {

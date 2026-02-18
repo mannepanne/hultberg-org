@@ -8,7 +8,7 @@ import { createMockContext } from '../mocks/context';
 import { generateJWT } from '@/auth';
 import type { Env } from '@/types';
 
-function makeDeleteRequest(slug: string, jwt?: string, origin = 'https://hultberg.org'): Request {
+function makeDeleteRequest(slug: string, jwt?: string, origin = 'http://localhost'): Request {
   return new Request('http://localhost/admin/api/delete-update', {
     method: 'DELETE',
     headers: {
@@ -60,7 +60,7 @@ describe('DELETE /admin/api/delete-update', () => {
     const jwt = await generateJWT(mockEnv, 'test@example.com');
     const request = new Request('http://localhost/admin/api/delete-update', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'Origin': 'https://hultberg.org', Cookie: `auth_token=${jwt}` },
+      headers: { 'Content-Type': 'application/json', 'Origin': 'http://localhost', Cookie: `auth_token=${jwt}` },
       body: JSON.stringify({}),
     });
     const response = await worker.fetch(request, mockEnv, mockCtx);

@@ -7,7 +7,6 @@ import { requireAuth } from '@/auth';
 import { fetchAllUpdates, fetchUpdateBySlug, saveUpdateFile } from '@/github';
 import { generateSlugFromTitle } from '@/utils';
 
-const ALLOWED_ORIGIN = 'https://hultberg.org';
 const MAX_CONTENT_BYTES = 100 * 1024; // 100KB
 const VALID_STATUSES: UpdateStatus[] = ['draft', 'published', 'unpublished'];
 
@@ -18,7 +17,7 @@ const VALID_STATUSES: UpdateStatus[] = ['draft', 'published', 'unpublished'];
  */
 export async function handleSaveUpdate(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
-  if (origin !== ALLOWED_ORIGIN) {
+  if (origin !== new URL(request.url).origin) {
     return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
   }
 

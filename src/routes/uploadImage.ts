@@ -5,7 +5,6 @@ import type { Env } from '@/types';
 import { requireAuth } from '@/auth';
 import { uploadImageFile } from '@/github';
 
-const ALLOWED_ORIGIN = 'https://hultberg.org';
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB (post-resize, should be well under this)
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const SLUG_PATTERN = /^[a-z0-9-]+$/;
@@ -19,7 +18,7 @@ const FILENAME_PATTERN = /^[a-z0-9._-]+$/i;
  */
 export async function handleUploadImage(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
-  if (origin !== ALLOWED_ORIGIN) {
+  if (origin !== new URL(request.url).origin) {
     return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
   }
 

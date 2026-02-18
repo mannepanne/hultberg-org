@@ -5,8 +5,6 @@ import type { Env } from '@/types';
 import { requireAuth } from '@/auth';
 import { deleteImageFile } from '@/github';
 
-const ALLOWED_ORIGIN = 'https://hultberg.org';
-
 /**
  * Handle DELETE /admin/api/delete-image
  * Deletes a single image file from GitHub for a given update slug.
@@ -14,7 +12,7 @@ const ALLOWED_ORIGIN = 'https://hultberg.org';
  */
 export async function handleDeleteImage(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
-  if (origin !== ALLOWED_ORIGIN) {
+  if (origin !== new URL(request.url).origin) {
     return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
   }
 

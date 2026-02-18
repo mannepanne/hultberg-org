@@ -243,7 +243,7 @@ describe('POST /admin/api/verify-token', () => {
     mockCtx = createMockContext();
   });
 
-  function makePostRequest(token: string, origin = 'https://hultberg.org'): Request {
+  function makePostRequest(token: string, origin = 'http://localhost'): Request {
     return new Request('http://localhost/admin/api/verify-token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Origin': origin },
@@ -296,7 +296,7 @@ describe('POST /admin/api/verify-token', () => {
   it('redirects to login when token is missing from form body', async () => {
     const request = new Request('http://localhost/admin/api/verify-token', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Origin': 'https://hultberg.org' },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Origin': 'http://localhost' },
       body: new URLSearchParams({}).toString(),
     });
     const response = await worker.fetch(request, mockEnv, mockCtx);

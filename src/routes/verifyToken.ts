@@ -5,7 +5,6 @@ import type { Env } from '@/types';
 import { peekMagicLinkToken, verifyMagicLinkToken, generateJWT, createAuthCookie } from '@/auth';
 
 const CSP = "default-src 'self'; script-src 'none'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'self';";
-const ALLOWED_ORIGIN = 'https://hultberg.org';
 
 function renderConfirmPage(token: string): string {
   return `<!DOCTYPE html>
@@ -85,7 +84,7 @@ export async function handleVerifyTokenPost(request: Request, env: Env): Promise
   const url = new URL(request.url);
 
   const origin = request.headers.get('Origin');
-  if (origin !== ALLOWED_ORIGIN) {
+  if (origin !== url.origin) {
     return Response.redirect(`${url.origin}/admin?error=invalid-link`, 302);
   }
 

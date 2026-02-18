@@ -9,7 +9,7 @@ import { generateJWT } from '@/auth';
 import type { Env } from '@/types';
 import type { Update } from '@/types';
 
-const ORIGIN = 'https://hultberg.org';
+const ORIGIN = 'http://localhost';
 
 function makeSaveRequest(
   body: Record<string, unknown>,

@@ -8,7 +8,7 @@ import { createMockContext } from '../mocks/context';
 import { generateJWT } from '@/auth';
 import type { Env } from '@/types';
 
-const ORIGIN = 'https://hultberg.org';
+const ORIGIN = 'http://localhost';
 const GITHUB_IMAGES_BASE = 'https://api.github.com/repos/mannepanne/hultberg-org/contents/public/images/updates';
 
 function makeUploadRequest(

@@ -9,6 +9,13 @@ const path = require('path');
 const DATA_DIR = path.join(__dirname, '../public/updates/data');
 const INDEX_FILE = path.join(DATA_DIR, 'index.json');
 
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.writeFileSync(INDEX_FILE, JSON.stringify({ updates: [] }, null, 2) + '\n');
+  console.log('generate-index: data directory not found, wrote empty index.json');
+  process.exit(0);
+}
+
 const files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json') && f !== 'index.json');
 
 const updates = files
@@ -28,7 +35,7 @@ const updates = files
     publishedDate: u.publishedDate,
     status: u.status,
   }))
-  .sort((a, b) => new Date(b.publishedDate) - new Date(a.publishedDate));
+  .sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime());
 
 fs.writeFileSync(INDEX_FILE, JSON.stringify({ updates }, null, 2) + '\n');
 

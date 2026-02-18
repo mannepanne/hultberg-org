@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "predev": "node scripts/generate-index.js",
     "dev": "wrangler dev",
     "test": "vitest run",
     "test:watch": "vitest",

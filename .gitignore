@@ -12,3 +12,6 @@ coverage/
 
 # Secrets for local development
 .dev.vars
+
+# Generated at build time by scripts/generate-index.js
+public/updates/data/index.json

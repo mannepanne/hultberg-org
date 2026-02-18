@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "e8ad9cd8a8bd",
+  "session_id": "31a6929b-40b8-4b54-b3e4-eda03b8e04ae",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-18T18:53:26.484106Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/routes/adminEditor.ts",
+    "src/routes/saveUpdate.ts",
+    "tests/integration/saveUpdate.test.ts"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "d8066a71-0934-4005-96da-f3141e34c2a7",
+  "checkpoint_transcript_start": 1798,
+  "transcript_lines_at_start": 1798,
+  "token_usage": {
+    "input_tokens": 29,
+    "cache_creation_tokens": 137733,
+    "cache_read_tokens": 3467128,
+    "output_tokens": 7307,
+    "api_call_count": 25
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-18T18:53:25.282955Z",
+    "agent_lines": 0,
+    "human_added": 165,
+    "human_modified": 6,
+    "human_removed": 0,
+    "total_committed": 165,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-magnus-Documents-Coding-MigrateHultbergOrg-hultberg-org/31a6929b-40b8-4b54-b3e4-eda03b8e04ae.jsonl"
+}

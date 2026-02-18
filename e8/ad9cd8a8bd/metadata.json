@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "e8ad9cd8a8bd",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/routes/adminEditor.ts",
+    "src/routes/saveUpdate.ts",
+    "tests/integration/saveUpdate.test.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/e8/ad9cd8a8bd/0/metadata.json",
+      "transcript": "/e8/ad9cd8a8bd/0/full.jsonl",
+      "context": "/e8/ad9cd8a8bd/0/context.md",
+      "content_hash": "/e8/ad9cd8a8bd/0/content_hash.txt",
+      "prompt": "/e8/ad9cd8a8bd/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 29,
+    "cache_creation_tokens": 137733,
+    "cache_read_tokens": 3467128,
+    "output_tokens": 7307,
+    "api_call_count": 25
+  }
+}

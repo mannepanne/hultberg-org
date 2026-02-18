@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "a5dec84c9c6b",
+  "strategy": "manual-commit",
+  "branch": "feature/phase5-6-editor-api",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".claude/settings.local.json",
+    "SPECIFICATIONS/technical-debt.md",
+    "src/routes/saveUpdate.ts",
+    "tests/integration/saveUpdate.test.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/a5/dec84c9c6b/0/metadata.json",
+      "transcript": "/a5/dec84c9c6b/0/full.jsonl",
+      "context": "/a5/dec84c9c6b/0/context.md",
+      "content_hash": "/a5/dec84c9c6b/0/content_hash.txt",
+      "prompt": "/a5/dec84c9c6b/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 22,
+    "cache_creation_tokens": 16005,
+    "cache_read_tokens": 2560931,
+    "output_tokens": 5982,
+    "api_call_count": 20
+  }
+}

@@ -12,6 +12,12 @@ import { handleVerifyTokenGet, handleVerifyTokenPost } from './routes/verifyToke
 import { handleAdminDashboard } from './routes/adminDashboard';
 import { handleListUpdates } from './routes/listUpdates';
 import { handleDeleteUpdate } from './routes/deleteUpdate';
+import { handleNewUpdate, handleEditUpdate } from './routes/adminEditor';
+import { handleAdminPreview } from './routes/adminPreview';
+import { handleSaveUpdate } from './routes/saveUpdate';
+import { handleUploadImage } from './routes/uploadImage';
+import { handleDeleteImage } from './routes/deleteImage';
+import { GITHUB_REPO } from './github';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -51,6 +57,38 @@ export default {
       return handleDeleteUpdate(request, env);
     }
 
+    // API: POST /admin/api/save-update (authenticated)
+    if (url.pathname === '/admin/api/save-update' && request.method === 'POST') {
+      return handleSaveUpdate(request, env);
+    }
+
+    // API: POST /admin/api/upload-image (authenticated)
+    if (url.pathname === '/admin/api/upload-image' && request.method === 'POST') {
+      return handleUploadImage(request, env);
+    }
+
+    // API: DELETE /admin/api/delete-image (authenticated)
+    if (url.pathname === '/admin/api/delete-image' && request.method === 'DELETE') {
+      return handleDeleteImage(request, env);
+    }
+
+    // Editor: GET /admin/updates/new
+    if (url.pathname === '/admin/updates/new' && request.method === 'GET') {
+      return handleNewUpdate(request, env);
+    }
+
+    // Editor: GET /admin/updates/:slug/edit
+    const editSlugMatch = url.pathname.match(/^\/admin\/updates\/([a-z0-9-]+)\/edit$/);
+    if (editSlugMatch && request.method === 'GET') {
+      return handleEditUpdate(request, env, editSlugMatch[1]);
+    }
+
+    // Preview: GET /admin/preview/:slug
+    const previewSlugMatch = url.pathname.match(/^\/admin\/preview\/([a-z0-9-]+)$/);
+    if (previewSlugMatch && request.method === 'GET') {
+      return handleAdminPreview(request, env, previewSlugMatch[1]);
+    }
+
     // Login page: GET /admin
     if (url.pathname === '/admin' && request.method === 'GET') {
       return handleAdminLogin(request);
@@ -72,6 +110,26 @@ export default {
     if (updateSlugMatch) {
       const slug = updateSlugMatch[1];
       return handleUpdatePage(request, slug);
+    }
+
+    // Route: /images/updates/* - proxy uploaded images from GitHub raw content
+    // Images are stored in GitHub via the admin API; this route serves them without
+    // requiring a full site redeploy after each upload.
+    const imagesMatch = url.pathname.match(/^\/images\/updates\/(.+)$/);
+    if (imagesMatch) {
+      const imagePath = imagesMatch[1];
+      const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/public/images/updates/${imagePath}`;
+      const imageResponse = await fetch(rawUrl);
+      if (!imageResponse.ok) {
+        return new Response('Not Found', { status: 404 });
+      }
+      return new Response(imageResponse.body, {
+        status: 200,
+        headers: {
+          'Content-Type': imageResponse.headers.get('Content-Type') ?? 'image/jpeg',
+          'Cache-Control': 'public, max-age=86400',
+        },
+      });
     }
 
     // Default 404 handler for unmatched routes

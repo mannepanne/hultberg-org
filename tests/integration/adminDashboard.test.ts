@@ -190,7 +190,7 @@ describe('POST /admin/logout', () => {
   it('redirects to /admin', async () => {
     const request = new Request('http://localhost/admin/logout', {
       method: 'POST',
-      headers: { Origin: 'https://hultberg.org' },
+      headers: { Origin: 'http://localhost' },
     });
     const response = await worker.fetch(request, mockEnv, mockCtx);
 
@@ -201,7 +201,7 @@ describe('POST /admin/logout', () => {
   it('clears the auth_token cookie', async () => {
     const request = new Request('http://localhost/admin/logout', {
       method: 'POST',
-      headers: { Origin: 'https://hultberg.org' },
+      headers: { Origin: 'http://localhost' },
     });
     const response = await worker.fetch(request, mockEnv, mockCtx);
 

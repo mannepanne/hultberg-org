@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "304e44db9143",
+  "session_id": "31a6929b-40b8-4b54-b3e4-eda03b8e04ae",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-18T21:57:15.475874Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "public/2005/11/recipe_sharing_.html"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "8cdc6485-8b25-44f9-ba02-d073670380f7",
+  "checkpoint_transcript_start": 2171,
+  "transcript_lines_at_start": 2171,
+  "token_usage": {
+    "input_tokens": 5,
+    "cache_creation_tokens": 13141,
+    "cache_read_tokens": 426436,
+    "output_tokens": 3785,
+    "api_call_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-18T21:57:13.575689Z",
+    "agent_lines": 0,
+    "human_added": 0,
+    "human_modified": 130,
+    "human_removed": 91,
+    "total_committed": 0,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-magnus-Documents-Coding-MigrateHultbergOrg-hultberg-org/31a6929b-40b8-4b54-b3e4-eda03b8e04ae.jsonl"
+}

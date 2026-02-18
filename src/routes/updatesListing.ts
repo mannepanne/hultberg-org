@@ -100,6 +100,8 @@ function renderUpdatesListingHTML(updates: UpdateIndex['updates']): string {
             <h1>Updates</h1>
 
             ${updatesHTML}
+
+            <p>← <a href="/">Home</a></p>
         </div>
     </body>
 </html>

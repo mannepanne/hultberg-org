@@ -131,6 +131,8 @@ function renderUpdatePageHTML(update: Update, contentHTML: string): string {
                     ${contentHTML}
                 </div>
             </article>
+
+            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a></p>
         </div>
     </body>
 </html>

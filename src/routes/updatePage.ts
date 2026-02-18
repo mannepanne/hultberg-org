@@ -117,7 +117,7 @@ function renderUpdatePageHTML(update: Update, contentHTML: string): string {
     </head>
     <body>
         <div style="max-width: 800px; margin: 0 auto; padding: 2em;">
-            <p><a href="/updates">← Back to updates</a></p>
+            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a></p>
 
             <article>
                 <header>

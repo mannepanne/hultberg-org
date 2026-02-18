@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "6f10cec46ca8",
+  "strategy": "manual-commit",
+  "branch": "feature/phase7-auto-deploy",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".gitignore",
+    "package.json",
+    "scripts/generate-index.js"
+  ],
+  "sessions": [
+    {
+      "metadata": "/6f/10cec46ca8/0/metadata.json",
+      "transcript": "/6f/10cec46ca8/0/full.jsonl",
+      "context": "/6f/10cec46ca8/0/context.md",
+      "content_hash": "/6f/10cec46ca8/0/content_hash.txt",
+      "prompt": "/6f/10cec46ca8/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 14,
+    "cache_creation_tokens": 6118,
+    "cache_read_tokens": 1034278,
+    "output_tokens": 2347,
+    "api_call_count": 12
+  }
+}

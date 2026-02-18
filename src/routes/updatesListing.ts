@@ -105,8 +105,8 @@ function renderUpdatesListingHTML(updates: UpdateIndex['updates']): string {
     </head>
     <body>
         <div style="max-width: 800px; margin: 0 auto; padding: 2em;">
-            <h1>Updates</h1>
             <p><a href="/">← Back to home</a></p>
+            <h1>Updates</h1>
 
             ${updatesHTML}
         </div>

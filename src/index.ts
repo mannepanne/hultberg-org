@@ -8,7 +8,7 @@ import { handleRSSFeed } from './routes/rssFeed';
 import { handleAdminLogin } from './routes/adminLogin';
 import { handleAdminLogout } from './routes/adminLogout';
 import { handleSendMagicLink } from './routes/sendMagicLink';
-import { handleVerifyToken } from './routes/verifyToken';
+import { handleVerifyTokenGet, handleVerifyTokenPost } from './routes/verifyToken';
 import { handleAdminDashboard } from './routes/adminDashboard';
 import { handleListUpdates } from './routes/listUpdates';
 import { handleDeleteUpdate } from './routes/deleteUpdate';
@@ -23,9 +23,12 @@ export default {
       return handleSendMagicLink(request, env);
     }
 
-    // API endpoint: GET /admin/api/verify-token
+    // Verify token: GET shows confirmation page, POST consumes token and sets cookie
     if (url.pathname === '/admin/api/verify-token' && request.method === 'GET') {
-      return handleVerifyToken(request, env);
+      return handleVerifyTokenGet(request, env);
+    }
+    if (url.pathname === '/admin/api/verify-token' && request.method === 'POST') {
+      return handleVerifyTokenPost(request, env);
     }
 
     // Dashboard: GET /admin/dashboard (authenticated)

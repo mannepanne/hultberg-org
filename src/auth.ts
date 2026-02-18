@@ -72,6 +72,23 @@ export async function storeMagicLinkToken(
 }
 
 /**
+ * Non-destructive check that a magic link token exists and has not been used
+ * Does NOT consume the token - used to validate before showing the confirmation page
+ * Returns true if the token is present in KV and not marked as used
+ */
+export async function peekMagicLinkToken(env: Env, token: string): Promise<boolean> {
+  if (!env.AUTH_KV) return false;
+  const data = await env.AUTH_KV.get(`auth:token:${token}`);
+  if (!data) return false;
+  try {
+    const tokenData = JSON.parse(data) as { used?: boolean };
+    return !tokenData.used;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Verify and consume a magic link token
  * Returns email if valid, null if invalid/expired/used
  * Marks token as used to prevent reuse, per security spec:

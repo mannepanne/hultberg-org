@@ -192,8 +192,7 @@ describe('GET /admin/api/verify-token', () => {
     expect(response.headers.get('Location')).toContain('/admin?error=link-expired');
   });
 
-  it('redirects to dashboard and sets cookie when token is valid', async () => {
-    // Store a valid token with timestamp 6 seconds in the past to clear the reuse protection window
+  it('shows confirmation page when token is valid (does not consume token)', async () => {
     const email = 'test@example.com';
     const token = 'valid-test-token';
     await mockEnv.AUTH_KV!.put(
@@ -204,6 +203,64 @@ describe('GET /admin/api/verify-token', () => {
 
     const request = new Request(`http://localhost/admin/api/verify-token?token=${token}`);
     const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toContain('text/html');
+
+    const html = await response.text();
+    expect(html).toContain('Log In to Admin');
+    expect(html).toContain(`value="${token}"`);
+
+    // Token must NOT be consumed — a second GET should still show the confirmation page
+    const request2 = new Request(`http://localhost/admin/api/verify-token?token=${token}`);
+    const response2 = await worker.fetch(request2, mockEnv, mockCtx);
+    expect(response2.status).toBe(200);
+  });
+
+  it('redirects to login when token is already used', async () => {
+    const email = 'test@example.com';
+    const token = 'used-test-token';
+    await mockEnv.AUTH_KV!.put(
+      `auth:token:${token}`,
+      JSON.stringify({ email, timestamp: Date.now() - 6000, used: true }),
+      { expirationTtl: 60 }
+    );
+
+    const request = new Request(`http://localhost/admin/api/verify-token?token=${token}`);
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get('Location')).toContain('/admin?error=link-expired');
+  });
+});
+
+describe('POST /admin/api/verify-token', () => {
+  let mockEnv: Env;
+  let mockCtx: ExecutionContext;
+
+  beforeEach(() => {
+    mockEnv = createMockEnv();
+    mockCtx = createMockContext();
+  });
+
+  function makePostRequest(token: string, origin = 'https://hultberg.org'): Request {
+    return new Request('http://localhost/admin/api/verify-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Origin': origin },
+      body: new URLSearchParams({ token }).toString(),
+    });
+  }
+
+  it('redirects to dashboard and sets cookie when token is valid', async () => {
+    const email = 'test@example.com';
+    const token = 'valid-post-token';
+    await mockEnv.AUTH_KV!.put(
+      `auth:token:${token}`,
+      JSON.stringify({ email, timestamp: Date.now() - 6000, used: false }),
+      { expirationTtl: 900 }
+    );
+
+    const response = await worker.fetch(makePostRequest(token), mockEnv, mockCtx);
 
     expect(response.status).toBe(302);
     expect(response.headers.get('Location')).toBe('/admin/dashboard');
@@ -217,26 +274,61 @@ describe('GET /admin/api/verify-token', () => {
   });
 
   it('prevents token reuse', async () => {
-    // Store a valid token with timestamp 6 seconds in the past to clear the reuse protection window
     const email = 'test@example.com';
-    const token = 'reuse-test-token';
+    const token = 'reuse-post-token';
     await mockEnv.AUTH_KV!.put(
       `auth:token:${token}`,
       JSON.stringify({ email, timestamp: Date.now() - 6000, used: false }),
       { expirationTtl: 900 }
     );
 
-    // First use should succeed
-    const request1 = new Request(`http://localhost/admin/api/verify-token?token=${token}`);
-    const response1 = await worker.fetch(request1, mockEnv, mockCtx);
+    // First POST should succeed
+    const response1 = await worker.fetch(makePostRequest(token), mockEnv, mockCtx);
     expect(response1.status).toBe(302);
     expect(response1.headers.get('Location')).toBe('/admin/dashboard');
 
-    // Second use should fail
-    const request2 = new Request(`http://localhost/admin/api/verify-token?token=${token}`);
-    const response2 = await worker.fetch(request2, mockEnv, mockCtx);
+    // Second POST should fail — token consumed
+    const response2 = await worker.fetch(makePostRequest(token), mockEnv, mockCtx);
     expect(response2.status).toBe(302);
     expect(response2.headers.get('Location')).toContain('/admin?error=link-expired');
+  });
+
+  it('redirects to login when token is missing from form body', async () => {
+    const request = new Request('http://localhost/admin/api/verify-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Origin': 'https://hultberg.org' },
+      body: new URLSearchParams({}).toString(),
+    });
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get('Location')).toContain('/admin?error=invalid-link');
+  });
+
+  it('redirects to login when token is invalid', async () => {
+    const response = await worker.fetch(makePostRequest('invalid-token'), mockEnv, mockCtx);
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get('Location')).toContain('/admin?error=link-expired');
+  });
+
+  it('redirects to login when Origin header is missing', async () => {
+    const request = new Request('http://localhost/admin/api/verify-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ token: 'some-token' }).toString(),
+    });
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get('Location')).toContain('/admin?error=invalid-link');
+  });
+
+  it('redirects to login when Origin header is wrong', async () => {
+    const response = await worker.fetch(makePostRequest('some-token', 'https://evil.com'), mockEnv, mockCtx);
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get('Location')).toContain('/admin?error=invalid-link');
   });
 });
 

@@ -78,12 +78,12 @@ function renderUpdatesListingHTML(updates: UpdateIndex['updates']): string {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="description" content="Updates from Magnus Hultberg" />
 
-        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-291574-7"></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-D1L22CCJTJ"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'UA-291574-7');
+            gtag('config', 'G-D1L22CCJTJ');
         </script>
     </head>
     <body>

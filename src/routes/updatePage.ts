@@ -90,12 +90,12 @@ function renderUpdatePageHTML(update: Update, contentHTML: string): string {
         <meta name="description" content="${escapeHtml(update.excerpt)}" />
         <meta name="author" content="${escapeHtml(update.author)}" />
 
-        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-291574-7"></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-D1L22CCJTJ"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'UA-291574-7');
+            gtag('config', 'G-D1L22CCJTJ');
         </script>
     </head>
     <body>

@@ -12,7 +12,7 @@ export interface Env {
   JWT_SECRET?: string;
   RESEND_API_KEY?: string;
 
-  // GitHub integration (Phase 6+)
+  // GitHub integration (Phase 4+)
   GITHUB_TOKEN?: string;
 
   // KV namespaces (Phase 3+)

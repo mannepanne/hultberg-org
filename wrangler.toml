@@ -8,6 +8,7 @@ enabled = true
 
 [assets]
 directory = "./public"
+binding = "ASSETS"
 
 # KV Namespaces for blog updates feature
 # AUTH_KV: Stores magic link tokens for authentication

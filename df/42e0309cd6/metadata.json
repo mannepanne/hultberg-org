@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "df42e0309cd6",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/routes/adminDashboard.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/df/42e0309cd6/0/metadata.json",
+      "transcript": "/df/42e0309cd6/0/full.jsonl",
+      "context": "/df/42e0309cd6/0/context.md",
+      "content_hash": "/df/42e0309cd6/0/content_hash.txt",
+      "prompt": "/df/42e0309cd6/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 7,
+    "cache_creation_tokens": 1777,
+    "cache_read_tokens": 573555,
+    "output_tokens": 737,
+    "api_call_count": 5
+  }
+}

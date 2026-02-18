@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "faa17f3446c3",
+  "strategy": "manual-commit",
+  "branch": "feature/phase5-6-editor-api",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/routes/adminEditor.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/fa/a17f3446c3/0/metadata.json",
+      "transcript": "/fa/a17f3446c3/0/full.jsonl",
+      "context": "/fa/a17f3446c3/0/context.md",
+      "content_hash": "/fa/a17f3446c3/0/content_hash.txt",
+      "prompt": "/fa/a17f3446c3/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 13,
+    "cache_creation_tokens": 26866,
+    "cache_read_tokens": 468869,
+    "output_tokens": 800,
+    "api_call_count": 9
+  }
+}

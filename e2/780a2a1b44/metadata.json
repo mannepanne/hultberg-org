@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "e2780a2a1b44",
+  "strategy": "manual-commit",
+  "branch": "feature/phase5-6-editor-api",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/github.ts",
+    "src/index.ts",
+    "tests/integration/imageProxy.test.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/e2/780a2a1b44/0/metadata.json",
+      "transcript": "/e2/780a2a1b44/0/full.jsonl",
+      "context": "/e2/780a2a1b44/0/context.md",
+      "content_hash": "/e2/780a2a1b44/0/content_hash.txt",
+      "prompt": "/e2/780a2a1b44/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 21,
+    "cache_creation_tokens": 18068,
+    "cache_read_tokens": 1038413,
+    "output_tokens": 6511,
+    "api_call_count": 17
+  }
+}

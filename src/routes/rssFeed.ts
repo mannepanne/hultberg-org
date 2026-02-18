@@ -1,18 +1,18 @@
 // ABOUT: Route handler for /updates/feed.xml RSS feed
 // ABOUT: Generates RSS 2.0 XML with published updates
 
-import type { UpdateIndex } from '@/types';
+import type { Env, UpdateIndex } from '@/types';
 
 /**
  * Handles GET requests to /updates/feed.xml
  * Fetches index, filters published updates, and generates RSS 2.0 XML
  */
-export async function handleRSSFeed(request: Request): Promise<Response> {
+export async function handleRSSFeed(request: Request, env: Env): Promise<Response> {
   try {
-    // Fetch the index.json from static assets
+    // Fetch the index.json via the ASSETS binding to avoid self-referential Worker routing
     const url = new URL(request.url);
     const indexUrl = `${url.origin}/updates/data/index.json`;
-    const indexResponse = await fetch(indexUrl);
+    const indexResponse = await (env.ASSETS?.fetch(new Request(indexUrl)) ?? fetch(indexUrl));
 
     if (!indexResponse.ok) {
       throw new Error('Failed to fetch updates index');

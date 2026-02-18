@@ -2,19 +2,19 @@
 // ABOUT: Renders markdown content with metadata and sanitizes HTML
 
 import { marked } from 'marked';
-import type { Update } from '@/types';
+import type { Env, Update } from '@/types';
 import { escapeHtml } from '@/utils';
 
 /**
  * Handles GET requests to /updates/{slug}
  * Fetches update JSON from static assets, checks visibility, and renders the page
  */
-export async function handleUpdatePage(request: Request, slug: string): Promise<Response> {
+export async function handleUpdatePage(request: Request, env: Env, slug: string): Promise<Response> {
   try {
-    // Fetch the update JSON from static assets
+    // Fetch the update JSON via the ASSETS binding to avoid self-referential Worker routing
     const url = new URL(request.url);
     const updateUrl = `${url.origin}/updates/data/${slug}.json`;
-    const updateResponse = await fetch(updateUrl);
+    const updateResponse = await (env.ASSETS?.fetch(new Request(updateUrl)) ?? fetch(updateUrl));
 
     if (!updateResponse.ok) {
       return new Response('Update not found', { status: 404 });

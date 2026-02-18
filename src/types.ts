@@ -18,6 +18,9 @@ export interface Env {
   // KV namespaces (Phase 3+)
   AUTH_KV?: KVNamespace; // Stores magic link tokens
   RATE_LIMIT_KV?: KVNamespace; // Stores rate limit data
+
+  // Static assets binding — use env.ASSETS.fetch() to serve files from public/
+  ASSETS?: Fetcher;
 }
 
 /**

@@ -1,19 +1,19 @@
 // ABOUT: Route handler for /updates listing page
 // ABOUT: Displays published updates in reverse chronological order
 
-import type { UpdateIndex } from '@/types';
+import type { Env, UpdateIndex } from '@/types';
 import { escapeHtml } from '@/utils';
 
 /**
  * Handles GET requests to /updates
  * Fetches index.json, filters published updates, and renders HTML
  */
-export async function handleUpdatesListing(request: Request): Promise<Response> {
+export async function handleUpdatesListing(request: Request, env: Env): Promise<Response> {
   try {
-    // Fetch the index.json from static assets
+    // Fetch the index.json via the ASSETS binding to avoid self-referential Worker routing
     const url = new URL(request.url);
     const indexUrl = `${url.origin}/updates/data/index.json`;
-    const indexResponse = await fetch(indexUrl);
+    const indexResponse = await (env.ASSETS?.fetch(new Request(indexUrl)) ?? fetch(indexUrl));
 
     if (!indexResponse.ok) {
       throw new Error('Failed to fetch updates index');

@@ -97,19 +97,19 @@ export default {
     // Public routes
     // Route: /updates/feed.xml RSS feed
     if (url.pathname === '/updates/feed.xml') {
-      return handleRSSFeed(request);
+      return handleRSSFeed(request, env);
     }
 
     // Route: /updates listing page
     if (url.pathname === '/updates') {
-      return handleUpdatesListing(request);
+      return handleUpdatesListing(request, env);
     }
 
     // Route: /updates/{slug} individual page
     const updateSlugMatch = url.pathname.match(/^\/updates\/([a-z0-9-]+)$/);
     if (updateSlugMatch) {
       const slug = updateSlugMatch[1];
-      return handleUpdatePage(request, slug);
+      return handleUpdatePage(request, env, slug);
     }
 
     // Route: /images/updates/* - proxy uploaded images from GitHub raw content

@@ -101,6 +101,28 @@ describe('POST /admin/api/save-update', () => {
     expect(response.status).toBe(400);
   });
 
+  it('returns 400 when title exceeds 200 characters', async () => {
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+    const request = makeSaveRequest({ title: 'A'.repeat(201), status: 'draft', content: '' }, jwt);
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(400);
+    const data = await response.json() as { error: string };
+    expect(data.error).toContain('200');
+  });
+
+  it('returns 400 when excerpt exceeds 300 characters', async () => {
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+    const request = makeSaveRequest({
+      title: 'Test', excerpt: 'B'.repeat(301), status: 'draft', content: '',
+    }, jwt);
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(400);
+    const data = await response.json() as { error: string };
+    expect(data.error).toContain('300');
+  });
+
   it('returns 400 when status is invalid', async () => {
     const jwt = await generateJWT(mockEnv, 'test@example.com');
     const request = makeSaveRequest({ title: 'Test', status: 'pending', content: '' }, jwt);
@@ -314,5 +336,48 @@ describe('POST /admin/api/save-update', () => {
     // publishedDate should now be set to a non-empty ISO string
     expect((savedContent as Update | null)?.publishedDate).toBeTruthy();
     expect((savedContent as Update | null)?.publishedDate).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it('preserves images array when saving an existing update', async () => {
+    const existingImages = ['/images/updates/has-images/photo.jpg', '/images/updates/has-images/banner.jpg'];
+    let savedContent: Update | null = null;
+
+    global.fetch = vi.fn(async (input: RequestInfo | URL | string, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      const method = init?.method ?? 'GET';
+
+      // fetchUpdateBySlug: existing update with images
+      if (url.includes('has-images.json') && method === 'GET' && !init?.body) {
+        const existing: Update = {
+          slug: 'has-images', title: 'Has Images', excerpt: '', content: '# Images',
+          status: 'published', publishedDate: '2026-01-01T00:00:00Z',
+          editedDate: '2026-01-01T00:00:00Z', author: 'Magnus Hultberg',
+          images: existingImages,
+        };
+        return new Response(JSON.stringify({ sha: 'sha', content: btoa(JSON.stringify(existing)) }), { status: 200 });
+      }
+      // saveUpdateFile: GET → SHA
+      if (url.includes('has-images.json') && method === 'GET') {
+        return new Response(JSON.stringify({ sha: 'sha' }), { status: 200 });
+      }
+      // saveUpdateFile: PUT → capture content
+      if (url.includes('has-images.json') && method === 'PUT') {
+        const body = JSON.parse(init!.body as string) as { content: string };
+        savedContent = JSON.parse(atob(body.content)) as Update;
+        return new Response(JSON.stringify({ content: { sha: 'new-sha' } }), { status: 200 });
+      }
+      return new Response('Not Found', { status: 404 });
+    });
+
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+    const request = makeSaveRequest(
+      { slug: 'has-images', title: 'Has Images Updated', status: 'published', content: '# Updated' },
+      jwt
+    );
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(200);
+    // images must not be wiped on save
+    expect((savedContent as Update | null)?.images).toEqual(existingImages);
   });
 });

@@ -87,6 +87,46 @@ Items here are accepted risks or pragmatic choices made during development, not 
 
 ---
 
+### TD-009: `addImageToGallery` Uses Unescaped `innerHTML`
+- **Location:** `src/routes/adminEditor.ts` — `addImageToGallery()` client-side JS
+- **Issue:** `div.innerHTML` is built via string concatenation using `path` and `filename` from the API response. The server sanitises filenames before returning them, but the pattern is inherently unsafe. `'unsafe-inline'` is in the CSP for EasyMDE, so injected event handlers would execute.
+- **Why accepted:** The `path` and `filename` values in the upload response are constructed server-side from sanitised inputs (slug regex + filename regex), so the attack surface is narrow.
+- **Risk:** Low. Requires a compromise of the server-side validation chain. The server-side `renderImageGallery()` function correctly uses `escapeHtml()` — the client-side path does not.
+- **Future fix:** Add a `jsEscape()` helper in the client-side script and apply it to `path` and `filename` before inserting into `innerHTML`. Alternatively, use `createElement` / `textContent` / `setAttribute` to build the DOM without string interpolation.
+- **Phase introduced:** 5/6
+
+---
+
+### TD-010: GIF Allowed in Upload Endpoint Despite Spec Omission
+- **Location:** `src/routes/uploadImage.ts:10`
+- **Issue:** `ALLOWED_MIME_TYPES` includes `image/gif`, which is not listed in the security spec. The client-side resize converts GIFs to JPEG anyway, so the uploaded file arrives as JPEG bytes with a `.gif` extension — an extension/content mismatch.
+- **Why accepted:** Not a security risk given the other validations and single-admin context.
+- **Risk:** Very Low. Only affects extension/content consistency.
+- **Future fix:** Either remove `image/gif` from the allowlist to match the spec, or add explicit documentation that GIFs are accepted and converted to JPEG.
+- **Phase introduced:** 5/6
+
+---
+
+### TD-011: File Extension Not Cross-Checked Against MIME Type
+- **Location:** `src/routes/uploadImage.ts`
+- **Issue:** MIME type is validated against the allowlist, but the filename extension is not cross-checked against the MIME type. A file named `malware.html` with `Content-Type: image/jpeg` would pass validation.
+- **Why accepted:** Low risk in a single-admin context. The file is stored in GitHub and served as a static asset, so a maliciously named file would only be dangerous if served with a browser-executable content type — which Cloudflare's static asset serving prevents.
+- **Risk:** Low. Relevant only if the serving layer changes.
+- **Future fix:** Map each allowed MIME type to its expected extensions and reject mismatches (e.g. `image/jpeg` must have `.jpg` or `.jpeg`).
+- **Phase introduced:** 5/6
+
+---
+
+### TD-012: `resizeImage` Uploads Original File on Canvas Error
+- **Location:** `src/routes/adminEditor.ts` — `resizeImage()` client-side JS
+- **Issue:** If canvas decoding fails (corrupt file or unusual format), the `onerror` handler resolves with the original unresized file. This means a corrupt image uploads at full original size, potentially exceeding the intended size constraints.
+- **Why accepted:** The 5MB server-side limit still applies. Canvas errors are rare for JPEG/PNG/WebP input.
+- **Risk:** Very Low. Server-side size check is the last line of defence.
+- **Future fix:** Reject on canvas error instead of falling back to the original file. Show a user-facing error message.
+- **Phase introduced:** 5/6
+
+---
+
 ## Resolved Items
 
 *(Move items here when addressed, with resolution notes)*

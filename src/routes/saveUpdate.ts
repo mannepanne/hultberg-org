@@ -38,9 +38,16 @@ export async function handleSaveUpdate(request: Request, env: Env): Promise<Resp
     if (!title) {
       return new Response(JSON.stringify({ error: 'Title is required' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
+    if (title.length > 200) {
+      return new Response(JSON.stringify({ error: 'Title must be 200 characters or fewer' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    }
 
     const content = body.content ?? '';
     const excerpt = body.excerpt?.trim() ?? '';
+    if (excerpt.length > 300) {
+      return new Response(JSON.stringify({ error: 'Excerpt must be 300 characters or fewer' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    }
+
     const status = body.status as UpdateStatus;
 
     if (!VALID_STATUSES.includes(status)) {
@@ -56,6 +63,7 @@ export async function handleSaveUpdate(request: Request, env: Env): Promise<Resp
     const now = new Date().toISOString();
     let slug = body.slug?.trim();
     let publishedDate = '';
+    let existingImages: string[] = [];
     let isNew = false;
 
     if (!slug) {
@@ -66,17 +74,19 @@ export async function handleSaveUpdate(request: Request, env: Env): Promise<Resp
       slug = generateSlugFromTitle(title, existingSlugs);
       publishedDate = status === 'published' ? now : '';
     } else {
-      // Existing update: validate slug format and preserve publishedDate
+      // Existing update: validate slug format and preserve publishedDate and images
       if (!/^[a-z0-9-]+$/.test(slug)) {
         return new Response(JSON.stringify({ error: 'Invalid slug format' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
       }
       // Fetch existing to preserve publishedDate (only set once, when first published)
+      // and images (managed separately via upload/delete endpoints)
       const existing = await fetchUpdateBySlug(env, slug);
       if (existing?.publishedDate) {
         publishedDate = existing.publishedDate;
       } else if (status === 'published') {
         publishedDate = now;
       }
+      existingImages = existing?.images ?? [];
     }
 
     const update = {
@@ -88,7 +98,7 @@ export async function handleSaveUpdate(request: Request, env: Env): Promise<Resp
       publishedDate,
       editedDate: now,
       author: 'Magnus Hultberg',
-      images: [],
+      images: existingImages,
     };
 
     const result = await saveUpdateFile(env, slug, update);

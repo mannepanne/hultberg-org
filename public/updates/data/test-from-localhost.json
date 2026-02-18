@@ -1,0 +1,11 @@
+{
+  "slug": "test-from-localhost",
+  "title": "Test from localhost",
+  "excerpt": "This is the excerpt on localhost",
+  "content": "Here comes the *content* body. **Lorem** ipso etc.",
+  "status": "draft",
+  "publishedDate": "",
+  "editedDate": "2026-02-18T14:27:05.967Z",
+  "author": "Magnus Hultberg",
+  "images": []
+}

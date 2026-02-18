@@ -261,6 +261,15 @@ describe('GET /admin/dashboard - Authenticated Access', () => {
     const email = 'test@example.com';
     const jwt = await generateJWT(mockEnv, email);
 
+    // Mock GitHub API - dashboard fetches updates list
+    global.fetch = vi.fn(async (input: RequestInfo | URL | string) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url.includes('api.github.com')) {
+        return new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return new Response('Not Found', { status: 404 });
+    });
+
     const request = new Request('http://localhost/admin/dashboard', {
       headers: { Cookie: `auth_token=${jwt}` },
     });
@@ -271,7 +280,6 @@ describe('GET /admin/dashboard - Authenticated Access', () => {
     const html = await response.text();
     expect(html).toContain('Admin Dashboard');
     expect(html).toContain(email);
-    expect(html).toContain('Successfully authenticated');
   });
 
   it('redirects to login with expired JWT', async () => {

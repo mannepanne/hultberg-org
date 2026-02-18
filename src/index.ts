@@ -6,9 +6,12 @@ import { handleUpdatesListing } from './routes/updatesListing';
 import { handleUpdatePage } from './routes/updatePage';
 import { handleRSSFeed } from './routes/rssFeed';
 import { handleAdminLogin } from './routes/adminLogin';
+import { handleAdminLogout } from './routes/adminLogout';
 import { handleSendMagicLink } from './routes/sendMagicLink';
 import { handleVerifyToken } from './routes/verifyToken';
 import { handleAdminDashboard } from './routes/adminDashboard';
+import { handleListUpdates } from './routes/listUpdates';
+import { handleDeleteUpdate } from './routes/deleteUpdate';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -28,6 +31,21 @@ export default {
     // Dashboard: GET /admin/dashboard (authenticated)
     if (url.pathname === '/admin/dashboard' && request.method === 'GET') {
       return handleAdminDashboard(request, env);
+    }
+
+    // Logout: POST /admin/logout
+    if (url.pathname === '/admin/logout' && request.method === 'POST') {
+      return handleAdminLogout(request);
+    }
+
+    // API: GET /admin/api/updates (authenticated, returns all updates as JSON)
+    if (url.pathname === '/admin/api/updates' && request.method === 'GET') {
+      return handleListUpdates(request, env);
+    }
+
+    // API: DELETE /admin/api/delete-update (authenticated)
+    if (url.pathname === '/admin/api/delete-update' && request.method === 'DELETE') {
+      return handleDeleteUpdate(request, env);
     }
 
     // Login page: GET /admin

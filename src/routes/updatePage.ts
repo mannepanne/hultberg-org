@@ -52,7 +52,7 @@ export async function renderUpdatePage(update: Update): Promise<Response> {
     status: 200,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self';",
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self' https://www.google-analytics.com https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self';",
     },
   });
 }
@@ -90,29 +90,12 @@ function renderUpdatePageHTML(update: Update, contentHTML: string): string {
         <meta name="description" content="${escapeHtml(update.excerpt)}" />
         <meta name="author" content="${escapeHtml(update.author)}" />
 
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-291574-7"></script>
         <script>
-            (function (i, s, o, g, r, a, m) {
-                i["GoogleAnalyticsObject"] = r;
-                ((i[r] =
-                    i[r] ||
-                    function () {
-                        (i[r].q = i[r].q || []).push(arguments);
-                    }),
-                    (i[r].l = 1 * new Date()));
-                ((a = s.createElement(o)), (m = s.getElementsByTagName(o)[0]));
-                a.async = 1;
-                a.src = g;
-                m.parentNode.insertBefore(a, m);
-            })(
-                window,
-                document,
-                "script",
-                "//www.google-analytics.com/analytics.js",
-                "ga",
-            );
-
-            ga("create", "UA-291574-7", "auto");
-            ga("send", "pageview");
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'UA-291574-7');
         </script>
     </head>
     <body>

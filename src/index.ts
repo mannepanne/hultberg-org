@@ -151,12 +151,12 @@ export default {
     </head>
     <body>
         <div style="max-width: 800px; margin: 0 auto; padding: 2em;">
-            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a></p>
+            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/">LinkedIn</a></p>
             <img src="/errors/bazinga.gif" alt="bazinga!" /><br /><br />
             sorry, the page or file you are looking for isn't here...<br />
             <a href="/" onclick="history.back(); return false;">go back from whence you came</a>, or tell me what a klutz I am by messaging me on
             <a href="https://uk.linkedin.com/in/hultberg">LinkedIn</a>
-            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a></p>
+            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/">LinkedIn</a></p>
         </div>
     </body>
 </html>

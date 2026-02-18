@@ -96,12 +96,12 @@ function renderUpdatesListingHTML(updates: UpdateIndex['updates']): string {
     </head>
     <body>
         <div style="max-width: 800px; margin: 0 auto; padding: 2em;">
-            <p>← <a href="/">Home</a></p>
+            <p>← <a href="/">Home</a> | <a href="https://www.linkedin.com/in/hultberg/">LinkedIn</a></p>
             <h1>Updates</h1>
 
             ${updatesHTML}
 
-            <p>← <a href="/">Home</a></p>
+            <p>← <a href="/">Home</a> | <a href="https://www.linkedin.com/in/hultberg/">LinkedIn</a></p>
         </div>
     </body>
 </html>

@@ -130,7 +130,7 @@ function renderUpdatePageHTML(update: Update, contentHTML: string): string {
     </head>
     <body>
         <div style="max-width: 800px; margin: 0 auto; padding: 2em;">
-            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a></p>
+            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/">LinkedIn</a></p>
 
             <article>
                 <header>
@@ -146,7 +146,7 @@ function renderUpdatePageHTML(update: Update, contentHTML: string): string {
                 </div>
             </article>
 
-            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a></p>
+            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/">LinkedIn</a></p>
         </div>
     </body>
 </html>

@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "edfc0bd42f26",
+  "strategy": "manual-commit",
+  "branch": "feature/phase4-admin-dashboard",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".claude/settings.local.json",
+    "src/github.ts",
+    "src/index.ts",
+    "src/routes/adminDashboard.ts",
+    "src/routes/adminLogout.ts",
+    "src/routes/deleteUpdate.ts",
+    "src/routes/listUpdates.ts",
+    "tests/integration/adminAuth.test.ts",
+    "tests/integration/adminDashboard.test.ts",
+    "tests/integration/deleteUpdate.test.ts",
+    "tests/integration/listUpdates.test.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/ed/fc0bd42f26/0/metadata.json",
+      "transcript": "/ed/fc0bd42f26/0/full.jsonl",
+      "context": "/ed/fc0bd42f26/0/context.md",
+      "content_hash": "/ed/fc0bd42f26/0/content_hash.txt",
+      "prompt": "/ed/fc0bd42f26/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 40,
+    "cache_creation_tokens": 52389,
+    "cache_read_tokens": 4258774,
+    "output_tokens": 17218,
+    "api_call_count": 32
+  }
+}

@@ -380,4 +380,89 @@ describe('POST /admin/api/save-update', () => {
     // images must not be wiped on save
     expect((savedContent as Update | null)?.images).toEqual(existingImages);
   });
+
+  it('returns 400 when publishedDate has invalid format', async () => {
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+    const request = makeSaveRequest(
+      { title: 'Test', status: 'published', content: '', publishedDate: '18-02-2026' },
+      jwt
+    );
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(400);
+    const data = await response.json() as { error: string };
+    expect(data.error).toContain('YYYY-MM-DD');
+  });
+
+  it('uses custom publishedDate when backdating a new update', async () => {
+    let savedContent: Update | null = null;
+
+    global.fetch = vi.fn(async (input: RequestInfo | URL | string, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      const method = init?.method ?? 'GET';
+
+      if (url === GITHUB_UPDATES_DIR && method === 'GET') {
+        return new Response(JSON.stringify([]), { status: 200 });
+      }
+      if (url.includes('backdate-test.json') && method === 'GET') {
+        return new Response('Not Found', { status: 404 });
+      }
+      if (url.includes('backdate-test.json') && method === 'PUT') {
+        const body = JSON.parse(init!.body as string) as { content: string };
+        savedContent = JSON.parse(atob(body.content)) as Update;
+        return new Response(JSON.stringify({ content: { sha: 'new-sha' } }), { status: 201 });
+      }
+      return new Response('Not Found', { status: 404 });
+    });
+
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+    const request = makeSaveRequest(
+      { title: 'Backdate Test', status: 'published', content: '', publishedDate: '2025-06-15' },
+      jwt
+    );
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(200);
+    expect((savedContent as Update | null)?.publishedDate).toBe('2025-06-15T12:00:00.000Z');
+  });
+
+  it('custom publishedDate overrides existing publishedDate on update', async () => {
+    let savedContent: Update | null = null;
+    const existingUpdate: Update = {
+      slug: 'existing-slug', title: 'Old Title', excerpt: '',
+      content: '# Old', status: 'published', publishedDate: '2026-01-10T12:00:00.000Z',
+      editedDate: '2026-01-10T12:00:00.000Z', author: 'Magnus Hultberg', images: [],
+    };
+
+    global.fetch = vi.fn(async (input: RequestInfo | URL | string, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      const method = init?.method ?? 'GET';
+
+      if (url.includes('existing-slug.json') && method === 'GET' && !init?.body) {
+        return new Response(JSON.stringify({
+          sha: 'existing-sha',
+          content: btoa(JSON.stringify(existingUpdate)),
+        }), { status: 200 });
+      }
+      if (url.includes('existing-slug.json') && method === 'GET') {
+        return new Response(JSON.stringify({ sha: 'existing-sha' }), { status: 200 });
+      }
+      if (url.includes('existing-slug.json') && method === 'PUT') {
+        const body = JSON.parse(init!.body as string) as { content: string };
+        savedContent = JSON.parse(atob(body.content)) as Update;
+        return new Response(JSON.stringify({ content: { sha: 'new-sha' } }), { status: 200 });
+      }
+      return new Response('Not Found', { status: 404 });
+    });
+
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+    const request = makeSaveRequest(
+      { slug: 'existing-slug', title: 'New Title', status: 'published', content: '', publishedDate: '2024-12-01' },
+      jwt
+    );
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(200);
+    expect((savedContent as Update | null)?.publishedDate).toBe('2024-12-01T12:00:00.000Z');
+  });
 });

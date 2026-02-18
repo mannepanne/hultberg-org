@@ -44,6 +44,7 @@ function renderEditor(email: string, update: Partial<Update> | null, images: Ima
   const excerpt = update?.excerpt ?? '';
   const content = update?.content ?? '';
   const status = update?.status ?? 'draft';
+  const publishedDateValue = update?.publishedDate ? update.publishedDate.slice(0, 10) : '';
 
   return `<!DOCTYPE html>
 <html lang="en-GB">
@@ -131,11 +132,16 @@ function renderEditor(email: string, update: Partial<Update> | null, images: Ima
 
     <div class="form-group">
       <label for="status">Status</label>
-      <select id="status">
+      <select id="status" onchange="onStatusChange()">
         <option value="draft"${status === 'draft' ? ' selected' : ''}>Draft</option>
         <option value="published"${status === 'published' ? ' selected' : ''}>Published</option>
         <option value="unpublished"${status === 'unpublished' ? ' selected' : ''}>Unpublished</option>
       </select>
+    </div>
+
+    <div class="form-group" id="published-date-group" style="${status === 'published' ? '' : 'display:none'}">
+      <label for="published-date">Published date <span style="font-weight:400;color:#6c757d">(leave blank to use today)</span></label>
+      <input type="date" id="published-date" value="${publishedDateValue}" />
     </div>
 
     <input type="hidden" id="slug-value" value="${escapeHtml(slug)}" />
@@ -310,16 +316,26 @@ function renderEditor(email: string, update: Partial<Update> | null, images: Ima
       }
     }
 
+    function onStatusChange() {
+      var status = document.getElementById('status').value;
+      var dateGroup = document.getElementById('published-date-group');
+      dateGroup.style.display = status === 'published' ? '' : 'none';
+    }
+
     async function saveUpdate() {
       var title = document.getElementById('title').value.trim();
       if (!title) { showMessage('Title is required.', 'error'); return; }
+
+      var status = document.getElementById('status').value;
+      var publishedDate = status === 'published' ? document.getElementById('published-date').value : '';
 
       var payload = {
         slug: document.getElementById('slug-value').value || null,
         title: title,
         excerpt: document.getElementById('excerpt').value.trim(),
         content: easyMDE.value(),
-        status: document.getElementById('status').value,
+        status: status,
+        publishedDate: publishedDate || null,
       };
 
       showMessage('Saving…', 'success');

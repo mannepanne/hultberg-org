@@ -31,6 +31,7 @@ export async function handleSaveUpdate(request: Request, env: Env): Promise<Resp
       excerpt?: string;
       content?: string;
       status?: string;
+      publishedDate?: string | null;
     };
 
     // Validate required fields
@@ -60,6 +61,14 @@ export async function handleSaveUpdate(request: Request, env: Env): Promise<Resp
       return new Response(JSON.stringify({ error: `Content exceeds maximum size of 100KB` }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
+    // Validate optional custom published date (YYYY-MM-DD)
+    const customDateRaw = body.publishedDate?.trim() ?? '';
+    if (customDateRaw && !/^\d{4}-\d{2}-\d{2}$/.test(customDateRaw)) {
+      return new Response(JSON.stringify({ error: 'Published date must be in YYYY-MM-DD format' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    }
+    // Convert YYYY-MM-DD to ISO datetime at noon UTC to avoid date shifting across timezones
+    const customPublishedDate = customDateRaw ? `${customDateRaw}T12:00:00.000Z` : '';
+
     const now = new Date().toISOString();
     let slug = body.slug?.trim();
     let publishedDate = '';
@@ -72,16 +81,18 @@ export async function handleSaveUpdate(request: Request, env: Env): Promise<Resp
       const existing = await fetchAllUpdates(env);
       const existingSlugs = existing.map(u => u.slug);
       slug = generateSlugFromTitle(title, existingSlugs);
-      publishedDate = status === 'published' ? now : '';
+      publishedDate = status === 'published' ? (customPublishedDate || now) : '';
     } else {
       // Existing update: validate slug format and preserve publishedDate and images
       if (!/^[a-z0-9-]+$/.test(slug)) {
         return new Response(JSON.stringify({ error: 'Invalid slug format' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
       }
-      // Fetch existing to preserve publishedDate (only set once, when first published)
-      // and images (managed separately via upload/delete endpoints)
+      // Fetch existing to preserve publishedDate and images
       const existing = await fetchUpdateBySlug(env, slug);
-      if (existing?.publishedDate) {
+      if (customPublishedDate && status === 'published') {
+        // Explicit backdate always wins when publishing
+        publishedDate = customPublishedDate;
+      } else if (existing?.publishedDate) {
         publishedDate = existing.publishedDate;
       } else if (status === 'published') {
         publishedDate = now;

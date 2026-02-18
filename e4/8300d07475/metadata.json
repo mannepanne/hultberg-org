@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "e48300d07475",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "wrangler.toml"
+  ],
+  "sessions": [
+    {
+      "metadata": "/e4/8300d07475/0/metadata.json",
+      "transcript": "/e4/8300d07475/0/full.jsonl",
+      "context": "/e4/8300d07475/0/context.md",
+      "content_hash": "/e4/8300d07475/0/content_hash.txt",
+      "prompt": "/e4/8300d07475/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 6,
+    "cache_creation_tokens": 2317,
+    "cache_read_tokens": 474037,
+    "output_tokens": 1799,
+    "api_call_count": 4
+  }
+}

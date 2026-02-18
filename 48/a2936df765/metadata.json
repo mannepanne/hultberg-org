@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "48a2936df765",
+  "strategy": "manual-commit",
+  "branch": "feature/phase5-6-editor-api",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".claude/settings.local.json",
+    "src/github.ts",
+    "src/index.ts",
+    "src/routes/adminEditor.ts",
+    "src/routes/adminPreview.ts",
+    "src/routes/deleteImage.ts",
+    "src/routes/saveUpdate.ts",
+    "src/routes/updatePage.ts",
+    "src/routes/uploadImage.ts",
+    "src/utils.ts",
+    "tests/integration/adminEditor.test.ts",
+    "tests/integration/adminPreview.test.ts",
+    "tests/integration/deleteImage.test.ts",
+    "tests/integration/saveUpdate.test.ts",
+    "tests/integration/uploadImage.test.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/48/a2936df765/0/metadata.json",
+      "transcript": "/48/a2936df765/0/full.jsonl",
+      "context": "/48/a2936df765/0/context.md",
+      "content_hash": "/48/a2936df765/0/content_hash.txt",
+      "prompt": "/48/a2936df765/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 66,
+    "cache_creation_tokens": 125849,
+    "cache_read_tokens": 5751613,
+    "output_tokens": 49902,
+    "api_call_count": 59
+  }
+}

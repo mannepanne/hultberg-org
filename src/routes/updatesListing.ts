@@ -75,8 +75,16 @@ function renderUpdatesListingHTML(updates: UpdateIndex['updates']): string {
         <meta charset="utf-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <title>Updates - Magnus Hultberg</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="description" content="Updates from Magnus Hultberg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <meta property="og:title" content="Updates | Magnus Hultberg" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://hultberg.org/updates" />
+        <meta property="og:image" content="https://hultberg.org/now/magnus_hultberg_juggling.png" />
+        <meta property="og:description" content="Updates from Magnus Hultberg" />
+        <meta property="og:site_name" content="Magnus Hultberg" />
+        <meta name="twitter:card" content="summary" />
 
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-D1L22CCJTJ"></script>
         <script>

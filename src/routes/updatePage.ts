@@ -80,15 +80,31 @@ function renderUpdatePageHTML(update: Update, contentHTML: string): string {
     ? `<p style="color: #666; font-size: 0.9em; font-style: italic;">Last edited: ${formattedEditedDate}</p>`
     : '';
 
+  const ogImage = update.images.length > 0
+    ? `https://hultberg.org${update.images[0]}`
+    : 'https://hultberg.org/now/magnus_hultberg_juggling.png';
+
+  const ogDescription = escapeHtml(update.excerpt || update.title);
+
   return `<!doctype html>
 <html class="no-js" lang="en-GB">
     <head>
         <meta charset="utf-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <title>${escapeHtml(update.title)} - Magnus Hultberg</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="${escapeHtml(update.excerpt)}" />
+        <meta name="description" content="${ogDescription}" />
         <meta name="author" content="${escapeHtml(update.author)}" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <meta property="og:title" content="${escapeHtml(update.title)}" />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content="https://hultberg.org/updates/${escapeHtml(update.slug)}" />
+        <meta property="og:image" content="${ogImage}" />
+        <meta property="og:description" content="${ogDescription}" />
+        <meta property="og:site_name" content="Magnus Hultberg" />
+        <meta property="article:author" content="Magnus Hultberg" />
+        <meta property="article:published_time" content="${escapeHtml(update.publishedDate)}" />
+        <meta name="twitter:card" content="${update.images.length > 0 ? 'summary_large_image' : 'summary'}" />
 
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-D1L22CCJTJ"></script>
         <script>

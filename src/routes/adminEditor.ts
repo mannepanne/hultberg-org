@@ -155,6 +155,11 @@ function renderEditor(email: string, update: Partial<Update> | null, images: Ima
 
     <div class="images-section">
       <h2>Images</h2>
+      <p style="color: #666; font-size: 0.9em; margin-bottom: 1em;">
+        <strong>Advanced image control:</strong> For custom sizing or alignment, use HTML directly in your content:<br>
+        <code style="background: #f5f5f5; padding: 0.2em 0.4em; border-radius: 3px;">&lt;img src="/images/updates/${slug || 'your-slug'}/photo.jpg" width="400" alt="Description"&gt;</code><br>
+        <code style="background: #f5f5f5; padding: 0.2em 0.4em; border-radius: 3px;">&lt;img src="..." style="float: left; margin-right: 1em;" width="300" alt="..."&gt;</code>
+      </p>
       ${isNew
         ? '<p class="images-disabled" id="images-disabled-msg">Save the update first to enable image uploads.</p>'
         : `<button class="btn btn-secondary upload-btn" type="button" id="upload-btn" onclick="triggerUpload()">Upload image</button>

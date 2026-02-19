@@ -170,6 +170,19 @@ function renderUpdatePageHTML(update: Update, contentHTML: string): string {
 function sanitizeHTML(html: string): string {
   let sanitized = html;
 
+  // Preserve img tags but sanitize them individually (remove event handlers, keep width/height/style)
+  const imgTags: string[] = [];
+  const imgPlaceholder = '___IMG_PLACEHOLDER_';
+  sanitized = sanitized.replace(/<img\b[^>]*>/gi, (match) => {
+    // Remove event handlers from img tag
+    let cleanImg = match
+      .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+      .replace(/on\w+\s*=\s*[^\s>]*/gi, '')
+      .replace(/\son\w+=/gi, '');
+    imgTags.push(cleanImg);
+    return `${imgPlaceholder}${imgTags.length - 1}___`;
+  });
+
   // Remove dangerous tags completely
   sanitized = sanitized
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
@@ -187,6 +200,7 @@ function sanitizeHTML(html: string): string {
     .replace(/javascript:/gi, '')
     .replace(/data:/gi, '')
     .replace(/vbscript:/gi, '')
+    .replace(/vbscript:/gi, '')
     .replace(/file:/gi, '')
     .replace(/about:/gi, '');
 
@@ -196,10 +210,15 @@ function sanitizeHTML(html: string): string {
     .replace(/on\w+\s*=\s*[^\s>]*/gi, '')
     .replace(/\son\w+=/gi, '');
 
-  // Remove style attributes that could contain expressions
+  // Remove style attributes that could contain expressions (but NOT on img tags, which were extracted)
   sanitized = sanitized
     .replace(/style\s*=\s*["'][^"']*["']/gi, '')
     .replace(/style\s*=\s*[^\s>]*/gi, '');
+
+  // Restore img tags with their preserved attributes (style, width, height allowed on images)
+  sanitized = sanitized.replace(/___IMG_PLACEHOLDER_(\d+)___/g, (match, index) => {
+    return imgTags[parseInt(index)];
+  });
 
   return sanitized;
 }

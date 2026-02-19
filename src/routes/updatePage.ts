@@ -120,6 +120,8 @@ function renderUpdatePageHTML(update: Update, contentHTML: string): string {
         <meta property="article:published_time" content="${escapeHtml(update.publishedDate)}" />
         <meta name="twitter:card" content="${update.images.length > 0 ? 'summary_large_image' : 'summary'}" />
 
+        <link rel="alternate" type="application/rss+xml" title="Updates - Magnus Hultberg" href="/updates/feed.xml" />
+
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-D1L22CCJTJ"></script>
         <script>
             window.dataLayer = window.dataLayer || [];

@@ -86,6 +86,8 @@ function renderUpdatesListingHTML(updates: UpdateIndex['updates']): string {
         <meta property="og:site_name" content="Magnus Hultberg" />
         <meta name="twitter:card" content="summary" />
 
+        <link rel="alternate" type="application/rss+xml" title="Updates - Magnus Hultberg" href="/updates/feed.xml" />
+
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-D1L22CCJTJ"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
@@ -96,12 +98,12 @@ function renderUpdatesListingHTML(updates: UpdateIndex['updates']): string {
     </head>
     <body>
         <div style="max-width: 800px; margin: 0 auto; padding: 2em;">
-            <p>← <a href="/">Home</a> | <a href="https://www.linkedin.com/in/hultberg/">LinkedIn</a></p>
+            <p>← <a href="/">Home</a> | <a href="/updates/feed.xml">RSS</a> | <a href="https://www.linkedin.com/in/hultberg/">LinkedIn</a></p>
             <h1>Updates</h1>
 
             ${updatesHTML}
 
-            <p>← <a href="/">Home</a> | <a href="https://www.linkedin.com/in/hultberg/">LinkedIn</a></p>
+            <p>← <a href="/">Home</a> | <a href="/updates/feed.xml">RSS</a> | <a href="https://www.linkedin.com/in/hultberg/">LinkedIn</a></p>
         </div>
     </body>
 </html>

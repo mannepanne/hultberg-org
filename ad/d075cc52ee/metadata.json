@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "add075cc52ee",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/routes/rssFeed.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/ad/d075cc52ee/0/metadata.json",
+      "transcript": "/ad/d075cc52ee/0/full.jsonl",
+      "context": "/ad/d075cc52ee/0/context.md",
+      "content_hash": "/ad/d075cc52ee/0/content_hash.txt",
+      "prompt": "/ad/d075cc52ee/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 66,
+    "cache_creation_tokens": 1358,
+    "cache_read_tokens": 853315,
+    "output_tokens": 1084,
+    "api_call_count": 6
+  }
+}

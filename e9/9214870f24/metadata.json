@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "e99214870f24",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "public/2005/11/recipe_sharing_.html",
+    "public/errors/not_found.html",
+    "public/index.html",
+    "public/now/index.html",
+    "src/index.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/e9/9214870f24/0/metadata.json",
+      "transcript": "/e9/9214870f24/0/full.jsonl",
+      "context": "/e9/9214870f24/0/context.md",
+      "content_hash": "/e9/9214870f24/0/content_hash.txt",
+      "prompt": "/e9/9214870f24/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 76,
+    "cache_creation_tokens": 126421,
+    "cache_read_tokens": 995315,
+    "output_tokens": 1716,
+    "api_call_count": 8
+  }
+}

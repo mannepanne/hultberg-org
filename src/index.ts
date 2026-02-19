@@ -141,6 +141,8 @@ export default {
         <title>Magnus Hultberg - hultberg.org</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+        <link rel="alternate" type="application/rss+xml" title="Updates - Magnus Hultberg" href="/updates/feed.xml" />
+
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-D1L22CCJTJ"></script>
         <script>
             window.dataLayer = window.dataLayer || [];

@@ -8,6 +8,8 @@ import type { Env, UpdateIndex } from '@/types';
  * Fetches index, filters published updates, and generates RSS 2.0 XML
  */
 export async function handleRSSFeed(request: Request, env: Env): Promise<Response> {
+  console.log('RSS feed accessed:', new Date().toISOString());
+
   try {
     // Fetch the index.json via the ASSETS binding to avoid self-referential Worker routing
     const url = new URL(request.url);

@@ -95,6 +95,8 @@ function renderUpdatesListingHTML(updates: UpdateIndex['updates']): string {
             gtag('js', new Date());
             gtag('config', 'G-D1L22CCJTJ');
         </script>
+
+        <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "f71c3c28b82c4c6991ec3d41b7f1496f"}'></script><!-- End Cloudflare Web Analytics -->
     </head>
     <body>
         <div style="max-width: 800px; margin: 0 auto; padding: 2em;">

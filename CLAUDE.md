@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file acts as project memory and provides guidance to Claude Code (claude.ai/code) when working in this repository.
 
 ## Rules of Engagement
 
@@ -73,7 +73,7 @@ npm run test:changed      # Run tests for changed files only
 - **Entry Point**: `src/index.ts` - Main Worker fetch handler; routes all requests
 - **Asset Handling**: Cloudflare Workers Assets serves static files from `public/` **before** the Worker runs (`run_worker_first = false`)
 - **Configuration**: `wrangler.toml` defines Worker settings, KV bindings, and asset handling
-- **ASSETS binding**: `binding = "ASSETS"` in `wrangler.toml` exposes `env.ASSETS` (type `Fetcher`) in the Worker — **this must be explicitly declared or `env.ASSETS` will be undefined**
+- **ASSETS binding**: `binding = "ASSETS"` in `wrangler.toml` exposes `env.ASSETS` (type `Fetcher`) in the Worker — **this must be explicitly declared or ****`env.ASSETS`**** will be undefined**
 
 ### Request Routing
 - Static assets (homepage, `/now`, images) → served directly by Cloudflare, Worker never runs
@@ -303,8 +303,8 @@ Wrangler automatically loads `.dev.vars` during `npm run dev`.
 
 Two KV namespaces are declared in `wrangler.toml` and automatically available in the Worker:
 
-- **AUTH_KV** (`env.AUTH_KV`) - Stores magic link tokens (15-minute TTL)
-- **RATE_LIMIT_KV** (`env.RATE_LIMIT_KV`) - Stores rate limiting counters (1-minute TTL)
+- **AUTH\_KV** (`env.AUTH_KV`) - Stores magic link tokens (15-minute TTL)
+- **RATE\_LIMIT\_KV** (`env.RATE_LIMIT_KV`) - Stores rate limiting counters (1-minute TTL)
 
 The ASSETS binding (`env.ASSETS`) is also declared in `wrangler.toml` — this is required to access static files from the Worker (see [Static File Serving Gotcha](#static-file-serving-gotcha) above).
 
@@ -380,7 +380,7 @@ import { Env } from '@/types';
 
 ### Mocking Strategy
 
-**Reusable mocks in `tests/mocks/`:**
+**Reusable mocks in ****`tests/mocks/`****:**
 - `createMockKV()` - In-memory KVNamespace for testing
 - `createMockEnv()` - Test environment configuration with sensible defaults
 - GitHub API responses mocked via `vi.stubGlobal('fetch', ...)` or similar
@@ -444,9 +444,32 @@ wrangler login
 - The proxy fetches from `raw.githubusercontent.com` — newly committed images may take a few minutes to propagate
 - Check that the `GITHUB_REPO` constant in `src/github.ts` matches your actual repo path
 
-**`env.ASSETS` is undefined:**
+**`env.ASSETS`**** is undefined:**
 - Ensure `wrangler.toml` has `binding = "ASSETS"` under `[assets]`
 - Without this, `env.ASSETS?.fetch()` silently falls back to `fetch()`, which re-enters Worker routing
+
+## Web Analytics
+
+The site uses **two analytics solutions** for traffic monitoring:
+
+### Google Analytics 4 (GA4)
+- **Measurement ID**: `G-D1L22CCJTJ`
+- Implemented site-wide via gtag.js snippet
+- Tracks pageviews, user journeys, and referral sources
+- Implemented in all static pages (`public/`) and Worker-rendered routes (`src/routes/`)
+
+### Cloudflare Web Analytics
+- **Token**: `f71c3c28b82c4c6991ec3d41b7f1496f`
+- Privacy-first, cookie-free alternative to GA4
+- Implemented site-wide via beacon.min.js snippet
+- Provides pageviews, referrers, and visitor data without cookies or invasive tracking
+- Located in Cloudflare dashboard under Analytics & Logs → Web Analytics
+
+**Future consideration:** Evaluate Cloudflare Web Analytics for 3-6 months, then consider consolidating to only Cloudflare to reduce tracking script overhead. See [TD-013 in technical-debt.md](./SPECIFICATIONS/technical-debt.md) for details.
+
+Both analytics scripts are included in:
+- Static HTML pages (`public/index.html`, `public/now/index.html`, `public/errors/not_found.html`, etc.)
+- Worker-rendered pages via template strings in `src/routes/updatePage.ts`, `src/routes/updatesListing.ts`, and inline 404 handler in `src/index.ts`
 
 ## Technical Debt
 
@@ -455,3 +478,4 @@ Known technical debt and accepted risks are tracked in [technical-debt.md](./SPE
 Key items:
 - **HTML Sanitization**: Regex-based XSS prevention in `src/routes/updatePage.ts` — acceptable for single trusted admin, defended in depth by CSP headers. Replace when a Workers-compatible allowlist sanitizer becomes available.
 - **No pagination on /updates**: The listing page renders all published updates. Not an issue at low volume, but will need pagination as content grows.
+- **Dual analytics setup**: Both Google Analytics and Cloudflare Web Analytics are implemented. Evaluate consolidating to Cloudflare-only after a trial period.

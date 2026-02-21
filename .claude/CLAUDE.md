@@ -1,9 +1,9 @@
 # CLAUDE.md
-# Project Context for Claude AI
+# Context for Claude AI
 
-- This file provides collaboration principles and ways of working guidance to Claude Code (claude.ai/code) when working with code in this repository.
-- The purpose is to help the Claude AI to better collaborate on this project.
-- Last updated: 30th August 2025
+- This file provides collaboration principles and ways of working guidance to Claude Code (claude.ai/code) when working with in this repository.
+- The purpose is to help the Claude to better collaborate on this project.
+- Last updated: 21st February 2026
 
 **Credits and inspiration:**
 - https://github.com/obra
@@ -68,15 +68,14 @@
 
 ### Platform-Specific Preferences
 | Use Case | Preferred Technology | Reason |
-|----------|---------------------|---------|
+| --- | --- | --- |
 | CLI/Headless projects | Python | Simplicity and extensive libraries |
 | Web application projects | TypeScript (strict mode) | Industry standard type safety |
 | Web frontend framework | Next.js (React) with App Router | Server-side rendering and SEO |
 | Web frontend design | TailWind CSS for styling with shadcn/ui as component library | Great starting point |
-| Hosting of simple websites | CloudFlare | I already have an account |
-| Hosting of Next.js applications | Netlify | I already have an account |
-| Database and authentication | Supabase | I already have an account |
+| Hosting of websites and web apps | CloudFlare | I already have an account |
 | CDN / DNS / Basic data storage | Cloudflare KV | Key-value storage, then other CF options |
+| Database and authentication | Supabase | I already have an account |
 | Email communication | Resend.com | I already have an account |
 | Authentication | Magic link systems | Simple and secure |
 | Payment processing | Stripe | Industry leader |
@@ -94,10 +93,10 @@
 
 ### Code Standards and Comments
 - All code files should start with:
-  ```
+```
   // ABOUT: [Brief description of file purpose]
   // ABOUT: [Key functionality or responsibility]
-  ```
+```
 - Preserve existing meaningful comments unless proven incorrect.
 - When migrating to new comment standards, do so systematically across the entire file.
 - Use evergreen naming conventions (avoid "new", "improved", "enhanced").

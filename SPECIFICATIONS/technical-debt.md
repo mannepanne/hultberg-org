@@ -123,6 +123,16 @@ Items here are accepted risks or pragmatic choices made during development, not 
 
 ---
 
+### TD-013: Dual Analytics Setup (Google Analytics + Cloudflare Web Analytics)
+- **Location:** All HTML pages (static and Worker-rendered)
+- **Issue:** The site currently loads both Google Analytics 4 (gtag.js) and Cloudflare Web Analytics (beacon.min.js) on every page. This adds extra script load overhead and duplicates tracking effort.
+- **Why accepted:** Cloudflare Web Analytics was just added and needs evaluation before committing to it as the sole analytics solution. GA4 is mature and familiar but has privacy/performance tradeoffs.
+- **Risk:** Very Low. Both scripts are lightweight and async/defer loaded. No functional impact, just minor page weight increase.
+- **Future fix:** After 3-6 months of using Cloudflare Web Analytics, evaluate its feature parity with GA4 for this use case. If sufficient, remove GA4 entirely to reduce tracking overhead and improve privacy posture.
+- **Phase introduced:** 2
+
+---
+
 ## Resolved Items
 
 *(Move items here when addressed, with resolution notes)*

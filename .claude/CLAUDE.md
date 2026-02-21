@@ -102,7 +102,7 @@ We prefer free/low-cost, state-of-the-art solutions. Always use latest stable ve
 
 **Key preferences:** TypeScript for web apps, Next.js for frontend, Cloudflare for hosting, Supabase for database, Python for CLI tools.
 
-**Complete technology preferences:** [COLLABORATION/technology-preferences.md](./COLLABORATION/technology-preferences.md)
+**Complete technology preferences:** [technology-preferences.md](./COLLABORATION/technology-preferences.md)
 
 ## Development Standards
 
@@ -125,24 +125,45 @@ We prefer free/low-cost, state-of-the-art solutions. Always use latest stable ve
 - Use evergreen naming conventions (avoid "new", "improved", "enhanced").
 
 ### Testing Strategy
+
 I believe in testing, but let's keep it practical and valuable rather than dogmatic.
 
-**For new features**, I prefer test-driven development when it makes sense:
-- Write a simple test that shows what we want to accomplish
-- Build just enough code to make it pass
-- Clean up the code while keeping tests green
-- This helps us think through the problem and catches issues early
+**Tests as Development Guardrails (inspired by **[**OpenAI's Harness Engineering**](https://openai.com/index/harness-engineering/)**):**
 
-**Test coverage should be comprehensive but thoughtful:**
-- **Unit tests**: Do individual functions work correctly?
-- **Integration tests**: Do the pieces work together properly?
-- **End-to-end tests**: Does the whole user workflow actually work?
+Tests serve dual purposes:
+1. **Validation** - Verify code works correctly
+2. **Directional Context** - Guide AI agents on what to build and how to build it
 
-**Practical testing guidelines:**
-- Pay attention to test output - failing tests are trying to tell us something important
-- In end-to-end tests, prefer real data over mocks when possible (but don't break the bank on API calls)
-- When working on existing code, make sure we don't break the existing test coverage
-- If you're unsure about what to test, ask - I'd rather discuss testing strategy than have you guess
+When you make changes, tests should immediately signal if you're breaking existing functionality and provide clear context about what each component should do.
+
+**Test-Driven Development workflow:**
+1. Write tests first that describe expected behavior
+2. Implement minimum code to make tests pass
+3. Refactor while keeping tests green
+4. Aim for 100% coverage of new code (every line should have clear purpose)
+
+**Coverage philosophy:**
+- Untested code is unclear about its purpose and constraints
+- If we can't write a test for it, maybe we don't need it
+- Coverage gaps indicate missing specifications
+- Target high coverage (95%+ lines/functions/statements, 90%+ branches)
+
+**Test organization:**
+- **Unit tests**: Individual functions work correctly
+- **Integration tests**: Components work together properly
+- **End-to-end tests**: Complete user workflows actually work
+- Test files mirror source structure for easy navigation
+
+**Practical guidelines:**
+- Pay attention to test output - failing tests are trying to tell you something important
+- Prefer real data over mocks when possible (but be pragmatic about API costs)
+- When working on existing code, maintain or improve test coverage
+- If unsure what to test, ask - I'd rather discuss strategy than have you guess
+
+**Pre-commit validation:**
+- Run tests before committing
+- Type-check before committing
+- Catch issues early, before they hit CI/CD
 
 Remember: tests should give us confidence to make changes, not slow us down with bureaucracy.
 

@@ -24,4 +24,4 @@ Reference guide for selecting technologies across projects.
 | Email communication | Resend.com | I already have an account |
 | Authentication | Magic link systems | Simple and secure |
 | Payment processing | Stripe | Industry leader |
-| Web analytics | Vercel Analytics | Privacy focused alternative to Google Analytics |
+| Web analytics | Cloudflare Web Analytics | Privacy-focused, cookie-free analytics |

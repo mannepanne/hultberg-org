@@ -133,6 +133,16 @@ Items here are accepted risks or pragmatic choices made during development, not 
 
 ---
 
+### TD-014: Add Cloudflare Web Analytics to restaurants.hultberg.org
+- **Location:** External project (restaurants.hultberg.org)
+- **Issue:** Cloudflare Web Analytics beacon was added to hultberg.org but not yet rolled out to the restaurants.hultberg.org subdomain/project. This means restaurant site traffic is not being tracked with the privacy-first analytics solution.
+- **Why accepted:** restaurants.hultberg.org is a separate codebase that requires independent implementation work.
+- **Risk:** Very Low. Just means missing analytics data for that site.
+- **Future fix:** Add the Cloudflare Web Analytics beacon snippet to all pages in the restaurants.hultberg.org project. May use the same Cloudflare Web Analytics site/token or create a separate one if granular tracking per subdomain is desired.
+- **Phase introduced:** 2
+
+---
+
 ## Resolved Items
 
 *(Move items here when addressed, with resolution notes)*

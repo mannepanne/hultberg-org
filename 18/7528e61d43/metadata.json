@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "187528e61d43",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".claude/COLLABORATION/technology-preferences.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/18/7528e61d43/0/metadata.json",
+      "transcript": "/18/7528e61d43/0/full.jsonl",
+      "context": "/18/7528e61d43/0/context.md",
+      "content_hash": "/18/7528e61d43/0/content_hash.txt",
+      "prompt": "/18/7528e61d43/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 24,
+    "cache_creation_tokens": 109654,
+    "cache_read_tokens": 139444,
+    "output_tokens": 448,
+    "api_call_count": 2
+  }
+}

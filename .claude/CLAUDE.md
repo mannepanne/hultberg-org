@@ -57,6 +57,45 @@
 
 **Project documentation** refers to @README.md and @SPECIFICATIONS/OnePagerRequirements.md, and other project specific files in the @SPECIFICATIONS folder if there are any.
 
+## Documentation Organization Pattern
+
+Projects use a **lifecycle-based documentation structure** to minimize context usage while maintaining comprehensive documentation:
+
+### The Two CLAUDE.md Files
+- **`.claude/CLAUDE.md`** (this file) - General collaboration principles, technology preferences, and ways of working. Applies across all projects.
+- **`CLAUDE.md`** (project root) - **Navigation index only**. Lean, scannable quick reference with links to detailed docs. Project-specific context.
+
+Both files are loaded as system context with every request, so keeping them minimal saves tokens.
+
+### Documentation Folders
+
+**SPECIFICATIONS/** - Forward-looking plans for features being built
+- Active specs remain here during planning and implementation
+- Completed specs move to `SPECIFICATIONS/ARCHIVE/` when done
+- This folder should always be lean - only active/upcoming work
+
+**REFERENCE/** - How-it-works documentation for implemented features
+- Implementation guides, troubleshooting, technical debt tracking
+- Living documentation that evolves with the codebase
+- Loaded on-demand when needed for specific tasks
+
+### The Pattern
+1. **Planning** → Create spec in `SPECIFICATIONS/`
+2. **Building** → Spec stays active in `SPECIFICATIONS/`, implementation docs added to `REFERENCE/`
+3. **Completion** → Spec moves to `SPECIFICATIONS/ARCHIVE/`, implementation docs remain in `REFERENCE/`
+
+This creates clear separation between "what we're building" (SPECIFICATIONS) and "how it works" (REFERENCE).
+
+### Keeping CLAUDE.md Lean
+The project root `CLAUDE.md` should be a navigation index:
+- Quick project overview (what/why)
+- Essential architecture patterns
+- Key file locations
+- Clear headings with summaries
+- Links to detailed docs in `REFERENCE/` and `SPECIFICATIONS/`
+
+Extract detailed content into separate files: troubleshooting guides, setup instructions, testing strategies, etc. Reference them by link rather than including inline.
+
 ## Technology Stack and Choices
 
 ### General Preferences

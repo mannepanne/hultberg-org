@@ -1,7 +1,7 @@
 # Blog-Style Updates Feature - MVP Specification
 
 **Related Documents:**
-- [blog-updates-security.md](./blog-updates-security.md)
+- [blog-security.md](../../REFERENCE/blog-security.md)
 - [blog-updates-implementation.md](./blog-updates-implementation.md)
 - [CLAUDE.md](./CLAUDE.md)  for general project structure and developer onboarding notes
 
@@ -71,7 +71,7 @@ A simple, lightweight blog feature for hultberg.org that allows Magnus to publis
 
 - **Magic link authentication** - Email sent to Magnus's personal email address
 - Simple, secure, no password management
-- See [blog-updates-security.md](./blog-updates-security.md) for complete authentication flow
+- See [blog-security.md](../../REFERENCE/blog-security.md) for complete authentication flow
 
 ### Updates Management Dashboard
 
@@ -308,7 +308,7 @@ See [blog-updates-implementation.md](./blog-updates-implementation.md) for detai
 - **Workers** (existing) - Main application runtime
 - **Workers Assets** (existing) - Serve static files
 - **Workers KV** (existing) - Store magic link tokens and rate limit data
-  - See [Security Details](./blog-updates-security.md#workers-kv-configuration) for namespace configuration
+  - See [Security Details](../../REFERENCE/blog-security.md#workers-kv-configuration) for namespace configuration
 
 ### External Services
 - **Resend.com** (existing account) - Send magic link emails
@@ -336,7 +336,7 @@ npx wrangler secret put ADMIN_EMAIL
 npx wrangler secret put JWT_SECRET
 ```
 
-See [Security Details](./blog-updates-security.md#secrets-management) for complete configuration.
+See [Security Details](../../REFERENCE/blog-security.md#secrets-management) for complete configuration.
 
 ---
 
@@ -350,7 +350,7 @@ This feature implements comprehensive security measures including:
 - Rate limiting on admin endpoints (10 req/min per IP)
 - Input validation on all API endpoints
 
-**For complete security implementation details, see:** [blog-updates-security.md](./blog-updates-security.md)
+**For complete security implementation details, see:** [blog-security.md](../../REFERENCE/blog-security.md)
 
 ---
 

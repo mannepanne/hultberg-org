@@ -1,6 +1,6 @@
 # Blog Updates - Implementation Plan
 
-**Related:** [blog-style-updates-mvp.md](./blog-style-updates-mvp.md) | [blog-updates-security.md](./blog-updates-security.md)
+**Related:** [blog-style-updates-mvp.md](./blog-style-updates-mvp.md) | [blog-security.md](../../REFERENCE/blog-security.md)
 
 This document provides a detailed, phase-by-phase implementation plan for building the blog updates feature.
 See also:
@@ -260,7 +260,7 @@ function sanitizeHtml(html: string): string {
 
 **Goal:** Establish testing framework and guardrails for agent-driven development
 
-**Related Documentation:** [testing-strategy-plan.md](./testing-strategy-plan.md)
+**Related Documentation:** [testing-strategy.md](../../REFERENCE/testing-strategy.md)
 
 **Why this phase:** Tests act as guardrails that guide development and catch issues early. Setting up testing infrastructure now ensures all subsequent phases are built with testability in mind.
 

@@ -1,11 +1,11 @@
 {
   "slug": "are-your-claudemd-files-guzzling-up-your-tokens",
   "title": "Are your CLAUDE.md files guzzling up your tokens?",
-  "excerpt": "",
+  "excerpt": "Just grokked: CLAUDE.md files are sent with EVERY request. My rich 700+ line memory for 'do this task' seemed suddenly wasteful. Refactored to act as library index. Result: 730→442 lines (67% reduction). 30 min discussion, 2 min to execute.",
   "content": "This is borderline daft, but I recently grokked how Claude Code actually uses the CLAUDE.md files (AGENTS.md for other coding agents like Codex) that act as \"memory\" in a given project. It's obvious in hindsight, but to provide working context they are sent in their entirety along with every request you make. Which specific CLAUDE.md are added in depends on where in your folder structure the agent is working, but the top level CLAUDE.md as well as .claude/CLAUDE.md are always used I believe.\n\nThis morning I had a \"Wait, what?\"  moment. So my 700-line plus project memory files were being sent with every \"do this basic task\" request? That seemed... wasteful.\n\nTime for an experiment.\n\nI've read about people treating CLAUDE.md like a \"library index\" - keeping it minimal with just links to detailed docs that Claude reads only when needed. Figured I'd try it.\n\nIn collaboration with Claude we refactored the growing memory files together.\n\nWhat we achieved:\n\n  📉 Top level CLAUDE.md: 482 lines → 157 lines (67% reduction)\n  📉 Total context: 730+ lines → 442 lines\n\nHere's how. We pulled detailed content out into separate files:\n\n- SPECIFICATIONS/        # Active feature specs\n--- ARCHIVE/            # Completed specs (historical)\n- REFERENCE/            # Implementation docs (loaded on-demand)\n--- testing-strategy.md\n--- troubleshooting.md\n--- technical-debt.md\n--- ...\n\nThe top level CLAUDE.md now just contains:\n  - Quick project overview\n  - Essential architecture patterns\n  - Links to the detailed stuff\n\nDoes it actually help?\n\nWell. Who am I to know. But those ~300 saved lines aren't loaded with every request anymore. Claude pulls in the detailed docs only when they're relevant to what I'm asking.\n\nCheaper per request (I think?), clearer context (for sure!), and my SPECIFICATIONS/ folder now shows what I'm actually working on (currently empty - no active work in progress).\n\nDiscussion around suitable structure: about 30 minutes. \n\nActual time for Claude to act on the agreed approach:  2 minutes.\n\nProbably worth it if you've got growing context files.",
-  "status": "draft",
-  "publishedDate": "",
-  "editedDate": "2026-02-21T11:03:54.256Z",
+  "status": "published",
+  "publishedDate": "2026-02-21T11:05:52.120Z",
+  "editedDate": "2026-02-21T11:05:52.120Z",
   "author": "Magnus Hultberg",
   "images": []
 }

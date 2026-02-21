@@ -48,3 +48,14 @@ export function encodeBase64(content: string): string {
   bytes.forEach(b => { binary += String.fromCharCode(b); });
   return btoa(binary);
 }
+
+/**
+ * Decode a Base64 string to UTF-8 text, handling Unicode characters correctly.
+ * atob() alone treats bytes as Latin-1, which corrupts multi-byte UTF-8 sequences (like emojis).
+ * This properly decodes UTF-8 bytes to a JavaScript string.
+ */
+export function decodeBase64(base64: string): string {
+  const binaryString = atob(base64);
+  const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));
+  return new TextDecoder('utf-8').decode(bytes);
+}

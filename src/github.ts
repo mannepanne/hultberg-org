@@ -3,7 +3,7 @@
 
 import type { Env } from './types';
 import type { Update } from './types';
-import { encodeBase64 } from './utils';
+import { encodeBase64, decodeBase64 } from './utils';
 
 export const GITHUB_REPO = 'mannepanne/hultberg-org';
 const GITHUB_API_BASE = 'https://api.github.com';
@@ -138,7 +138,8 @@ export async function fetchUpdateBySlug(env: Env, slug: string): Promise<Update 
   const fileData = await response.json() as { content: string };
   try {
     // GitHub returns content as Base64-encoded UTF-8
-    const decoded = atob(fileData.content.replace(/\n/g, ''));
+    const base64 = fileData.content.replace(/\n/g, '');
+    const decoded = decodeBase64(base64);
     return JSON.parse(decoded) as Update;
   } catch {
     return null;

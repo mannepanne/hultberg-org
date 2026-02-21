@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "066f70b3a131",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".claude/CLAUDE.md",
+    "CLAUDE.md",
+    "REFERENCE/environment-setup.md",
+    "REFERENCE/troubleshooting.md",
+    "REFERENCE/web-analytics.md",
+    "SPECIFICATIONS/ARCHIVE/blog-style-updates-mvp.md",
+    "SPECIFICATIONS/ARCHIVE/blog-updates-implementation.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/06/6f70b3a131/0/metadata.json",
+      "transcript": "/06/6f70b3a131/0/full.jsonl",
+      "context": "/06/6f70b3a131/0/context.md",
+      "content_hash": "/06/6f70b3a131/0/content_hash.txt",
+      "prompt": "/06/6f70b3a131/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 297,
+    "cache_creation_tokens": 32294,
+    "cache_read_tokens": 2098717,
+    "output_tokens": 13424,
+    "api_call_count": 25
+  }
+}

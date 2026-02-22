@@ -47,7 +47,7 @@
 - **Don't rewrite working code** - Make the smallest reasonable changes to get to the desired outcome. Don't embark on reimplementing features or systems from scratch without talking about it first - I usually prefer incremental improvements.
 - **Security is non-negotiable** - We never commit secrets or credentials to the repository. Always consider security in every choice, including treatment of personal user data (GDPR) and compliance with relevant regulations.
 - **Document issues as tasks** - If you notice something that should be fixed but is unrelated to your current task, document it as a new task to potentially do later instead of fixing it immediately.
-- **Keep documentation current** - When making significant changes to architecture, APIs, or core functionality, proactively update @SPECIFICATIONS/DEVELOPMENT.md to reflect the new reality. This documentation is critical for future development work.
+- **Keep documentation current** - When making significant changes to architecture, APIs, or core functionality, proactively update project documentation to reflect the new reality. Use SPECIFICATIONS/ for active work, REFERENCE/ for implementation details.
 - **Don't waste tokens** - Be succinct and concise.
 
 ### Decision Making Process
@@ -55,7 +55,7 @@
 2. **Scope Control**: Ask permission before major rewrites or scope changes
 3. **Technology Choices**: Justify new technology suggestions with clear benefits
 
-**Project documentation** refers to @README.md and @SPECIFICATIONS/OnePagerRequirements.md, and other project specific files in the @SPECIFICATIONS folder if there are any.
+**Project documentation** refers to project-specific CLAUDE.md, README.md, and organized files in SPECIFICATIONS/ (active work), SPECIFICATIONS/ARCHIVE/ (completed specs), and REFERENCE/ (implementation guides).
 
 ## Documentation Organization Pattern
 
@@ -254,37 +254,14 @@ The goal is sustainable progress, not perfect process.
 
 ## Documentation Standards
 
-### Project Knowledge Documentation
-- We value documentation. The main purpose of documentation is to be able to pick up a project later and quickly understand how everything hangs together and how to use it and / or extend it.
-- We also value documentation as a way to communicate our knowledge and expertise to others. This helps to ensure that our work is not lost when we move on to other projects.
-- Preferred output format for general documentation is Markdown (.md).
-- Place any documentation files you create except README.md in the SPECIFICATIONS folder.
-- Always maintain a README.md in the project root folder.
-- To maintain high level project documentation about desired outcome, project phasing, requirements etc always use the PRD SPECIFICATIONS/OnePagerRequirements.md unless something else is explicitly defined.
+We value documentation - it enables picking up projects later and communicating knowledge to others.
 
-### Documentation Process
-These are the most important areas of analysis when creating documentation:
-1. Code structure and purpose
-2. Inputs, outputs, and behavior
-3. User interaction flows
-4. Edge cases and error handling
-5. Integration points with other components/systems
+**Key principles:**
+- Documentation should explain how everything works and how to use/extend it
+- Preferred format: Markdown (.md)
+- Always maintain README.md in project root
+- Use lifecycle-based structure: SPECIFICATIONS/ (active), ARCHIVE/ (completed), REFERENCE/ (implementation)
+- Keep documentation current alongside code changes
+- Focus on clarity, completeness, and actionability
 
-Process for creating documentation:
-1. Analyze the target code thoroughly
-2. Identify all public interfaces
-3. Document expected behaviors
-4. Include code examples
-5. Add diagrams where helpful
-6. Follow project documentation standards
-7. Ensure clarity, completeness, and actionability
-
-### Documentation Template
-Essential headings for technical documentation:
-- **Overview**: Brief 1-2 paragraph overview explaining purpose and value
-- **Usage**: How to use this component/feature with examples
-- **API/Parameters**: Detailed specification of interfaces
-- **Behavior**: Expected behavior in different scenarios
-- **Error Handling**: How errors are caught, handled, and reported
-- **Testing**: How to test this component/feature
-- **Related Components**: Links to related documentation
+**Detailed templates and process:** [documentation-standards.md](./COLLABORATION/documentation-standards.md)

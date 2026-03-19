@@ -132,13 +132,13 @@ function renderUpdatePageHTML(update: Update, contentHTML: string): string {
 
         <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "f71c3c28b82c4c6991ec3d41b7f1496f"}'></script><!-- End Cloudflare Web Analytics -->
     </head>
-    <body>
+    <body style="font-family: Georgia, serif; line-height: 1.5;">
         <div style="max-width: 800px; margin: 0 auto; padding: 2em;">
             <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/">LinkedIn</a></p>
 
             <article>
                 <header>
-                    <h1>${escapeHtml(update.title)}</h1>
+                    <h1 style="font-size: 1.5em; font-weight: bold; line-height: 1.2; margin-bottom: 0.5em;">${escapeHtml(update.title)}</h1>
                     <p style="color: #666; font-size: 0.9em;">
                         By <a href="/now">${escapeHtml(update.author)}</a> • ${formattedPublishedDate}
                     </p>

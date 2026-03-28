@@ -17,6 +17,7 @@ import { handleAdminPreview } from './routes/adminPreview';
 import { handleSaveUpdate } from './routes/saveUpdate';
 import { handleUploadImage } from './routes/uploadImage';
 import { handleDeleteImage } from './routes/deleteImage';
+import { handleGitHubContributions } from './routes/githubProxy';
 import { GITHUB_REPO } from './github';
 
 export default {
@@ -95,6 +96,11 @@ export default {
     }
 
     // Public routes
+    // API: GET /api/github/contributions - Proxy for GitHub GraphQL API
+    if (url.pathname === '/api/github/contributions' && request.method === 'GET') {
+      return handleGitHubContributions(request, env);
+    }
+
     // Route: /updates/feed.xml RSS feed
     if (url.pathname === '/updates/feed.xml') {
       return handleRSSFeed(request, env);
@@ -155,12 +161,12 @@ export default {
     </head>
     <body>
         <div style="max-width: 800px; margin: 0 auto; padding: 2em;">
-            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/">LinkedIn</a></p>
+            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a></p>
             <img src="/errors/bazinga.gif" alt="bazinga!" /><br /><br />
             sorry, the page or file you are looking for isn't here...<br />
             <a href="/" onclick="history.back(); return false;">go back from whence you came</a>, or tell me what a klutz I am by messaging me on
-            <a href="https://uk.linkedin.com/in/hultberg">LinkedIn</a>
-            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/">LinkedIn</a></p>
+            <a href="https://uk.linkedin.com/in/hultberg" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a></p>
         </div>
     </body>
 </html>

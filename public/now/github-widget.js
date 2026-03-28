@@ -6,13 +6,37 @@
 
   const MAX_REPOS = 10; // Maximum number of repos to display
   const ACTIVITY_CUTOFF_DAYS = 21; // Don't show "X days ago" after this many days
+  const FETCH_TIMEOUT_MS = 10000; // 10 second timeout for API calls
+
+  /**
+   * Fetch with timeout support
+   * @param {string} url - URL to fetch
+   * @param {number} timeout - Timeout in milliseconds
+   * @returns {Promise<Response>}
+   */
+  async function fetchWithTimeout(url, timeout = FETCH_TIMEOUT_MS) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out');
+      }
+      throw error;
+    }
+  }
 
   /**
    * Fetches public repositories from GitHub REST API
    */
   async function fetchRepositories(username) {
     try {
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `https://api.github.com/users/${username}/repos?sort=pushed&per_page=100`
       );
 
@@ -38,7 +62,7 @@
    */
   async function fetchContributions(username) {
     try {
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `/api/github/contributions?username=${username}`
       );
 
@@ -82,10 +106,16 @@
 
   /**
    * Renders the contribution graph
+   * Uses DOM methods to prevent XSS from untrusted GitHub API data
    */
   function renderContributionGraph(calendar, container) {
+    // Clear existing content
+    container.innerHTML = '';
+
     if (!calendar) {
-      container.innerHTML = '<p>Unable to load contribution data.</p>';
+      const message = document.createElement('p');
+      message.textContent = 'Unable to load contribution data.';
+      container.appendChild(message);
       return;
     }
 
@@ -111,66 +141,116 @@
       }
     });
 
-    // Build HTML
-    let html = '<div class="contribution-graph">';
+    // Create main container
+    const graphContainer = document.createElement('div');
+    graphContainer.className = 'contribution-graph';
 
-    // Month labels
-    html += '<div class="month-labels">';
+    // Create month labels container
+    const monthLabelsDiv = document.createElement('div');
+    monthLabelsDiv.className = 'month-labels';
     monthLabels.forEach(({ weekIndex, label }) => {
-      html += `<span style="grid-column: ${weekIndex + 1}">${label}</span>`;
+      const span = document.createElement('span');
+      span.style.gridColumn = `${weekIndex + 1}`;
+      span.textContent = label; // Safe: controlled by our code
+      monthLabelsDiv.appendChild(span);
     });
-    html += '</div>';
+    graphContainer.appendChild(monthLabelsDiv);
 
-    // Grid of contribution squares
-    html += '<div class="contribution-grid" role="img" aria-label="GitHub contribution activity for the last 6 months">';
+    // Create contribution grid
+    const gridDiv = document.createElement('div');
+    gridDiv.className = 'contribution-grid';
+    gridDiv.setAttribute('role', 'img');
+    gridDiv.setAttribute('aria-label', 'GitHub contribution activity for the last 6 months');
+
     recentWeeks.forEach(week => {
-      html += '<div class="week">';
+      const weekDiv = document.createElement('div');
+      weekDiv.className = 'week';
+
       week.contributionDays.forEach(day => {
         const color = getContributionColor(day.contributionCount);
         const contributionText = day.contributionCount === 1 ? 'contribution' : 'contributions';
-        html += `<div class="day" style="background-color: ${color}" title="${day.contributionCount} ${contributionText} on ${day.date}" aria-label="${day.contributionCount} ${contributionText} on ${day.date}"></div>`;
+        const label = `${day.contributionCount} ${contributionText} on ${day.date}`;
+
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'day';
+        dayDiv.style.backgroundColor = color; // Safe: color from our getContributionColor function
+        dayDiv.title = label; // Safe: DOM properties escape HTML
+        dayDiv.setAttribute('aria-label', label); // Safe: setAttribute escapes
+        weekDiv.appendChild(dayDiv);
       });
-      html += '</div>';
+
+      gridDiv.appendChild(weekDiv);
     });
-    html += '</div>';
+    graphContainer.appendChild(gridDiv);
 
-    // Total contributions
-    html += `<div class="contribution-total">${totalContributions.toLocaleString()} contributions in the last 12 months</div>`;
+    // Create total contributions text
+    const totalDiv = document.createElement('div');
+    totalDiv.className = 'contribution-total';
+    totalDiv.textContent = `${totalContributions.toLocaleString()} contributions in the last 12 months`; // Safe: textContent escapes
+    graphContainer.appendChild(totalDiv);
 
-    html += '</div>';
-
-    container.innerHTML = html;
+    container.appendChild(graphContainer);
   }
 
   /**
    * Renders the repository list
+   * Uses DOM methods to prevent XSS from untrusted GitHub API data
    */
   function renderRepositories(repos, container) {
+    // Clear existing content
+    container.innerHTML = '';
+
     if (!repos || repos.length === 0) {
-      container.innerHTML = '<p>No recent repositories found.</p>';
+      const message = document.createElement('p');
+      message.textContent = 'No recent repositories found.';
+      container.appendChild(message);
       return;
     }
 
-    let html = '<div class="repo-list">';
+    const repoList = document.createElement('div');
+    repoList.className = 'repo-list';
 
     repos.forEach(repo => {
       const daysAgo = formatDaysAgo(repo.pushed_at);
       const description = repo.description || 'No description available';
 
-      html += '<div class="repo-item">';
-      html += `<div class="repo-header">`;
-      html += `<a href="${repo.html_url}" class="repo-name" target="_blank" rel="noopener noreferrer">${repo.name}</a>`;
+      // Create repo item container
+      const repoItem = document.createElement('div');
+      repoItem.className = 'repo-item';
+
+      // Create header with name and activity
+      const repoHeader = document.createElement('div');
+      repoHeader.className = 'repo-header';
+
+      // Create link (href is validated by browser, textContent prevents XSS)
+      const repoLink = document.createElement('a');
+      repoLink.href = repo.html_url;
+      repoLink.className = 'repo-name';
+      repoLink.target = '_blank';
+      repoLink.rel = 'noopener noreferrer';
+      repoLink.textContent = repo.name; // Safe: textContent escapes HTML
+      repoHeader.appendChild(repoLink);
+
+      // Add activity indicator if present
       if (daysAgo) {
-        html += `<span class="repo-activity">${daysAgo}</span>`;
+        const activitySpan = document.createElement('span');
+        activitySpan.className = 'repo-activity';
+        activitySpan.textContent = daysAgo; // Safe: controlled by our code
+        repoHeader.appendChild(activitySpan);
       }
-      html += `</div>`;
-      html += `<div class="repo-description">${description}</div>`;
-      html += '</div>';
+
+      repoItem.appendChild(repoHeader);
+
+      // Create description
+      const descriptionDiv = document.createElement('div');
+      descriptionDiv.className = 'repo-description';
+      descriptionDiv.textContent = description; // Safe: textContent escapes HTML
+      repoItem.appendChild(descriptionDiv);
+
+      repoList.appendChild(repoItem);
     });
 
-    html += '</div>';
-
-    container.innerHTML = html;
+    container.appendChild(repoList);
   }
 
   /**

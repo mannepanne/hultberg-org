@@ -102,7 +102,7 @@ describe('GET /api/github/contributions', () => {
     const response = await handleGitHubContributions(request, mockEnv);
     global.fetch = originalFetch;
 
-    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://hultberg.org');
     expect(response.headers.get('Access-Control-Allow-Methods')).toBe('GET, OPTIONS');
     expect(response.headers.get('Access-Control-Allow-Headers')).toBe('Content-Type');
   });
@@ -114,7 +114,7 @@ describe('GET /api/github/contributions', () => {
     const response = await handleGitHubContributions(request, mockEnv);
 
     expect(response.status).toBe(200);
-    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://hultberg.org');
     expect(response.headers.get('Access-Control-Allow-Methods')).toBe('GET, OPTIONS');
     expect(response.headers.get('Access-Control-Allow-Headers')).toBe('Content-Type');
   });
@@ -274,9 +274,8 @@ describe('GET /api/github/contributions', () => {
     global.fetch = originalFetch;
 
     expect(response.status).toBe(500);
-    const body = await response.json() as { error: string; details: string };
-    expect(body.error).toBe('Failed to fetch GitHub contributions');
-    expect(body.details).toBeDefined();
+    const body = await response.json() as { error: string };
+    expect(body.error).toBe('Unable to load GitHub data. Please try again later.');
   });
 
   it('handles network errors gracefully', async () => {
@@ -295,9 +294,8 @@ describe('GET /api/github/contributions', () => {
     global.fetch = originalFetch;
 
     expect(response.status).toBe(500);
-    const body = await response.json() as { error: string; details: string };
-    expect(body.error).toBe('Failed to fetch GitHub contributions');
-    expect(body.details).toBe('Network error');
+    const body = await response.json() as { error: string };
+    expect(body.error).toBe('Unable to load GitHub data. Please try again later.');
   });
 
   it('returns proper structure matching GitHub GraphQL response', async () => {
@@ -341,5 +339,116 @@ describe('GET /api/github/contributions', () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body).toEqual(mockResponse);
+  });
+
+  it('returns 429 when rate limit exceeded', async () => {
+    // Mock rate limit to return true (exceeded)
+    const mockRateLimitKV = {
+      get: async () => '10', // Already at limit
+      put: async () => {},
+      delete: async () => {},
+      list: async () => ({ keys: [], cursor: '', list_complete: true }),
+      getWithMetadata: async () => ({ value: null, metadata: null }),
+    };
+
+    const envWithRateLimit = createMockEnv({ RATE_LIMIT_KV: mockRateLimitKV as any });
+    const request = new Request('http://localhost/api/github/contributions?username=testuser');
+    const response = await handleGitHubContributions(request, envWithRateLimit);
+
+    expect(response.status).toBe(429);
+    const body = await response.json() as { error: string };
+    expect(body.error).toBe('Too many requests. Please try again later.');
+  });
+
+  it('allows requests from whitelisted origin (hultberg.org)', async () => {
+    const request = new Request('http://localhost/api/github/contributions?username=testuser', {
+      headers: { 'Origin': 'https://hultberg.org' }
+    });
+
+    const originalFetch = global.fetch;
+    global.fetch = async (input: RequestInfo | URL) => {
+      const url = input.toString();
+      if (url === 'https://api.github.com/graphql') {
+        return new Response(JSON.stringify({
+          data: { user: { contributionsCollection: { contributionCalendar: { totalContributions: 0, weeks: [] } } } }
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return originalFetch(input);
+    };
+
+    const response = await handleGitHubContributions(request, mockEnv);
+    global.fetch = originalFetch;
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://hultberg.org');
+  });
+
+  it('allows requests from whitelisted origin (localhost)', async () => {
+    const request = new Request('http://localhost/api/github/contributions?username=testuser', {
+      headers: { 'Origin': 'http://localhost:8787' }
+    });
+
+    const originalFetch = global.fetch;
+    global.fetch = async (input: RequestInfo | URL) => {
+      const url = input.toString();
+      if (url === 'https://api.github.com/graphql') {
+        return new Response(JSON.stringify({
+          data: { user: { contributionsCollection: { contributionCalendar: { totalContributions: 0, weeks: [] } } } }
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return originalFetch(input);
+    };
+
+    const response = await handleGitHubContributions(request, mockEnv);
+    global.fetch = originalFetch;
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:8787');
+  });
+
+  it('uses fallback origin for non-whitelisted origin', async () => {
+    const request = new Request('http://localhost/api/github/contributions?username=testuser', {
+      headers: { 'Origin': 'https://evil.com' }
+    });
+
+    const originalFetch = global.fetch;
+    global.fetch = async (input: RequestInfo | URL) => {
+      const url = input.toString();
+      if (url === 'https://api.github.com/graphql') {
+        return new Response(JSON.stringify({
+          data: { user: { contributionsCollection: { contributionCalendar: { totalContributions: 0, weeks: [] } } } }
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return originalFetch(input);
+    };
+
+    const response = await handleGitHubContributions(request, mockEnv);
+    global.fetch = originalFetch;
+
+    expect(response.status).toBe(200);
+    // Should use fallback, not the evil origin
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://hultberg.org');
+  });
+
+  it('uses fallback origin when Origin header is missing', async () => {
+    const request = new Request('http://localhost/api/github/contributions?username=testuser');
+    // No Origin header set
+
+    const originalFetch = global.fetch;
+    global.fetch = async (input: RequestInfo | URL) => {
+      const url = input.toString();
+      if (url === 'https://api.github.com/graphql') {
+        return new Response(JSON.stringify({
+          data: { user: { contributionsCollection: { contributionCalendar: { totalContributions: 0, weeks: [] } } } }
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return originalFetch(input);
+    };
+
+    const response = await handleGitHubContributions(request, mockEnv);
+    global.fetch = originalFetch;
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://hultberg.org');
   });
 });

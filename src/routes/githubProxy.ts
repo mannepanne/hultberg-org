@@ -37,6 +37,19 @@ export async function handleGitHubContributions(
     );
   }
 
+  // Validate username format (GitHub usernames: alphanumeric and hyphens, 1-39 chars)
+  // May not start/end with hyphen, no consecutive hyphens
+  const usernameRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/;
+  if (!usernameRegex.test(username)) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid username format' }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
   // Check for GitHub token
   if (!env.GITHUB_TOKEN) {
     return new Response(

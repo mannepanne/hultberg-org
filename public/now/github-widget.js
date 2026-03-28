@@ -4,17 +4,16 @@
 (function() {
   'use strict';
 
-  const GITHUB_USERNAME = 'mannepanne';
   const MAX_REPOS = 10; // Maximum number of repos to display
   const ACTIVITY_CUTOFF_DAYS = 21; // Don't show "X days ago" after this many days
 
   /**
    * Fetches public repositories from GitHub REST API
    */
-  async function fetchRepositories() {
+  async function fetchRepositories(username) {
     try {
       const response = await fetch(
-        `https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=pushed&per_page=100`
+        `https://api.github.com/users/${username}/repos?sort=pushed&per_page=100`
       );
 
       if (!response.ok) {
@@ -25,7 +24,7 @@
 
       // Filter to only repos owned by user (not forks) and sort by most recent push
       return repos
-        .filter(repo => !repo.fork && repo.owner.login === GITHUB_USERNAME)
+        .filter(repo => !repo.fork && repo.owner.login === username)
         .sort((a, b) => new Date(b.pushed_at) - new Date(a.pushed_at))
         .slice(0, MAX_REPOS);
     } catch (error) {
@@ -37,10 +36,10 @@
   /**
    * Fetches contribution data from our Worker proxy
    */
-  async function fetchContributions() {
+  async function fetchContributions(username) {
     try {
       const response = await fetch(
-        `/api/github/contributions?username=${GITHUB_USERNAME}`
+        `/api/github/contributions?username=${username}`
       );
 
       if (!response.ok) {
@@ -123,19 +122,20 @@
     html += '</div>';
 
     // Grid of contribution squares
-    html += '<div class="contribution-grid">';
+    html += '<div class="contribution-grid" role="img" aria-label="GitHub contribution activity for the last 6 months">';
     recentWeeks.forEach(week => {
       html += '<div class="week">';
       week.contributionDays.forEach(day => {
         const color = getContributionColor(day.contributionCount);
-        html += `<div class="day" style="background-color: ${color}" title="${day.contributionCount} contributions on ${day.date}"></div>`;
+        const contributionText = day.contributionCount === 1 ? 'contribution' : 'contributions';
+        html += `<div class="day" style="background-color: ${color}" title="${day.contributionCount} ${contributionText} on ${day.date}" aria-label="${day.contributionCount} ${contributionText} on ${day.date}"></div>`;
       });
       html += '</div>';
     });
     html += '</div>';
 
     // Total contributions
-    html += `<div class="contribution-total">${totalContributions.toLocaleString()} contributions in the last year</div>`;
+    html += `<div class="contribution-total">${totalContributions.toLocaleString()} contributions in the last 12 months</div>`;
 
     html += '</div>';
 
@@ -185,14 +185,17 @@
       return;
     }
 
+    // Read username from data attribute (with fallback)
+    const username = contributionContainer.dataset.username || 'mannepanne';
+
     // Show loading state
     contributionContainer.innerHTML = '<p>Loading contributions...</p>';
     repoContainer.innerHTML = '<p>Loading repositories...</p>';
 
     // Fetch data in parallel
     const [contributions, repos] = await Promise.all([
-      fetchContributions(),
-      fetchRepositories()
+      fetchContributions(username),
+      fetchRepositories(username)
     ]);
 
     // Render the data

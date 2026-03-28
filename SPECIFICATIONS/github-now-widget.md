@@ -16,11 +16,14 @@ Add a GitHub contribution history and recent repositories widget to the `/now` p
 ## GitHub Widget Components
 
 ### 1. Contribution Graph
-- Display last 12 months rolling (not calendar year)
+- **API fetches:** Last 12 months rolling contribution data (not calendar year)
+- **Display shows:** Last 6 months (26 weeks) for compact layout
 - Month labels across top (Mar, Apr, May, etc.)
 - No weekday labels on left side
 - Green contribution squares matching GitHub's visual style
-- Total contribution count below graph (e.g., "2,826 contributions in the last year")
+- Total contribution count below graph shows full 12-month total (e.g., "2,826 contributions in the last 12 months")
+
+**Rationale:** Fetching 12 months of data ensures accurate total count, but displaying only 6 months keeps the graph width manageable and visually balanced with the Goodreads widget.
 
 ### 2. Recent Repositories List
 **Header:** "Projects I have been working on recently"

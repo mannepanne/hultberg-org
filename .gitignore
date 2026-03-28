@@ -7,6 +7,9 @@ package-lock.json
 .entire/
 nimbalyst-local/
 
+# Session state (working memory, may contain sensitive context)
+.claude/session-state/
+
 # Test coverage
 coverage/
 

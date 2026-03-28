@@ -15,11 +15,13 @@ export async function handleGitHubContributions(
   // Restrict CORS to allowed origins only (prevents quota abuse)
   const origin = request.headers.get('Origin');
   const allowedOrigins = ['https://hultberg.org', 'http://localhost:8787'];
-  const allowOrigin = allowedOrigins.includes(origin || '') ? origin : 'https://hultberg.org';
+  const allowOrigin = (origin && allowedOrigins.includes(origin))
+    ? origin
+    : 'https://hultberg.org';
 
   // CORS headers for client-side access
   const corsHeaders = {
-    'Access-Control-Allow-Origin': allowOrigin || 'https://hultberg.org',
+    'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };

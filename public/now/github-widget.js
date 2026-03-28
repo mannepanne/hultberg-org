@@ -106,10 +106,16 @@
 
   /**
    * Renders the contribution graph
+   * Uses DOM methods to prevent XSS from untrusted GitHub API data
    */
   function renderContributionGraph(calendar, container) {
+    // Clear existing content
+    container.innerHTML = '';
+
     if (!calendar) {
-      container.innerHTML = '<p>Unable to load contribution data.</p>';
+      const message = document.createElement('p');
+      message.textContent = 'Unable to load contribution data.';
+      container.appendChild(message);
       return;
     }
 
@@ -135,35 +141,55 @@
       }
     });
 
-    // Build HTML
-    let html = '<div class="contribution-graph">';
+    // Create main container
+    const graphContainer = document.createElement('div');
+    graphContainer.className = 'contribution-graph';
 
-    // Month labels
-    html += '<div class="month-labels">';
+    // Create month labels container
+    const monthLabelsDiv = document.createElement('div');
+    monthLabelsDiv.className = 'month-labels';
     monthLabels.forEach(({ weekIndex, label }) => {
-      html += `<span style="grid-column: ${weekIndex + 1}">${label}</span>`;
+      const span = document.createElement('span');
+      span.style.gridColumn = `${weekIndex + 1}`;
+      span.textContent = label; // Safe: controlled by our code
+      monthLabelsDiv.appendChild(span);
     });
-    html += '</div>';
+    graphContainer.appendChild(monthLabelsDiv);
 
-    // Grid of contribution squares
-    html += '<div class="contribution-grid" role="img" aria-label="GitHub contribution activity for the last 6 months">';
+    // Create contribution grid
+    const gridDiv = document.createElement('div');
+    gridDiv.className = 'contribution-grid';
+    gridDiv.setAttribute('role', 'img');
+    gridDiv.setAttribute('aria-label', 'GitHub contribution activity for the last 6 months');
+
     recentWeeks.forEach(week => {
-      html += '<div class="week">';
+      const weekDiv = document.createElement('div');
+      weekDiv.className = 'week';
+
       week.contributionDays.forEach(day => {
         const color = getContributionColor(day.contributionCount);
         const contributionText = day.contributionCount === 1 ? 'contribution' : 'contributions';
-        html += `<div class="day" style="background-color: ${color}" title="${day.contributionCount} ${contributionText} on ${day.date}" aria-label="${day.contributionCount} ${contributionText} on ${day.date}"></div>`;
+        const label = `${day.contributionCount} ${contributionText} on ${day.date}`;
+
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'day';
+        dayDiv.style.backgroundColor = color; // Safe: color from our getContributionColor function
+        dayDiv.title = label; // Safe: DOM properties escape HTML
+        dayDiv.setAttribute('aria-label', label); // Safe: setAttribute escapes
+        weekDiv.appendChild(dayDiv);
       });
-      html += '</div>';
+
+      gridDiv.appendChild(weekDiv);
     });
-    html += '</div>';
+    graphContainer.appendChild(gridDiv);
 
-    // Total contributions
-    html += `<div class="contribution-total">${totalContributions.toLocaleString()} contributions in the last 12 months</div>`;
+    // Create total contributions text
+    const totalDiv = document.createElement('div');
+    totalDiv.className = 'contribution-total';
+    totalDiv.textContent = `${totalContributions.toLocaleString()} contributions in the last 12 months`; // Safe: textContent escapes
+    graphContainer.appendChild(totalDiv);
 
-    html += '</div>';
-
-    container.innerHTML = html;
+    container.appendChild(graphContainer);
   }
 
   /**

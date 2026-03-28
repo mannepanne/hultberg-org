@@ -29,12 +29,145 @@
 
 <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "f71c3c28b82c4c6991ec3d41b7f1496f"}'></script><!-- End Cloudflare Web Analytics -->
 
+<style>
+  /* Goodreads widget styles */
+  #customize-list{
+    float: left;
+    list-style: none;
+  }
+  #gr_updates_widget{
+    float: left;
+    background-color: #fff;
+    border: 0;
+  }
+  #gr_footer{
+    display: none;
+  }
+  #gr_updates_widget p{
+    padding: 0;
+    margin: 0;
+  }
+  #gr_footer img{
+    display: none;
+  }
+
+  /* Two-column layout for widgets */
+  .widgets-container {
+    display: flex;
+    gap: 1em;
+    margin-top: 2em;
+    flex-wrap: wrap;
+  }
+
+  .widget-column {
+    flex: 1;
+    min-width: 300px;
+  }
+
+  /* GitHub widget styles */
+  .github-widget h2 {
+    font-size: 1.5em;
+    font-weight: bold;
+    line-height: 1.2;
+    margin-bottom: 0.5em;
+  }
+
+  .github-widget h3 {
+    font-size: 1em;
+    font-weight: normal;
+    margin: 1em 0 0.5em 0;
+    font-style: italic;
+  }
+
+  /* Contribution graph */
+  .contribution-graph {
+    margin: 1em 0;
+  }
+
+  .month-labels {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 10px;
+    gap: 3px;
+    font-size: 0.75em;
+    color: #666;
+    margin-bottom: 4px;
+  }
+
+  .contribution-grid {
+    display: flex;
+    gap: 3px;
+  }
+
+  .contribution-grid .week {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .contribution-grid .day {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  .contribution-total {
+    margin-top: 0.5em;
+    font-size: 0.9em;
+    color: #666;
+  }
+
+  /* Repository list */
+  .repo-list {
+    margin-top: 1em;
+  }
+
+  .repo-item {
+    margin-bottom: 1.5em;
+  }
+
+  .repo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.25em;
+  }
+
+  .repo-name {
+    font-weight: bold;
+    text-decoration: none;
+  }
+
+  .repo-name:hover {
+    text-decoration: underline;
+  }
+
+  .repo-activity {
+    font-size: 0.85em;
+    color: #666;
+    font-style: italic;
+  }
+
+  .repo-description {
+    font-size: 0.9em;
+    color: #333;
+    line-height: 1.4;
+  }
+
+  /* Responsive layout */
+  @media (max-width: 768px) {
+    .widgets-container {
+      flex-direction: column;
+    }
+  }
+</style>
+
 </head>
 <body id="now" style="font-family: Georgia, serif; line-height: 1.5;">
 
 <div id="content" style="max-width: 800px; margin: 0 auto; padding: 2em;">
 
-  <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/">LinkedIn</a></p>
+  <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a></p>
 
   <h1 style="font-size: 1.5em; font-weight: bold; line-height: 1.2; margin-bottom: 0.5em;">What I'm doing now</h1>
 
@@ -51,43 +184,35 @@
     <li>pondering the future</li>
   </ul>
 
-  <p>also see <a href="https://uk.linkedin.com/in/hultberg"onclick="gtag('event', 'Click', { 'event_category' : 'Link Social', 'event_label' : 'LinkedIn_hultberg' });">LinkedIn</a></p>
+  <p>also see <a href="https://uk.linkedin.com/in/hultberg" onclick="gtag('event', 'Click', { 'event_category' : 'Link Social', 'event_label' : 'LinkedIn_hultberg' });" target="_blank" rel="noopener noreferrer">LinkedIn</a> and <a href="https://github.com/mannepanne" onclick="gtag('event', 'Click', { 'event_category' : 'Link Social', 'event_label' : 'GitHub_mannepanne' });" target="_blank" rel="noopener noreferrer">GitHub</a></p>
 
   <p>(list last updated: February 2026 | credit for the /now idea: <a href="https://sivers.org/nowff" onclick="gtag('event', 'Click', { 'event_category' : 'Link External', 'event_label' : 'Derek Sivers' });">Derek Sivers</a>)</p>
 
-  <div style="float: left;">
+  <div class="widgets-container">
 
-    <h2 style="font-size: 1.5em; font-weight: bold; line-height: 1.2; margin-bottom: 0.5em;">Reading updates</h2>
+    <div class="widget-column">
+      <h2 style="font-size: 1.5em; font-weight: bold; line-height: 1.2; margin-bottom: 0.5em;">Reading updates</h2>
 
-    <style>
-      #customize-list{
-        float: left;
-        list-style: none;
-      }
-      #gr_updates_widget{
-        float: left;
-        background-color: #fff;
-        border: 0;
-      }
-      #gr_footer{
-        display: none;
-      }
-      #gr_updates_widget p{
-        padding: 0;
-        margin: 0;
-      }
-      #gr_footer img{
-        display: none;
-      }
-    </style>
-    <div id="gr_updates_widget">
-      <iframe id="the_iframe" src="https://goodreads.com/widgets/user_update_widget?height=400&num_updates=4&user=3011094&width=300" width="298" height="400" frameborder="0"></iframe>
+      <div id="gr_updates_widget">
+        <iframe id="the_iframe" src="https://goodreads.com/widgets/user_update_widget?height=500&num_updates=4&user=3011094&width=325" width="323" height="500" frameborder="0"></iframe>
+      </div>
     </div>
 
+    <div class="widget-column github-widget">
+      <h2>GitHub activity</h2>
+
+      <div id="github-contributions"></div>
+
+      <h3>Projects I have been working on recently</h3>
+
+      <div id="github-repos"></div>
+    </div>
 
   </div>
 
-  <p style="clear: both; margin-top: 2em;">← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/">LinkedIn</a></p>
+  <p style="clear: both; margin-top: 2em;">← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+
+  <script src="/now/github-widget.js"></script>
 
 </div>
 

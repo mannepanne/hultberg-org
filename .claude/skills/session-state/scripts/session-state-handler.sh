@@ -1,5 +1,7 @@
 #!/bin/bash
-# Session state validation and reminder hook
+# ABOUT: Session state hook handler for Claude Code
+# ABOUT: Validates state, tracks tool usage, detects PR merges, scans for secrets
+# ABOUT: Read-only - Claude updates state files, this script just reminds and validates
 #
 # This SCRIPT is read-only - it validates and outputs reminders to Claude.
 # CLAUDE is expected to update session-state.md using the Edit tool when prompted.
@@ -9,11 +11,18 @@
 
 set -euo pipefail
 
+# Validate required environment variable
+if [ -z "${CLAUDE_PROJECT_DIR:-}" ]; then
+  echo "ERROR: CLAUDE_PROJECT_DIR environment variable not set"
+  echo "This hook requires Claude Code to set CLAUDE_PROJECT_DIR"
+  exit 1
+fi
+
 # Read hook event from stdin JSON
 EVENT_JSON=$(cat)
 HOOK_EVENT=$(echo "$EVENT_JSON" | jq -r '.hook_event_name // "unknown"')
 SESSION_FILE="$CLAUDE_PROJECT_DIR/.claude/session-state/current.md"
-TOOL_COUNT_FILE="/tmp/claude-session-state-tool-count-$$"
+TOOL_COUNT_FILE="$CLAUDE_PROJECT_DIR/.claude/session-state/.tool-count"
 
 # ============================================================================
 # Security: Scan session state for potential secrets or sensitive data
@@ -91,7 +100,11 @@ if [ "$HOOK_EVENT" = "SessionStart" ]; then
   fi
 
   # Get current git status
-  cd "$CLAUDE_PROJECT_DIR"
+  if ! cd "$CLAUDE_PROJECT_DIR" 2>/dev/null; then
+    echo "ERROR: Cannot access project directory: $CLAUDE_PROJECT_DIR"
+    exit 1
+  fi
+
   GIT_AVAILABLE=true
   GIT_STATUS=$(git status --porcelain 2>/dev/null) || GIT_AVAILABLE=false
   GIT_BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
@@ -194,8 +207,8 @@ elif [ "$HOOK_EVENT" = "PostToolUse" ]; then
   # Extract the command from tool_input
   COMMAND=$(echo "$EVENT_JSON" | jq -r '.tool_input.command // ""')
 
-  # Only trigger for gh pr merge commands
-  if echo "$COMMAND" | grep -q "gh pr merge"; then
+  # Only trigger for actual gh pr merge commands with PR number
+  if echo "$COMMAND" | grep -qE '^gh pr merge [0-9]+'; then
     echo "=== SESSION STATE: PR MERGE DETECTED ==="
     echo ""
     echo "A PR merge was just completed. Archive current session state."

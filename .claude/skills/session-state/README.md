@@ -78,11 +78,11 @@ Session state **is** for:
 
 ## Documentation
 
-- **Complete guide:** See project's `REFERENCE/session-state-system.md`
-- **Security guidelines:** Comprehensive section in REFERENCE doc
 - **Installation:** `references/install-procedure.md`
 - **Troubleshooting:** `references/troubleshooting.md`
 - **Hook details:** `references/hooks-reference.md`
+- **Security guidelines:** Pattern detection in script, see troubleshooting for details
+- **Complete reference:** All documentation in `references/` directory
 
 ## Experimental Status
 

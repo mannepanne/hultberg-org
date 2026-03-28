@@ -137,7 +137,7 @@ Session state files are **git-ignored by default** to prevent accidental secret 
 
 **Pattern detection:** SessionEnd hook scans for common secret patterns and warns if detected.
 
-**Complete guide:** See [Security and Privacy Guidelines](../../REFERENCE/session-state-system.md#security-and-privacy-guidelines) in REFERENCE doc.
+**Complete guide:** See security patterns in script and [troubleshooting guide](references/troubleshooting.md) for details.
 
 ## Experimental status
 
@@ -147,4 +147,4 @@ Session state files are **git-ignored by default** to prevent accidental secret 
 - Note patterns where context was lost
 - Report findings for system improvements
 
-**Documentation:** See project `REFERENCE/session-state-system.md` for complete implementation details.
+**Documentation:** Complete implementation details in [references/](references/) directory.

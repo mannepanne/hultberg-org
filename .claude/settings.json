@@ -114,6 +114,10 @@
     ]
   },
   "permissions": {
+    "allow": [
+      "Edit(/Users/magnus/Documents/Coding/MigrateHultbergOrg/hultberg-org/.claude/session-state/**)",
+      "Write(/Users/magnus/Documents/Coding/MigrateHultbergOrg/hultberg-org/.claude/session-state/**)"
+    ],
     "deny": [
       "Read(./.entire/metadata/**)"
     ]

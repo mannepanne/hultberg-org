@@ -6,13 +6,37 @@
 
   const MAX_REPOS = 10; // Maximum number of repos to display
   const ACTIVITY_CUTOFF_DAYS = 21; // Don't show "X days ago" after this many days
+  const FETCH_TIMEOUT_MS = 10000; // 10 second timeout for API calls
+
+  /**
+   * Fetch with timeout support
+   * @param {string} url - URL to fetch
+   * @param {number} timeout - Timeout in milliseconds
+   * @returns {Promise<Response>}
+   */
+  async function fetchWithTimeout(url, timeout = FETCH_TIMEOUT_MS) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out');
+      }
+      throw error;
+    }
+  }
 
   /**
    * Fetches public repositories from GitHub REST API
    */
   async function fetchRepositories(username) {
     try {
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `https://api.github.com/users/${username}/repos?sort=pushed&per_page=100`
       );
 
@@ -38,7 +62,7 @@
    */
   async function fetchContributions(username) {
     try {
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `/api/github/contributions?username=${username}`
       );
 
@@ -144,33 +168,63 @@
 
   /**
    * Renders the repository list
+   * Uses DOM methods to prevent XSS from untrusted GitHub API data
    */
   function renderRepositories(repos, container) {
+    // Clear existing content
+    container.innerHTML = '';
+
     if (!repos || repos.length === 0) {
-      container.innerHTML = '<p>No recent repositories found.</p>';
+      const message = document.createElement('p');
+      message.textContent = 'No recent repositories found.';
+      container.appendChild(message);
       return;
     }
 
-    let html = '<div class="repo-list">';
+    const repoList = document.createElement('div');
+    repoList.className = 'repo-list';
 
     repos.forEach(repo => {
       const daysAgo = formatDaysAgo(repo.pushed_at);
       const description = repo.description || 'No description available';
 
-      html += '<div class="repo-item">';
-      html += `<div class="repo-header">`;
-      html += `<a href="${repo.html_url}" class="repo-name" target="_blank" rel="noopener noreferrer">${repo.name}</a>`;
+      // Create repo item container
+      const repoItem = document.createElement('div');
+      repoItem.className = 'repo-item';
+
+      // Create header with name and activity
+      const repoHeader = document.createElement('div');
+      repoHeader.className = 'repo-header';
+
+      // Create link (href is validated by browser, textContent prevents XSS)
+      const repoLink = document.createElement('a');
+      repoLink.href = repo.html_url;
+      repoLink.className = 'repo-name';
+      repoLink.target = '_blank';
+      repoLink.rel = 'noopener noreferrer';
+      repoLink.textContent = repo.name; // Safe: textContent escapes HTML
+      repoHeader.appendChild(repoLink);
+
+      // Add activity indicator if present
       if (daysAgo) {
-        html += `<span class="repo-activity">${daysAgo}</span>`;
+        const activitySpan = document.createElement('span');
+        activitySpan.className = 'repo-activity';
+        activitySpan.textContent = daysAgo; // Safe: controlled by our code
+        repoHeader.appendChild(activitySpan);
       }
-      html += `</div>`;
-      html += `<div class="repo-description">${description}</div>`;
-      html += '</div>';
+
+      repoItem.appendChild(repoHeader);
+
+      // Create description
+      const descriptionDiv = document.createElement('div');
+      descriptionDiv.className = 'repo-description';
+      descriptionDiv.textContent = description; // Safe: textContent escapes HTML
+      repoItem.appendChild(descriptionDiv);
+
+      repoList.appendChild(repoItem);
     });
 
-    html += '</div>';
-
-    container.innerHTML = html;
+    container.appendChild(repoList);
   }
 
   /**

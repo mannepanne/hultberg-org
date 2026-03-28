@@ -2,6 +2,7 @@
 // ABOUT: Keeps GitHub personal access token secure on the server side
 
 import type { Env } from '../types';
+import { checkRateLimit } from '../auth';
 
 /**
  * Handles GitHub GraphQL API requests for contribution data
@@ -11,9 +12,14 @@ export async function handleGitHubContributions(
   request: Request,
   env: Env
 ): Promise<Response> {
+  // Restrict CORS to allowed origins only (prevents quota abuse)
+  const origin = request.headers.get('Origin');
+  const allowedOrigins = ['https://hultberg.org', 'http://localhost:8787'];
+  const allowOrigin = allowedOrigins.includes(origin || '') ? origin : 'https://hultberg.org';
+
   // CORS headers for client-side access
   const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': allowOrigin || 'https://hultberg.org',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
@@ -21,6 +27,19 @@ export async function handleGitHubContributions(
   // Handle preflight OPTIONS request
   if (request.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Rate limiting (10 requests per minute per IP)
+  const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const rateLimitExceeded = await checkRateLimit(env, clientIP);
+  if (rateLimitExceeded) {
+    return new Response(
+      JSON.stringify({ error: 'Too many requests. Please try again later.' }),
+      {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 
   // Extract username from query params
@@ -119,10 +138,13 @@ export async function handleGitHubContributions(
       },
     });
   } catch (error) {
+    // Log detailed error server-side for debugging
+    console.error('GitHub API error:', error);
+
+    // Return generic error to client (don't leak implementation details)
     return new Response(
       JSON.stringify({
-        error: 'Failed to fetch GitHub contributions',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: 'Unable to load GitHub data. Please try again later.',
       }),
       {
         status: 500,

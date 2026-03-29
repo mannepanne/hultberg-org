@@ -18,26 +18,6 @@
             "command": "entire hooks claude-code post-todo"
           }
         ]
-      },
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/skills/session-state/scripts/session-state-handler.sh"
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/skills/session-state/scripts/session-state-handler.sh"
-          }
-        ]
       }
     ],
     "PreToolUse": [
@@ -49,15 +29,6 @@
             "command": "entire hooks claude-code pre-task"
           }
         ]
-      },
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/skills/session-state/scripts/session-state-handler.sh"
-          }
-        ]
       }
     ],
     "SessionEnd": [
@@ -67,10 +38,6 @@
           {
             "type": "command",
             "command": "entire hooks claude-code session-end"
-          },
-          {
-            "type": "command",
-            "command": ".claude/skills/session-state/scripts/session-state-handler.sh"
           }
         ]
       }
@@ -82,10 +49,6 @@
           {
             "type": "command",
             "command": "entire hooks claude-code session-start"
-          },
-          {
-            "type": "command",
-            "command": ".claude/skills/session-state/scripts/session-state-handler.sh"
           }
         ]
       }
@@ -114,10 +77,6 @@
     ]
   },
   "permissions": {
-    "allow": [
-      "Edit(/Users/magnus/Documents/Coding/MigrateHultbergOrg/hultberg-org/.claude/session-state/**)",
-      "Write(/Users/magnus/Documents/Coding/MigrateHultbergOrg/hultberg-org/.claude/session-state/**)"
-    ],
     "deny": [
       "Read(./.entire/metadata/**)"
     ]

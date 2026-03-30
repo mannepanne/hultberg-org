@@ -249,10 +249,20 @@ function renderEditor(email: string, content: NowContent): string {
             '<td>' + formattedDate + '</td>' +
             '<td>' + escapeHtmlClient(preview) + '</td>' +
             '<td class="actions">' +
-              '<button class="delete-btn" onclick=\'deleteSnapshot("' + snapshot.date + '", "' + formattedDate + '")\'>Delete</button>' +
+              '<button class="delete-btn" data-date="' + snapshot.date + '" data-formatted-date="' + escapeHtmlClient(formattedDate) + '">Delete</button>' +
             '</td>' +
           '</tr>';
         }).join('');
+
+        // Add event listeners to delete buttons
+        var deleteButtons = tbody.querySelectorAll('.delete-btn');
+        deleteButtons.forEach(function(button) {
+          button.addEventListener('click', function() {
+            var date = this.getAttribute('data-date');
+            var formattedDate = this.getAttribute('data-formatted-date');
+            deleteSnapshot(date, formattedDate);
+          });
+        });
       } catch (e) {
         console.error('Failed to load snapshots:', e);
       }

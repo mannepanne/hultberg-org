@@ -9,6 +9,7 @@ export const GITHUB_REPO = 'mannepanne/hultberg-org';
 const GITHUB_API_BASE = 'https://api.github.com';
 const UPDATES_DATA_PATH = 'public/updates/data';
 const IMAGES_PATH = 'public/images/updates';
+const NOW_CONTENT_PATH = 'public/now/data/content.json';
 
 function githubHeaders(token: string): Record<string, string> {
   return {
@@ -334,4 +335,56 @@ export async function deleteImagesDirectory(env: Env, slug: string): Promise<voi
       }
     })
   );
+}
+
+/**
+ * Save /now page content to GitHub
+ * Updates public/now/data/content.json with new markdown and timestamp
+ * GET-then-PUT pattern: retrieves existing SHA, retries once on conflict
+ */
+export async function saveNowContent(
+  env: Env,
+  content: { markdown: string; lastUpdated: string },
+  retryCount = 0
+): Promise<{ success: boolean; error?: string }> {
+  if (!env.GITHUB_TOKEN) {
+    return { success: false, error: 'GitHub token not configured' };
+  }
+
+  const url = `${GITHUB_API_BASE}/repos/${GITHUB_REPO}/contents/${NOW_CONTENT_PATH}`;
+
+  // GET existing file to retrieve SHA
+  const getResponse = await fetch(url, { headers: githubHeaders(env.GITHUB_TOKEN) });
+  let existingSha: string | undefined;
+  if (getResponse.ok) {
+    const fileData = await getResponse.json() as { sha: string };
+    existingSha = fileData.sha;
+  } else if (getResponse.status !== 404) {
+    return { success: false, error: `GitHub API error: ${getResponse.status}` };
+  }
+
+  const encodedContent = encodeBase64(JSON.stringify(content, null, 2));
+  const putBody: Record<string, string> = {
+    message: `Update /now page content\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>`,
+    content: encodedContent,
+  };
+  if (existingSha) putBody.sha = existingSha;
+
+  const putResponse = await fetch(url, {
+    method: 'PUT',
+    headers: { ...githubHeaders(env.GITHUB_TOKEN), 'Content-Type': 'application/json' },
+    body: JSON.stringify(putBody),
+  });
+
+  if (putResponse.status === 409 && retryCount === 0) {
+    // SHA conflict — retry once with a fresh GET
+    return saveNowContent(env, content, 1);
+  }
+
+  if (!putResponse.ok) {
+    const err = await putResponse.text();
+    return { success: false, error: `GitHub API error: ${putResponse.status} - ${err}` };
+  }
+
+  return { success: true };
 }

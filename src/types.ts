@@ -66,3 +66,12 @@ export interface UpdateIndexEntry {
 export interface UpdateIndex {
   updates: UpdateIndexEntry[];
 }
+
+/**
+ * /now page content stored in content.json
+ * Contains markdown content and last update timestamp
+ */
+export interface NowContent {
+  markdown: string;
+  lastUpdated: string; // ISO 8601 format
+}

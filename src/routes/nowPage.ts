@@ -2,13 +2,8 @@
 // ABOUT: Renders markdown content from JSON with widgets and sanitizes HTML
 
 import { marked } from 'marked';
-import type { Env } from '@/types';
+import type { Env, NowContent } from '@/types';
 import { sanitizeHTML } from '@/sanitize';
-
-interface NowContent {
-  markdown: string;
-  lastUpdated: string;
-}
 
 /**
  * Handles GET requests to /now

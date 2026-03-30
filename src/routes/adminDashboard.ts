@@ -125,6 +125,7 @@ function renderDashboard(email: string, updates: Update[]): string {
     <a class="brand" href="/admin/dashboard">hultberg.org admin</a>
     <nav>
       <a href="/admin/dashboard">Dashboard</a>
+      <a href="/admin/now/edit">Now</a>
     </nav>
     <span class="user">${email}</span>
     <form method="POST" action="/admin/logout">

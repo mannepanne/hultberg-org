@@ -195,15 +195,16 @@ Current `/now` page structure (`public/now/index.html`):
 - [x] Update `updatePage.ts` to import `sanitizeHTML` from `src/sanitize.ts` - **PR #17**
 - [x] Create `src/routes/nowPage.ts` for `GET /now` route (server-side rendering) - **PR #18**
 - [x] Import `sanitizeHTML` in `nowPage.ts` from `src/sanitize.ts` - **PR #18**
-- [ ] Create `src/routes/nowEditor.ts` for `GET /admin/now/edit` route
-- [ ] Create `src/routes/saveNow.ts` for `POST /admin/api/save-now` route
-- [ ] Add rate limiting to save endpoint (reuse `checkRateLimit` from `auth.ts`)
-- [ ] Add content size validation (100KB limit like updates)
-- [x] Add routes to `src/index.ts` router - **PR #18** (GET /now route registered)
+- [x] Create `src/routes/nowEditor.ts` for `GET /admin/now/edit` route - **PR #19**
+- [x] Create `src/routes/saveNow.ts` for `POST /admin/api/save-now` route - **PR #19**
+- [x] Add rate limiting to save endpoint (reuse `checkRateLimit` from `auth.ts`) - **PR #19**
+- [x] Add content size validation (100KB limit like updates) - **PR #19**
+- [x] Add routes to `src/index.ts` router - **PR #18** (GET /now), **PR #19** (admin routes)
 - [x] Verify `/now/*` static assets (github-widget.js, images, data/) still accessible after Worker route added - **PR #18** (exact path match preserves static assets)
-- [ ] Add "Now" navigation link in admin header (update `adminEditor.ts`, `adminDashboard.ts`)
-- [ ] Implement GitHub commit functionality for /now content (see commit message format below)
+- [x] Add "Now" navigation link in admin header (update `adminEditor.ts`, `adminDashboard.ts`) - **PR #19**
+- [x] Implement GitHub commit functionality for /now content (see commit message format below) - **PR #19**
 - [x] Add proper CSP headers to /now route (allow Goodreads iframe, github-widget.js, api.github.com) - **PR #18**
+- [x] Move NowContent interface to types.ts (shared between routes) - **PR #19**
 
 **Frontend:**
 - [x] Create `public/now/data/` directory - **PR #17**
@@ -213,8 +214,8 @@ Current `/now` page structure (`public/now/index.html`):
 
 **Testing:**
 - [x] Add integration tests for `GET /now` (renders page, sanitizes HTML, proper CSP headers) - **PR #18** (19 tests)
-- [ ] Add integration tests for `GET /admin/now/edit` (auth required, renders form, loads content)
-- [ ] Add integration tests for `POST /admin/api/save-now` (auth, rate limiting, validation, GitHub commit)
+- [x] Add integration tests for `GET /admin/now/edit` (auth required, renders form, loads content) - **PR #19** (9 tests)
+- [x] Add integration tests for `POST /admin/api/save-now` (auth, rate limiting, validation, GitHub commit) - **PR #19** (13 tests)
 - [ ] Manual testing: Edit form, save, page rendering, widget functionality, XSS prevention
 
 ## Future Enhancements (Out of Scope for MVP)

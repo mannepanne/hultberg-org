@@ -19,6 +19,8 @@ import { handleUploadImage } from './routes/uploadImage';
 import { handleDeleteImage } from './routes/deleteImage';
 import { handleGitHubContributions } from './routes/githubProxy';
 import { handleNowPage } from './routes/nowPage';
+import { handleNowEditor } from './routes/nowEditor';
+import { handleSaveNow } from './routes/saveNow';
 import { GITHUB_REPO } from './github';
 
 export default {
@@ -72,6 +74,16 @@ export default {
     // API: DELETE /admin/api/delete-image (authenticated)
     if (url.pathname === '/admin/api/delete-image' && request.method === 'DELETE') {
       return handleDeleteImage(request, env);
+    }
+
+    // API: POST /admin/api/save-now (authenticated)
+    if (url.pathname === '/admin/api/save-now' && request.method === 'POST') {
+      return handleSaveNow(request, env);
+    }
+
+    // Editor: GET /admin/now/edit
+    if (url.pathname === '/admin/now/edit' && request.method === 'GET') {
+      return handleNowEditor(request, env);
     }
 
     // Editor: GET /admin/updates/new

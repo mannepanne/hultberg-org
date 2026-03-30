@@ -47,6 +47,7 @@ async function renderNowPage(content: NowContent): Promise<Response> {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       'Content-Security-Policy': "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self' https://www.google-analytics.com https://cloudflareinsights.com https://api.github.com; frame-src https://goodreads.com; frame-ancestors 'none'; base-uri 'self';",
+      'Cache-Control': 'public, max-age=60, s-maxage=60',
     },
   });
 }

@@ -135,6 +135,14 @@ describe('GET /now', () => {
     expect(csp).toContain('https://api.github.com');
   });
 
+  it('includes Cache-Control header to prevent stale content', async () => {
+    const request = new Request('http://localhost/now');
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    const cacheControl = response.headers.get('Cache-Control');
+    expect(cacheControl).toBe('public, max-age=60, s-maxage=60');
+  });
+
   it('sanitizes HTML in markdown content', async () => {
     // Mock content with potentially dangerous HTML
     global.fetch = vi.fn(async (input: RequestInfo | URL | string) => {

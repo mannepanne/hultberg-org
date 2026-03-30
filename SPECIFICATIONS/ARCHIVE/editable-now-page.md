@@ -1,7 +1,9 @@
 # Editable /now Page
 
-**Status:** Draft
+**Status:** ✅ Completed
 **Created:** 2026-03-30
+**Completed:** 2026-03-30
+**PRs:** #17 (Foundation), #18 (Server-side rendering), #19 (Admin editor)
 
 ## Implementation Plan
 

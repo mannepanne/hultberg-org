@@ -1,0 +1,269 @@
+// ABOUT: Route handler for /now page
+// ABOUT: Renders markdown content from JSON with widgets and sanitizes HTML
+
+import { marked } from 'marked';
+import type { Env } from '@/types';
+import { sanitizeHTML } from '@/sanitize';
+
+interface NowContent {
+  markdown: string;
+  lastUpdated: string;
+}
+
+/**
+ * Handles GET requests to /now
+ * Fetches content JSON from static assets and renders the page
+ */
+export async function handleNowPage(request: Request, env: Env): Promise<Response> {
+  try {
+    // Fetch the content JSON via the ASSETS binding to avoid self-referential Worker routing
+    const url = new URL(request.url);
+    const contentUrl = `${url.origin}/now/data/content.json`;
+    const contentResponse = await (env.ASSETS?.fetch(new Request(contentUrl)) ?? fetch(contentUrl));
+
+    if (!contentResponse.ok) {
+      return new Response('Error loading content', { status: 500 });
+    }
+
+    const content: NowContent = await contentResponse.json();
+
+    return renderNowPage(content);
+  } catch (error) {
+    console.error('Error handling /now page:', error);
+    return new Response('Error loading page', { status: 500 });
+  }
+}
+
+/**
+ * Renders the /now page with markdown content and widgets
+ */
+async function renderNowPage(content: NowContent): Promise<Response> {
+  // Convert markdown to HTML
+  const contentHTML = await marked(content.markdown);
+
+  // Sanitize HTML to prevent XSS
+  const sanitizedHTML = sanitizeHTML(contentHTML);
+
+  // Render the page
+  const html = renderNowPageHTML(sanitizedHTML);
+
+  return new Response(html, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self' https://www.google-analytics.com https://cloudflareinsights.com https://api.github.com; frame-src https://goodreads.com; frame-ancestors 'none'; base-uri 'self';",
+    },
+  });
+}
+
+/**
+ * Renders the full /now page HTML
+ */
+function renderNowPageHTML(contentHTML: string): string {
+  return `<!doctype html>
+<html class="no-js" lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>What I'm doing now | Magnus Hultberg - hultberg.org</title>
+  <meta name="description" content="What Magnus Hultberg is doing now">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta property="og:title" content="What I'm doing now | Magnus Hultberg">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://hultberg.org/now">
+  <meta property="og:image" content="https://hultberg.org/now/magnus_hultberg_juggling.png">
+  <meta property="og:description" content="What Magnus Hultberg is doing now">
+  <meta property="og:site_name" content="Magnus Hultberg">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="alternate" type="application/rss+xml" title="Updates - Magnus Hultberg" href="/updates/feed.xml">
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-D1L22CCJTJ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-D1L22CCJTJ');
+</script>
+
+<!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "f71c3c28b82c4c6991ec3d41b7f1496f"}'></script><!-- End Cloudflare Web Analytics -->
+
+<style>
+  /* Goodreads widget styles */
+  #customize-list{
+    float: left;
+    list-style: none;
+  }
+  #gr_updates_widget{
+    float: left;
+    background-color: #fff;
+    border: 0;
+  }
+  #gr_footer{
+    display: none;
+  }
+  #gr_updates_widget p{
+    padding: 0;
+    margin: 0;
+  }
+  #gr_footer img{
+    display: none;
+  }
+
+  /* Two-column layout for widgets */
+  .widgets-container {
+    display: flex;
+    gap: 1em;
+    margin-top: 2em;
+    flex-wrap: wrap;
+  }
+
+  .widget-column {
+    flex: 1;
+    min-width: 300px;
+  }
+
+  /* GitHub widget styles */
+  .github-widget h2 {
+    font-size: 1.5em;
+    font-weight: bold;
+    line-height: 1.2;
+    margin-bottom: 0.5em;
+  }
+
+  .github-widget h3 {
+    font-size: 1em;
+    font-weight: normal;
+    margin: 1em 0 0.5em 0;
+    font-style: italic;
+  }
+
+  /* Contribution graph */
+  .contribution-graph {
+    margin: 1em 0;
+  }
+
+  .month-labels {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 10px;
+    gap: 3px;
+    font-size: 0.75em;
+    color: #666;
+    margin-bottom: 4px;
+  }
+
+  .contribution-grid {
+    display: flex;
+    gap: 3px;
+  }
+
+  .contribution-grid .week {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .contribution-grid .day {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  .contribution-total {
+    margin-top: 0.5em;
+    font-size: 0.9em;
+    color: #666;
+  }
+
+  /* Repository list */
+  .repo-list {
+    margin-top: 1em;
+  }
+
+  .repo-item {
+    margin-bottom: 1.5em;
+  }
+
+  .repo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.25em;
+  }
+
+  .repo-name {
+    font-weight: bold;
+    text-decoration: none;
+  }
+
+  .repo-name:hover {
+    text-decoration: underline;
+  }
+
+  .repo-activity {
+    font-size: 0.85em;
+    color: #666;
+    font-style: italic;
+  }
+
+  .repo-description {
+    font-size: 0.9em;
+    color: #333;
+    line-height: 1.4;
+  }
+
+  /* Responsive layout */
+  @media (max-width: 768px) {
+    .widgets-container {
+      flex-direction: column;
+    }
+  }
+</style>
+
+</head>
+<body id="now" style="font-family: Georgia, serif; line-height: 1.5;">
+
+<div id="content" style="max-width: 800px; margin: 0 auto; padding: 2em;">
+
+  <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+
+  <h1 style="font-size: 1.5em; font-weight: bold; line-height: 1.2; margin-bottom: 0.5em;">What I'm doing now</h1>
+
+  ${contentHTML}
+
+  <div class="widgets-container">
+
+    <div class="widget-column">
+      <h2 style="font-size: 1.5em; font-weight: bold; line-height: 1.2; margin-bottom: 0.5em;">Reading updates</h2>
+
+      <div id="gr_updates_widget">
+        <iframe id="the_iframe" src="https://goodreads.com/widgets/user_update_widget?height=500&num_updates=4&user=3011094&width=325" width="323" height="500" frameborder="0"></iframe>
+      </div>
+    </div>
+
+    <div class="widget-column github-widget">
+      <h2>GitHub activity</h2>
+
+      <div id="github-contributions" data-username="mannepanne"></div>
+
+      <h3>Projects I have been working on recently</h3>
+
+      <div id="github-repos"></div>
+    </div>
+
+  </div>
+
+  <p style="clear: both; margin-top: 2em;">← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+
+  <script src="/now/github-widget.js"></script>
+
+</div>
+
+</body>
+</html>
+`;
+}

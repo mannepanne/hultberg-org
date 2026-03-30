@@ -191,30 +191,31 @@ Current `/now` page structure (`public/now/index.html`):
 ## Implementation Checklist
 
 **Backend:**
-- [ ] Extract `sanitizeHTML()` from `updatePage.ts` to `src/sanitize.ts` (for reuse)
-- [ ] Update `updatePage.ts` to import `sanitizeHTML` from `src/sanitize.ts`
-- [ ] Create `src/routes/nowPage.ts` for `GET /now` route (server-side rendering)
-- [ ] Import `sanitizeHTML` in `nowPage.ts` from `src/sanitize.ts`
-- [ ] Create `src/routes/nowEditor.ts` for `GET /admin/now/edit` route
-- [ ] Create `src/routes/saveNow.ts` for `POST /admin/api/save-now` route
-- [ ] Add rate limiting to save endpoint (reuse `checkRateLimit` from `auth.ts`)
-- [ ] Add content size validation (100KB limit like updates)
-- [ ] Add routes to `src/index.ts` router
-- [ ] Verify `/now/*` static assets (github-widget.js, images, data/) still accessible after Worker route added
-- [ ] Add "Now" navigation link in admin header (update `adminEditor.ts`, `adminDashboard.ts`)
-- [ ] Implement GitHub commit functionality for /now content (see commit message format below)
-- [ ] Add proper CSP headers to /now route (allow Goodreads iframe, github-widget.js, api.github.com)
+- [x] Extract `sanitizeHTML()` from `updatePage.ts` to `src/sanitize.ts` (for reuse) - **PR #17**
+- [x] Update `updatePage.ts` to import `sanitizeHTML` from `src/sanitize.ts` - **PR #17**
+- [x] Create `src/routes/nowPage.ts` for `GET /now` route (server-side rendering) - **PR #18**
+- [x] Import `sanitizeHTML` in `nowPage.ts` from `src/sanitize.ts` - **PR #18**
+- [x] Create `src/routes/nowEditor.ts` for `GET /admin/now/edit` route - **PR #19**
+- [x] Create `src/routes/saveNow.ts` for `POST /admin/api/save-now` route - **PR #19**
+- [x] Add rate limiting to save endpoint (reuse `checkRateLimit` from `auth.ts`) - **PR #19**
+- [x] Add content size validation (100KB limit like updates) - **PR #19**
+- [x] Add routes to `src/index.ts` router - **PR #18** (GET /now), **PR #19** (admin routes)
+- [x] Verify `/now/*` static assets (github-widget.js, images, data/) still accessible after Worker route added - **PR #18** (exact path match preserves static assets)
+- [x] Add "Now" navigation link in admin header (update `adminEditor.ts`, `adminDashboard.ts`) - **PR #19**
+- [x] Implement GitHub commit functionality for /now content (see commit message format below) - **PR #19**
+- [x] Add proper CSP headers to /now route (allow Goodreads iframe, github-widget.js, api.github.com) - **PR #18**
+- [x] Move NowContent interface to types.ts (shared between routes) - **PR #19**
 
 **Frontend:**
-- [ ] Create `public/now/data/` directory
-- [ ] Create `public/now/data/content.json` with placeholder content for development
-- [ ] Keep current `public/now/index.html` as template reference (will be replaced by Worker route)
-- [ ] Preserve exact widget structure (Goodreads iframe, GitHub script) in rendered HTML
+- [x] Create `public/now/data/` directory - **PR #17**
+- [x] Create `public/now/data/content.json` with placeholder content for development - **PR #17**
+- [x] Keep current `public/now/index.html` as template reference (will be replaced by Worker route) - **PR #18** (marked as deprecated with comment)
+- [x] Preserve exact widget structure (Goodreads iframe, GitHub script) in rendered HTML - **PR #18**
 
 **Testing:**
-- [ ] Add integration tests for `GET /now` (renders page, sanitizes HTML, proper CSP headers)
-- [ ] Add integration tests for `GET /admin/now/edit` (auth required, renders form, loads content)
-- [ ] Add integration tests for `POST /admin/api/save-now` (auth, rate limiting, validation, GitHub commit)
+- [x] Add integration tests for `GET /now` (renders page, sanitizes HTML, proper CSP headers) - **PR #18** (19 tests)
+- [x] Add integration tests for `GET /admin/now/edit` (auth required, renders form, loads content) - **PR #19** (9 tests)
+- [x] Add integration tests for `POST /admin/api/save-now` (auth, rate limiting, validation, GitHub commit) - **PR #19** (13 tests)
 - [ ] Manual testing: Edit form, save, page rendering, widget functionality, XSS prevention
 
 ## Future Enhancements (Out of Scope for MVP)

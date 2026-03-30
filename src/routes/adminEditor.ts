@@ -105,6 +105,7 @@ function renderEditor(email: string, update: Partial<Update> | null, images: Ima
     <a class="brand" href="/admin/dashboard">hultberg.org admin</a>
     <nav>
       <a href="/admin/dashboard">Dashboard</a>
+      <a href="/admin/now/edit">Now</a>
     </nav>
     <span class="user">${escapeHtml(email)}</span>
     <form method="POST" action="/admin/logout">

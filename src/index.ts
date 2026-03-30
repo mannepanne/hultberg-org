@@ -18,6 +18,9 @@ import { handleSaveUpdate } from './routes/saveUpdate';
 import { handleUploadImage } from './routes/uploadImage';
 import { handleDeleteImage } from './routes/deleteImage';
 import { handleGitHubContributions } from './routes/githubProxy';
+import { handleNowPage } from './routes/nowPage';
+import { handleNowEditor } from './routes/nowEditor';
+import { handleSaveNow } from './routes/saveNow';
 import { GITHUB_REPO } from './github';
 
 export default {
@@ -73,6 +76,16 @@ export default {
       return handleDeleteImage(request, env);
     }
 
+    // API: POST /admin/api/save-now (authenticated)
+    if (url.pathname === '/admin/api/save-now' && request.method === 'POST') {
+      return handleSaveNow(request, env);
+    }
+
+    // Editor: GET /admin/now/edit
+    if (url.pathname === '/admin/now/edit' && request.method === 'GET') {
+      return handleNowEditor(request, env);
+    }
+
     // Editor: GET /admin/updates/new
     if (url.pathname === '/admin/updates/new' && request.method === 'GET') {
       return handleNewUpdate(request, env);
@@ -116,6 +129,11 @@ export default {
     if (updateSlugMatch) {
       const slug = updateSlugMatch[1];
       return handleUpdatePage(request, env, slug);
+    }
+
+    // Route: /now page
+    if (url.pathname === '/now') {
+      return handleNowPage(request, env);
     }
 
     // Route: /images/updates/* - proxy uploaded images from GitHub raw content

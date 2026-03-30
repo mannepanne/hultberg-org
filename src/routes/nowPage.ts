@@ -1,11 +1,61 @@
-<!--
-  DEPRECATED: This file is no longer served directly.
-  /now requests are handled by src/routes/nowPage.ts (server-side rendering).
-  This file is kept as a reference for HTML structure and widget configuration.
-  To update /now page content, use the admin editor (coming in PR #3).
-  Last served: 2026-03-30 (before server-side rendering implementation)
--->
-<!doctype html>
+// ABOUT: Route handler for /now page
+// ABOUT: Renders markdown content from JSON with widgets and sanitizes HTML
+
+import { marked } from 'marked';
+import type { Env, NowContent } from '@/types';
+import { sanitizeHTML } from '@/sanitize';
+
+/**
+ * Handles GET requests to /now
+ * Fetches content JSON from static assets and renders the page
+ */
+export async function handleNowPage(request: Request, env: Env): Promise<Response> {
+  try {
+    // Fetch the content JSON via the ASSETS binding to avoid self-referential Worker routing
+    const url = new URL(request.url);
+    const contentUrl = `${url.origin}/now/data/content.json`;
+    const contentResponse = await (env.ASSETS?.fetch(new Request(contentUrl)) ?? fetch(contentUrl));
+
+    if (!contentResponse.ok) {
+      return new Response('Error loading content', { status: 500 });
+    }
+
+    const content: NowContent = await contentResponse.json();
+
+    return renderNowPage(content);
+  } catch (error) {
+    console.error('Error handling /now page:', error);
+    return new Response('Error loading page', { status: 500 });
+  }
+}
+
+/**
+ * Renders the /now page with markdown content and widgets
+ */
+async function renderNowPage(content: NowContent): Promise<Response> {
+  // Convert markdown to HTML
+  const contentHTML = await marked(content.markdown);
+
+  // Sanitize HTML to prevent XSS
+  const sanitizedHTML = sanitizeHTML(contentHTML);
+
+  // Render the page
+  const html = renderNowPageHTML(sanitizedHTML);
+
+  return new Response(html, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self' https://www.google-analytics.com https://cloudflareinsights.com https://api.github.com; frame-src https://goodreads.com; frame-ancestors 'none'; base-uri 'self';",
+    },
+  });
+}
+
+/**
+ * Renders the full /now page HTML
+ */
+function renderNowPageHTML(contentHTML: string): string {
+  return `<!doctype html>
 <html class="no-js" lang="en-GB">
 <head>
   <meta charset="utf-8">
@@ -178,22 +228,7 @@
 
   <h1 style="font-size: 1.5em; font-weight: bold; line-height: 1.2; margin-bottom: 0.5em;">What I'm doing now</h1>
 
-  <p>I live in London, work at <a href="https://char.gy" onclick="gtag('event', 'Click', { 'event_category' : 'Link External', 'event_label' : 'char.gy' });">char.gy</a>, and try to focus on these things:</p>
-
-  <p>(in order of time spent)</p>
-
-  <ul>
-    <li>working full time as product manager for <a href="https://char.gy" onclick="gtag('event', 'Click', { 'event_category' : 'Link External', 'event_label' : 'char.gy' });">char.gy</a>: designing, manufacturing, installing and operating EV chargers, bringing convenient, reliable, and affordable charging directly to drivers' doorsteps</li>
-    <li>still dabbling with lockdown induced vegetable gardening, looking forward to harvesting more asparagus spears this year (planted the bed in lockdown, so over five years in the making...)</li>
-    <li>working out 2 days a week while trying to repair the longitudinal splits in bicep tendons in my right arm... over a year in the making, but slowly getting there. I hope.</li>
-    <li>playing with <a href="https://hultberg.org/updates/a-reusable-project-template-for-aiassisted-coding" onclick="gtag('event', 'Click', { 'event_category' : 'Link Internal', 'event_label' : 'Updates_AssetsUsefulStuff' });">Claude Code and Gemini CLI</a> - mind blown</li>
-    <li>reading <a href="https://www.goodreads.com/review/list/3011094?order=d&shelf=currently-reading&sort=date_added&visible_control=batchEdit" onclick="gtag('event', 'Click', { 'event_category' : 'Link Social', 'event_label' : 'Goodreads_manne' });">good books</a></li>
-    <li>pondering the future</li>
-  </ul>
-
-  <p>also see <a href="https://uk.linkedin.com/in/hultberg" onclick="gtag('event', 'Click', { 'event_category' : 'Link Social', 'event_label' : 'LinkedIn_hultberg' });" target="_blank" rel="noopener noreferrer">LinkedIn</a> and <a href="https://github.com/mannepanne" onclick="gtag('event', 'Click', { 'event_category' : 'Link Social', 'event_label' : 'GitHub_mannepanne' });" target="_blank" rel="noopener noreferrer">GitHub</a></p>
-
-  <p>(list last updated: February 2026 | credit for the /now idea: <a href="https://sivers.org/nowff" onclick="gtag('event', 'Click', { 'event_category' : 'Link External', 'event_label' : 'Derek Sivers' });">Derek Sivers</a>)</p>
+  ${contentHTML}
 
   <div class="widgets-container">
 
@@ -225,3 +260,5 @@
 
 </body>
 </html>
+`;
+}

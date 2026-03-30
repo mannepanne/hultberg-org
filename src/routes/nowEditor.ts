@@ -249,7 +249,7 @@ function renderEditor(email: string, content: NowContent): string {
             '<td>' + formattedDate + '</td>' +
             '<td>' + escapeHtmlClient(preview) + '</td>' +
             '<td class="actions">' +
-              '<button class="delete-btn" onclick="deleteSnapshot(\'' + snapshot.date + '\', \'' + formattedDate + '\')">Delete</button>' +
+              '<button class="delete-btn" onclick=\'deleteSnapshot("' + snapshot.date + '", "' + formattedDate + '")\'>Delete</button>' +
             '</td>' +
           '</tr>';
         }).join('');

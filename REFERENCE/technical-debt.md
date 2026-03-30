@@ -8,7 +8,7 @@ Items here are accepted risks or pragmatic choices made during development, not 
 ## Active Items
 
 ### TD-001: Regex-Based HTML Sanitization
-- **Location:** `src/routes/updatePage.ts` - `sanitizeHTML()`
+- **Location:** `src/sanitize.ts` - `sanitizeHTML()` (shared by updatePage and nowPage routes)
 - **Issue:** Uses regex pattern matching instead of a proper HTML parser for sanitizing markdown-rendered content. Regex cannot handle all XSS vectors (e.g. nested tags, obfuscated payloads).
 - **Why accepted:** No HTML sanitization library is compatible with the Cloudflare Workers runtime (DOMPurify requires DOM, sanitize-html requires node::process). CSP headers provide defence-in-depth.
 - **Risk:** Low-Medium. Content comes from admin-controlled GitHub repository, not untrusted user input. CSP mitigates most browser-side XSS.

@@ -11,6 +11,14 @@
  * - Removes inline event handlers (onclick, onerror, etc.)
  * - Removes style attributes (except on img tags)
  *
+ * TODO: Replace with proper allowlist-based sanitizer when Workers-compatible library available.
+ * Current approach uses regex-based filtering which is not ideal but acceptable because:
+ * - Single trusted admin (no untrusted user input)
+ * - Content version-controlled in GitHub
+ * - CSP headers provide defense-in-depth
+ * - Server-side rendering only
+ * See REFERENCE/technical-debt.md for details.
+ *
  * @param html - The HTML string to sanitize
  * @returns Sanitized HTML string safe for rendering
  */

@@ -57,6 +57,18 @@ function renderEditor(email: string, content: NowContent): string {
     footer a { color: #adb5bd; }
     .EasyMDEContainer { margin-top: 0; }
     .help-text { color: #6c757d; font-size: 0.85em; margin-top: 8px; }
+    .snapshots-section { margin-top: 48px; }
+    .snapshots-section h2 { font-size: 1.1em; margin-bottom: 16px; }
+    .snapshots-table { width: 100%; background: #fff; border-radius: 4px; overflow: hidden; border: 1px solid #dee2e6; }
+    .snapshots-table table { width: 100%; border-collapse: collapse; }
+    .snapshots-table th { background: #f8f9fa; padding: 12px; text-align: left; font-weight: 600; font-size: 0.85em; color: #495057; border-bottom: 2px solid #dee2e6; }
+    .snapshots-table td { padding: 12px; border-bottom: 1px solid #dee2e6; font-size: 0.9em; }
+    .snapshots-table tr:last-child td { border-bottom: none; }
+    .snapshots-table tr:hover { background: #f8f9fa; }
+    .snapshots-table .actions { white-space: nowrap; text-align: right; }
+    .snapshots-table .delete-btn { background: none; border: none; color: #dc3545; cursor: pointer; padding: 0; font-size: inherit; }
+    .snapshots-table .delete-btn:hover { text-decoration: underline; }
+    .snapshots-table .empty { text-align: center; color: #6c757d; padding: 32px; }
   </style>
 </head>
 <body>
@@ -87,7 +99,26 @@ function renderEditor(email: string, content: NowContent): string {
     <div class="toolbar">
       <button class="btn btn-primary" type="button" onclick="saveContent()">Save</button>
       <a class="btn btn-secondary" href="/now" target="_blank">View Page</a>
+      <button class="btn btn-secondary" type="button" onclick="archiveSnapshot()">Archive Snapshot</button>
       <span class="status-msg" id="status-msg"></span>
+    </div>
+
+    <div class="snapshots-section">
+      <h2>Snapshots</h2>
+      <div class="snapshots-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Preview</th>
+              <th class="actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="snapshots-list">
+            <tr><td colspan="3" class="empty">Loading snapshots...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </main>
 
@@ -147,6 +178,111 @@ function renderEditor(email: string, content: NowContent): string {
       clearTimeout(el._timer);
       el._timer = setTimeout(function() { el.className = 'status-msg'; }, 4000);
     }
+
+    // Snapshot management functions
+    async function archiveSnapshot() {
+      var markdown = easyMDE.value().trim();
+      if (!markdown) {
+        showMessage('Content cannot be empty.', 'error');
+        return;
+      }
+
+      var payload = { markdown: markdown };
+      showMessage('Creating snapshot…', 'success');
+
+      try {
+        var response = await fetch('/admin/api/create-now-snapshot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        var data = await response.json();
+
+        if (data.success) {
+          if (data.overwritten) {
+            showMessage('Snapshot updated for today!', 'success');
+          } else {
+            showMessage('Snapshot created!', 'success');
+          }
+          loadSnapshots();
+        } else {
+          showMessage('Snapshot failed: ' + (data.error || 'Unknown error'), 'error');
+        }
+      } catch (e) {
+        showMessage('Snapshot failed: network error', 'error');
+      }
+    }
+
+    async function loadSnapshots() {
+      try {
+        var response = await fetch('/admin/api/list-now-snapshots');
+        var data = await response.json();
+
+        var tbody = document.getElementById('snapshots-list');
+
+        if (!data.snapshots || data.snapshots.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" class="empty">No snapshots yet. Click "Archive Snapshot" to create one.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.snapshots.map(function(snapshot) {
+          var formattedDate = formatSnapshotDate(snapshot.date);
+          var preview = snapshot.preview.substring(0, 100);
+          if (snapshot.preview.length > 100) preview += '...';
+
+          return '<tr>' +
+            '<td>' + formattedDate + '</td>' +
+            '<td>' + escapeHtmlClient(preview) + '</td>' +
+            '<td class="actions">' +
+              '<button class="delete-btn" onclick="deleteSnapshot(\'' + snapshot.date + '\', \'' + formattedDate + '\')">Delete</button>' +
+            '</td>' +
+          '</tr>';
+        }).join('');
+      } catch (e) {
+        console.error('Failed to load snapshots:', e);
+      }
+    }
+
+    async function deleteSnapshot(date, formattedDate) {
+      if (!confirm('Delete snapshot from ' + formattedDate + '?')) {
+        return;
+      }
+
+      try {
+        var response = await fetch('/admin/api/delete-now-snapshot?date=' + date, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        var data = await response.json();
+
+        if (data.success) {
+          showMessage('Snapshot deleted!', 'success');
+          loadSnapshots();
+        } else {
+          showMessage('Delete failed: ' + (data.error || 'Unknown error'), 'error');
+        }
+      } catch (e) {
+        showMessage('Delete failed: network error', 'error');
+      }
+    }
+
+    function formatSnapshotDate(dateStr) {
+      // Convert YYYYMMDD to readable format
+      var year = dateStr.substring(0, 4);
+      var month = dateStr.substring(4, 6);
+      var day = dateStr.substring(6, 8);
+      var date = new Date(year + '-' + month + '-' + day);
+      return date.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function escapeHtmlClient(text) {
+      var div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Load snapshots on page load
+    loadSnapshots();
   </script>
 </body>
 </html>`;

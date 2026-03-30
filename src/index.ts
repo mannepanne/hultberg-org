@@ -21,6 +21,9 @@ import { handleGitHubContributions } from './routes/githubProxy';
 import { handleNowPage } from './routes/nowPage';
 import { handleNowEditor } from './routes/nowEditor';
 import { handleSaveNow } from './routes/saveNow';
+import { handleCreateNowSnapshot } from './routes/createNowSnapshot';
+import { handleListNowSnapshots } from './routes/listNowSnapshots';
+import { handleDeleteNowSnapshot } from './routes/deleteNowSnapshot';
 import { GITHUB_REPO } from './github';
 
 export default {
@@ -79,6 +82,21 @@ export default {
     // API: POST /admin/api/save-now (authenticated)
     if (url.pathname === '/admin/api/save-now' && request.method === 'POST') {
       return handleSaveNow(request, env);
+    }
+
+    // API: POST /admin/api/create-now-snapshot (authenticated)
+    if (url.pathname === '/admin/api/create-now-snapshot' && request.method === 'POST') {
+      return handleCreateNowSnapshot(request, env);
+    }
+
+    // API: GET /admin/api/list-now-snapshots (authenticated)
+    if (url.pathname === '/admin/api/list-now-snapshots' && request.method === 'GET') {
+      return handleListNowSnapshots(request, env);
+    }
+
+    // API: DELETE /admin/api/delete-now-snapshot (authenticated)
+    if (url.pathname === '/admin/api/delete-now-snapshot' && request.method === 'DELETE') {
+      return handleDeleteNowSnapshot(request, env);
     }
 
     // Editor: GET /admin/now/edit

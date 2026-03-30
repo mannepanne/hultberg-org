@@ -75,3 +75,30 @@ export interface NowContent {
   markdown: string;
   lastUpdated: string; // ISO 8601 format
 }
+
+/**
+ * /now page snapshot stored in snapshots/YYYYMMDD.json
+ * Historical version of /now content at a specific date
+ */
+export interface NowSnapshot {
+  markdown: string;
+  snapshotDate: string; // ISO 8601 format
+}
+
+/**
+ * Entry in the snapshots index file
+ * Lightweight summary for listing snapshots in admin UI
+ */
+export interface NowSnapshotIndexEntry {
+  date: string; // YYYYMMDD format (e.g., "20260330")
+  snapshotDate: string; // ISO 8601 format
+  preview: string; // First 150 chars of content
+}
+
+/**
+ * Snapshots index file structure (snapshots/index.json)
+ * Contains metadata for all snapshots
+ */
+export interface NowSnapshotsIndex {
+  snapshots: NowSnapshotIndexEntry[];
+}

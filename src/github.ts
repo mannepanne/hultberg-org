@@ -1,8 +1,7 @@
 // ABOUT: GitHub API utilities for reading and writing update files
 // ABOUT: Wraps GitHub Contents API for listing, fetching, saving, and deleting updates and images
 
-import type { Env } from './types';
-import type { Update } from './types';
+import type { Env, Update, NowSnapshot, NowSnapshotsIndex, NowSnapshotIndexEntry } from './types';
 import { encodeBase64, decodeBase64 } from './utils';
 
 export const GITHUB_REPO = 'mannepanne/hultberg-org';
@@ -10,6 +9,8 @@ const GITHUB_API_BASE = 'https://api.github.com';
 const UPDATES_DATA_PATH = 'public/updates/data';
 const IMAGES_PATH = 'public/images/updates';
 const NOW_CONTENT_PATH = 'public/now/data/content.json';
+const NOW_SNAPSHOTS_PATH = 'public/now/snapshots';
+const NOW_SNAPSHOTS_INDEX_PATH = 'public/now/snapshots/index.json';
 
 function githubHeaders(token: string): Record<string, string> {
   return {
@@ -387,4 +388,210 @@ export async function saveNowContent(
   }
 
   return { success: true };
+}
+
+/**
+ * Fetch snapshots index from GitHub
+ * Returns the index or an empty index if not found
+ */
+async function fetchSnapshotsIndex(env: Env): Promise<NowSnapshotsIndex> {
+  if (!env.GITHUB_TOKEN) {
+    return { snapshots: [] };
+  }
+
+  const url = `${GITHUB_API_BASE}/repos/${GITHUB_REPO}/contents/${NOW_SNAPSHOTS_INDEX_PATH}`;
+  const response = await fetch(url, { headers: githubHeaders(env.GITHUB_TOKEN) });
+
+  if (!response.ok) {
+    return { snapshots: [] };
+  }
+
+  const fileData = await response.json() as { content: string };
+  const decoded = decodeBase64(fileData.content);
+  return JSON.parse(decoded) as NowSnapshotsIndex;
+}
+
+/**
+ * Save snapshots index to GitHub
+ */
+async function saveSnapshotsIndex(
+  env: Env,
+  index: NowSnapshotsIndex,
+  retryCount = 0
+): Promise<{ success: boolean; error?: string }> {
+  if (!env.GITHUB_TOKEN) {
+    return { success: false, error: 'GitHub token not configured' };
+  }
+
+  const url = `${GITHUB_API_BASE}/repos/${GITHUB_REPO}/contents/${NOW_SNAPSHOTS_INDEX_PATH}`;
+
+  // GET existing file to retrieve SHA
+  const getResponse = await fetch(url, { headers: githubHeaders(env.GITHUB_TOKEN) });
+  let existingSha: string | undefined;
+  if (getResponse.ok) {
+    const fileData = await getResponse.json() as { sha: string };
+    existingSha = fileData.sha;
+  } else if (getResponse.status !== 404) {
+    return { success: false, error: `GitHub API error: ${getResponse.status}` };
+  }
+
+  const encodedContent = encodeBase64(JSON.stringify(index, null, 2));
+  const putBody: Record<string, string> = {
+    message: `Update /now snapshots index\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>`,
+    content: encodedContent,
+  };
+  if (existingSha) putBody.sha = existingSha;
+
+  const putResponse = await fetch(url, {
+    method: 'PUT',
+    headers: { ...githubHeaders(env.GITHUB_TOKEN), 'Content-Type': 'application/json' },
+    body: JSON.stringify(putBody),
+  });
+
+  if (putResponse.status === 409 && retryCount === 0) {
+    return saveSnapshotsIndex(env, index, 1);
+  }
+
+  if (!putResponse.ok) {
+    const err = await putResponse.text();
+    return { success: false, error: `GitHub API error: ${putResponse.status} - ${err}` };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Save a /now page snapshot to GitHub
+ * Creates snapshot file and updates index
+ */
+export async function saveNowSnapshot(
+  env: Env,
+  date: string, // YYYYMMDD format
+  snapshot: NowSnapshot
+): Promise<{ success: boolean; error?: string; overwritten?: boolean }> {
+  if (!env.GITHUB_TOKEN) {
+    return { success: false, error: 'GitHub token not configured' };
+  }
+
+  // Save snapshot file
+  const snapshotPath = `${NOW_SNAPSHOTS_PATH}/${date}.json`;
+  const url = `${GITHUB_API_BASE}/repos/${GITHUB_REPO}/contents/${snapshotPath}`;
+
+  // Check if snapshot already exists
+  const getResponse = await fetch(url, { headers: githubHeaders(env.GITHUB_TOKEN) });
+  let existingSha: string | undefined;
+  let overwritten = false;
+  if (getResponse.ok) {
+    const fileData = await getResponse.json() as { sha: string };
+    existingSha = fileData.sha;
+    overwritten = true;
+  } else if (getResponse.status !== 404) {
+    return { success: false, error: `GitHub API error: ${getResponse.status}` };
+  }
+
+  const encodedContent = encodeBase64(JSON.stringify(snapshot, null, 2));
+  const putBody: Record<string, string> = {
+    message: overwritten
+      ? `Update /now snapshot for ${date}\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>`
+      : `Create /now snapshot for ${date}\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>`,
+    content: encodedContent,
+  };
+  if (existingSha) putBody.sha = existingSha;
+
+  const putResponse = await fetch(url, {
+    method: 'PUT',
+    headers: { ...githubHeaders(env.GITHUB_TOKEN), 'Content-Type': 'application/json' },
+    body: JSON.stringify(putBody),
+  });
+
+  if (!putResponse.ok) {
+    const err = await putResponse.text();
+    return { success: false, error: `GitHub API error: ${putResponse.status} - ${err}` };
+  }
+
+  // Update index
+  const index = await fetchSnapshotsIndex(env);
+  const preview = snapshot.markdown.substring(0, 150).trim();
+  const existingIndex = index.snapshots.findIndex(s => s.date === date);
+
+  const entry: NowSnapshotIndexEntry = {
+    date,
+    snapshotDate: snapshot.snapshotDate,
+    preview,
+  };
+
+  if (existingIndex >= 0) {
+    index.snapshots[existingIndex] = entry;
+  } else {
+    index.snapshots.push(entry);
+  }
+
+  // Sort by date descending (newest first)
+  index.snapshots.sort((a, b) => b.date.localeCompare(a.date));
+
+  const indexResult = await saveSnapshotsIndex(env, index);
+  if (!indexResult.success) {
+    return indexResult;
+  }
+
+  return { success: true, overwritten };
+}
+
+/**
+ * Delete a /now page snapshot from GitHub
+ * Removes snapshot file and updates index
+ */
+export async function deleteNowSnapshot(
+  env: Env,
+  date: string // YYYYMMDD format
+): Promise<{ success: boolean; error?: string }> {
+  if (!env.GITHUB_TOKEN) {
+    return { success: false, error: 'GitHub token not configured' };
+  }
+
+  // Delete snapshot file
+  const snapshotPath = `${NOW_SNAPSHOTS_PATH}/${date}.json`;
+  const url = `${GITHUB_API_BASE}/repos/${GITHUB_REPO}/contents/${snapshotPath}`;
+
+  // Get file SHA
+  const getResponse = await fetch(url, { headers: githubHeaders(env.GITHUB_TOKEN) });
+  if (!getResponse.ok) {
+    return { success: false, error: 'Snapshot not found' };
+  }
+
+  const fileData = await getResponse.json() as { sha: string };
+  const deleteBody = {
+    message: `Delete /now snapshot for ${date}\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>`,
+    sha: fileData.sha,
+  };
+
+  const deleteResponse = await fetch(url, {
+    method: 'DELETE',
+    headers: { ...githubHeaders(env.GITHUB_TOKEN), 'Content-Type': 'application/json' },
+    body: JSON.stringify(deleteBody),
+  });
+
+  if (!deleteResponse.ok) {
+    const err = await deleteResponse.text();
+    return { success: false, error: `GitHub API error: ${deleteResponse.status} - ${err}` };
+  }
+
+  // Update index
+  const index = await fetchSnapshotsIndex(env);
+  index.snapshots = index.snapshots.filter(s => s.date !== date);
+
+  const indexResult = await saveSnapshotsIndex(env, index);
+  if (!indexResult.success) {
+    return indexResult;
+  }
+
+  return { success: true };
+}
+
+/**
+ * List all /now page snapshots
+ * Returns snapshots index sorted by date (newest first)
+ */
+export async function listNowSnapshots(env: Env): Promise<NowSnapshotsIndex> {
+  return fetchSnapshotsIndex(env);
 }

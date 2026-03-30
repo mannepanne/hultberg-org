@@ -246,6 +246,21 @@ describe('GET /now', () => {
     expect(response.status).toBe(500);
   });
 
+  it('returns 500 if content.json is malformed JSON', async () => {
+    // Mock fetch to return malformed JSON
+    global.fetch = vi.fn(async () => {
+      return new Response('{ invalid json', {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+
+    const request = new Request('http://localhost/now');
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(500);
+  });
+
   it('includes Google Analytics', async () => {
     const request = new Request('http://localhost/now');
     const response = await worker.fetch(request, mockEnv, mockCtx);

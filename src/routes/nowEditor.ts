@@ -2,7 +2,7 @@
 // ABOUT: GET /admin/now/edit - admin interface for editing /now page content
 
 import type { Env, NowContent } from '@/types';
-import { requireAuth } from '@/auth';
+import { requireAuth, checkRateLimit } from '@/auth';
 import { escapeHtml } from '@/utils';
 
 const CDN = 'https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist';
@@ -64,7 +64,7 @@ function renderEditor(email: string, content: NowContent): string {
     <a class="brand" href="/admin/dashboard">hultberg.org admin</a>
     <nav>
       <a href="/admin/dashboard">Dashboard</a>
-      <a href="/admin/now/edit">Now</a>
+      <a href="/admin/now/edit" aria-current="page">Now</a>
     </nav>
     <span class="user">${escapeHtml(email)}</span>
     <form method="POST" action="/admin/logout">
@@ -160,6 +160,13 @@ export async function handleNowEditor(request: Request, env: Env): Promise<Respo
   const authResult = await requireAuth(request, env);
   if (authResult instanceof Response) {
     return Response.redirect(new URL('/admin', request.url).toString(), 302);
+  }
+
+  // Rate limiting
+  const clientIP = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+  const rateLimited = await checkRateLimit(env, clientIP);
+  if (rateLimited) {
+    return new Response('Rate limit exceeded', { status: 429 });
   }
 
   try {

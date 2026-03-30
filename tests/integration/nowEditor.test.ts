@@ -234,4 +234,45 @@ describe('GET /admin/now/edit', () => {
     expect(html).not.toContain('upload-image');
     expect(html).not.toContain('triggerUpload');
   });
+
+  it('returns 429 when rate limit is exceeded', async () => {
+    global.fetch = vi.fn(async (input: RequestInfo | URL | string) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url.includes('/now/data/content.json')) {
+        const content: NowContent = {
+          markdown: 'Test',
+          lastUpdated: '2026-03-30T12:00:00Z',
+        };
+        return new Response(JSON.stringify(content), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response('Not Found', { status: 404 });
+    });
+
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+
+    // Make 10 successful requests to hit rate limit
+    for (let i = 0; i < 10; i++) {
+      const request = new Request('http://localhost/admin/now/edit', {
+        headers: {
+          Cookie: `auth_token=${jwt}`,
+          'CF-Connecting-IP': '203.0.113.1',
+        },
+      });
+      await worker.fetch(request, mockEnv, mockCtx);
+    }
+
+    // 11th request should be rate limited
+    const request = new Request('http://localhost/admin/now/edit', {
+      headers: {
+        Cookie: `auth_token=${jwt}`,
+        'CF-Connecting-IP': '203.0.113.1',
+      },
+    });
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(429);
+  });
 });

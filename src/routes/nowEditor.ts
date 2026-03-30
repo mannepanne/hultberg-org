@@ -126,34 +126,19 @@ function renderEditor(email: string, content: NowContent): string {
     <a href="/admin/dashboard">← Back to dashboard</a>
   </footer>
 
-  <script src="${CDN}/easymde.min.js" onerror="console.error('Failed to load EasyMDE from CDN')"></script>
+  <script src="${CDN}/easymde.min.js"></script>
   <script>
-    console.log('Script starting...');
-    console.log('EasyMDE available:', typeof EasyMDE !== 'undefined');
-
-    try {
-      var contentElement = document.getElementById('content');
-      console.log('Content element:', contentElement);
-
-      if (!contentElement) {
-        console.error('Content element not found!');
-      } else {
-        var easyMDE = new EasyMDE({
-          element: contentElement,
-          spellChecker: false,
-          autosave: { enabled: false },
-          toolbar: [
-            'bold', 'italic', 'heading', '|',
-            'quote', 'unordered-list', 'ordered-list', '|',
-            'link', 'code', '|',
-            'preview', 'side-by-side', 'fullscreen', '|', 'guide'
-          ],
-        });
-        console.log('EasyMDE initialized successfully');
-      }
-    } catch (error) {
-      console.error('Error initializing EasyMDE:', error);
-    }
+    var easyMDE = new EasyMDE({
+      element: document.getElementById('content'),
+      spellChecker: false,
+      autosave: { enabled: false },
+      toolbar: [
+        'bold', 'italic', 'heading', '|',
+        'quote', 'unordered-list', 'ordered-list', '|',
+        'link', 'code', '|',
+        'preview', 'side-by-side', 'fullscreen', '|', 'guide'
+      ],
+    });
 
     async function saveContent() {
       var markdown = easyMDE.value().trim();
@@ -307,12 +292,7 @@ function renderEditor(email: string, content: NowContent): string {
     }
 
     // Load snapshots on page load
-    try {
-      console.log('Loading snapshots...');
-      loadSnapshots();
-    } catch (error) {
-      console.error('Error calling loadSnapshots:', error);
-    }
+    loadSnapshots();
   </script>
 </body>
 </html>`;

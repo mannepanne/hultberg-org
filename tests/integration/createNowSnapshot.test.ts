@@ -310,4 +310,120 @@ describe('POST /admin/api/create-now-snapshot', () => {
     const data = await response.json() as { success: boolean };
     expect(data.success).toBe(true);
   });
+
+  it('accepts custom date parameter', async () => {
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+
+    // Mock GitHub API
+    global.fetch = vi.fn(async (input: RequestInfo | URL | string, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url.includes('api.github.com')) {
+        const method = init?.method || (input instanceof Request ? input.method : 'GET');
+        if (method === 'PUT') {
+          return new Response(JSON.stringify({ content: {} }), { status: 200 });
+        }
+        // GET for checking if file exists or fetching index
+        if (url.includes('snapshots/index.json')) {
+          return new Response('Not Found', { status: 404 });
+        }
+        // Snapshot file doesn't exist yet (for custom date)
+        if (url.includes('/20160926.json')) {
+          return new Response('Not Found', { status: 404 });
+        }
+        return new Response('Not Found', { status: 404 });
+      }
+      return new Response('Not Found', { status: 404 });
+    });
+
+    const request = makeCreateRequest({
+      markdown: 'Historical snapshot content',
+      date: '20160926', // Sept 26, 2016
+    }, jwt);
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(200);
+    const data = await response.json() as { success: boolean; date: string };
+    expect(data.success).toBe(true);
+    expect(data.date).toBe('20160926');
+  });
+
+  it('returns 400 for invalid date format', async () => {
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+
+    const request = makeCreateRequest({
+      markdown: 'Test content',
+      date: '2016-09-26', // Wrong format (should be YYYYMMDD)
+    }, jwt);
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(400);
+    const data = await response.json() as { error: string };
+    expect(data.error).toContain('Invalid date format');
+  });
+
+  it('returns 400 for non-existent date', async () => {
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+
+    const request = makeCreateRequest({
+      markdown: 'Test content',
+      date: '20260231', // Feb 31 doesn't exist
+    }, jwt);
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(400);
+    const data = await response.json() as { error: string };
+    expect(data.error).toContain('Invalid date');
+  });
+
+  it('returns 400 for future date', async () => {
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+
+    // Get a future date (tomorrow)
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const futureDate = tomorrow.toISOString().substring(0, 10).replace(/-/g, '');
+
+    const request = makeCreateRequest({
+      markdown: 'Test content',
+      date: futureDate,
+    }, jwt);
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(400);
+    const data = await response.json() as { error: string };
+    expect(data.error).toContain('future');
+  });
+
+  it('defaults to today when date not provided', async () => {
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+
+    // Mock GitHub API
+    global.fetch = vi.fn(async (input: RequestInfo | URL | string, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url.includes('api.github.com')) {
+        const method = init?.method || (input instanceof Request ? input.method : 'GET');
+        if (method === 'PUT') {
+          return new Response(JSON.stringify({ content: {} }), { status: 200 });
+        }
+        if (url.includes('snapshots/index.json')) {
+          return new Response('Not Found', { status: 404 });
+        }
+        return new Response('Not Found', { status: 404 });
+      }
+      return new Response('Not Found', { status: 404 });
+    });
+
+    const request = makeCreateRequest({
+      markdown: 'Test content without date',
+      // No date parameter
+    }, jwt);
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(200);
+    const data = await response.json() as { success: boolean; date: string };
+    expect(data.success).toBe(true);
+    // Should return today's date in YYYYMMDD format
+    const today = new Date().toISOString().substring(0, 10).replace(/-/g, '');
+    expect(data.date).toBe(today);
+  });
 });

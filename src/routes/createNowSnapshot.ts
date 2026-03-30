@@ -11,6 +11,11 @@ const MAX_CONTENT_BYTES = 100 * 1024; // 100KB
  * Handle POST /admin/api/create-now-snapshot
  * Creates a snapshot of /now page content in GitHub (public/now/snapshots/)
  * Applies rate limiting and validation
+ *
+ * Request body:
+ * - markdown: string (required) - Content for the snapshot
+ * - date: string (optional) - YYYYMMDD format, defaults to today if not provided
+ *   Must not be in the future. Enables backdating snapshots for migration.
  */
 export async function handleCreateNowSnapshot(request: Request, env: Env): Promise<Response> {
   // CSRF protection
@@ -39,6 +44,7 @@ export async function handleCreateNowSnapshot(request: Request, env: Env): Promi
   try {
     const body = await request.json() as {
       markdown?: string;
+      date?: string;
     };
 
     // Validate markdown content
@@ -59,14 +65,58 @@ export async function handleCreateNowSnapshot(request: Request, env: Env): Promi
       });
     }
 
-    // Generate date string (YYYYMMDD format for today)
+    // Validate and process date
     const now = new Date();
-    const date = now.toISOString().substring(0, 10).replace(/-/g, '');
+    let date: string;
+    let snapshotDate: string;
+
+    if (body.date) {
+      // Validate date format (YYYYMMDD)
+      if (!/^\d{8}$/.test(body.date)) {
+        return new Response(JSON.stringify({ error: 'Invalid date format. Expected YYYYMMDD' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      // Parse and validate date is valid
+      const year = parseInt(body.date.substring(0, 4));
+      const month = parseInt(body.date.substring(4, 6));
+      const day = parseInt(body.date.substring(6, 8));
+      const parsedDate = new Date(year, month - 1, day);
+
+      // Check if date is valid (e.g., not Feb 31)
+      if (parsedDate.getFullYear() !== year ||
+          parsedDate.getMonth() !== month - 1 ||
+          parsedDate.getDate() !== day) {
+        return new Response(JSON.stringify({ error: 'Invalid date. Date does not exist' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      // Check if date is not in the future
+      parsedDate.setHours(23, 59, 59, 999); // End of day
+      if (parsedDate > now) {
+        return new Response(JSON.stringify({ error: 'Cannot create snapshot for future date' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      date = body.date;
+      // Use noon on the specified date for snapshotDate
+      snapshotDate = new Date(year, month - 1, day, 12, 0, 0).toISOString();
+    } else {
+      // Default to today
+      date = now.toISOString().substring(0, 10).replace(/-/g, '');
+      snapshotDate = now.toISOString();
+    }
 
     // Prepare snapshot
     const snapshot: NowSnapshot = {
       markdown,
-      snapshotDate: now.toISOString(),
+      snapshotDate,
     };
 
     // Save to GitHub

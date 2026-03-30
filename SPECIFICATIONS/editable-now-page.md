@@ -3,6 +3,36 @@
 **Status:** Draft
 **Created:** 2026-03-30
 
+## Implementation Plan
+
+This feature will be built in **3 phased PRs** for clean, reviewable increments:
+
+### PR #1: Foundation
+- Extract `sanitizeHTML()` to `src/sanitize.ts`
+- Update `updatePage.ts` to use shared sanitize
+- Create `public/now/data/content.json` with placeholder
+- Add tests for sanitize module
+
+**Value:** Shared sanitization ready, data structure in place
+
+### PR #2: Server-side rendering
+- Create `src/routes/nowPage.ts` (GET /now route)
+- Implement `renderNowPage()` function
+- Register route in `src/index.ts`
+- Add integration tests for /now rendering
+- Verify widgets still work
+
+**Value:** /now page working with server-side rendering (read-only)
+
+### PR #3: Admin editor and save
+- Create `src/routes/nowEditor.ts` (GET /admin/now/edit)
+- Create `src/routes/saveNow.ts` (POST /admin/api/save-now)
+- Add "Now" link to admin navigation
+- Add rate limiting and validation
+- Add integration tests for admin routes
+
+**Value:** Complete feature - user can edit /now content
+
 ## Overview
 
 Make the main "What I'm doing now" text block on the /now page editable through the admin interface, using the same Markdown editing experience as updates.

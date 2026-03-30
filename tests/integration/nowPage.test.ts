@@ -133,7 +133,7 @@ describe('GET /now', () => {
     const response = await worker.fetch(request, mockEnv, mockCtx);
 
     const csp = response.headers.get('Content-Security-Policy');
-    expect(csp).toContain('frame-src https://*.goodreads.com');
+    expect(csp).toContain('frame-src https://goodreads.com https://*.goodreads.com');
   });
 
   it('includes CSP header with unsafe-inline for analytics scripts', async () => {

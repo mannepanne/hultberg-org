@@ -104,6 +104,18 @@ Add new routes in Worker:
 - No published date (uses lastUpdated timestamp)
 - No image uploads (keep it simple)
 
+### GitHub Commit Message Format
+
+When saving /now content, commit to GitHub with this message format (matches updates pattern):
+
+```
+Update /now page content
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+```
+
 ### Layout Preservation
 
 Current `/now` page structure (`public/now/index.html`):
@@ -149,16 +161,19 @@ Current `/now` page structure (`public/now/index.html`):
 ## Implementation Checklist
 
 **Backend:**
+- [ ] Extract `sanitizeHTML()` from `updatePage.ts` to `src/sanitize.ts` (for reuse)
+- [ ] Update `updatePage.ts` to import `sanitizeHTML` from `src/sanitize.ts`
 - [ ] Create `src/routes/nowPage.ts` for `GET /now` route (server-side rendering)
-- [ ] Copy and adapt `sanitizeHTML()` function from `updatePage.ts` or import it
+- [ ] Import `sanitizeHTML` in `nowPage.ts` from `src/sanitize.ts`
 - [ ] Create `src/routes/nowEditor.ts` for `GET /admin/now/edit` route
 - [ ] Create `src/routes/saveNow.ts` for `POST /admin/api/save-now` route
 - [ ] Add rate limiting to save endpoint (reuse `checkRateLimit` from `auth.ts`)
 - [ ] Add content size validation (100KB limit like updates)
 - [ ] Add routes to `src/index.ts` router
+- [ ] Verify `/now/*` static assets (github-widget.js, images, data/) still accessible after Worker route added
 - [ ] Add "Now" navigation link in admin header (update `adminEditor.ts`, `adminDashboard.ts`)
-- [ ] Implement GitHub commit functionality for /now content
-- [ ] Add proper CSP headers to /now route (allow Goodreads iframe, github-widget.js)
+- [ ] Implement GitHub commit functionality for /now content (see commit message format below)
+- [ ] Add proper CSP headers to /now route (allow Goodreads iframe, github-widget.js, api.github.com)
 
 **Frontend:**
 - [ ] Create `public/now/data/` directory
@@ -174,7 +189,7 @@ Current `/now` page structure (`public/now/index.html`):
 
 ## Future Enhancements (Out of Scope for MVP)
 
-- **Preview before publishing** - With server-side rendering, this would be simple (add `/admin/preview/now` route reusing pattern from updates). Low cost, high user value. Could be added in MVP if desired.
+- **Preview before publishing** - With server-side rendering, this would be simple (add `/admin/preview/now` route reusing pattern from updates). Low cost, high user value. Not included in MVP to keep scope minimal.
 - Version history and revert capability
 - Edit other sections (reading list, project list)
 - Scheduling updates
@@ -244,7 +259,8 @@ Follow pattern from `tests/integration/updatePage.test.ts` and `tests/integratio
 
 6. **CSP Headers**
    - Allow Goodreads iframe: `frame-src https://goodreads.com`
-   - Allow GitHub widget script: `script-src 'self' ... (existing domains)`
+   - Allow GitHub widget script: `script-src 'self' ... https://goodreads.com` (for widget script)
+   - Allow GitHub API calls: `connect-src 'self' ... https://api.github.com` (for github-widget.js REST API calls)
    - Prevent inline scripts and unsafe eval
    - Match CSP pattern from `updatePage.ts` with additions for widgets
 
@@ -284,14 +300,14 @@ export async function handleNowPage(request: Request, env: Env): Promise<Respons
     const contentHTML = await marked(data.markdown);
     const sanitizedHTML = sanitizeHTML(contentHTML);
 
-    // Render full page HTML (fetch current index.html as template, inject content)
-    const html = await renderNowPage(sanitizedHTML, env);
+    // Render full page HTML programmatically (like renderUpdatePageHTML in updatePage.ts)
+    const html = renderNowPage(sanitizedHTML);
 
     return new Response(html, {
       status: 200,
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://static.cloudflareinsights.com https://goodreads.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://hultberg.org; frame-src https://goodreads.com; connect-src 'self' https://www.google-analytics.com https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self';",
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://static.cloudflareinsights.com https://goodreads.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://hultberg.org; frame-src https://goodreads.com; connect-src 'self' https://www.google-analytics.com https://cloudflareinsights.com https://api.github.com; frame-ancestors 'none'; base-uri 'self';",
       },
     });
   } catch (error) {
@@ -301,13 +317,68 @@ export async function handleNowPage(request: Request, env: Env): Promise<Respons
 }
 ```
 
+### renderNowPage Implementation
+
+**Programmatic HTML generation** (recommended, matches `renderUpdatePageHTML` pattern):
+
+```typescript
+function renderNowPage(contentHTML: string): string {
+  return `<!doctype html>
+<html class="no-js" lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>What I'm doing now | Magnus Hultberg - hultberg.org</title>
+  <!-- Copy remaining head content from current index.html -->
+  <!-- Include: meta tags, og tags, analytics, styles -->
+</head>
+<body id="now" style="font-family: Georgia, serif; line-height: 1.5;">
+  <div id="content" style="max-width: 800px; margin: 0 auto; padding: 2em;">
+    <!-- Copy navigation links -->
+    <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | ...</p>
+
+    <h1 style="...">What I'm doing now</h1>
+
+    <!-- INJECT SANITIZED MARKDOWN CONTENT HERE -->
+    ${contentHTML}
+
+    <!-- PRESERVE WIDGET SECTIONS (copy from current index.html lines 191+) -->
+    <div class="widgets-container">
+      <div class="widget-column">
+        <h2>Reading updates</h2>
+        <div id="gr_updates_widget">
+          <iframe id="the_iframe" src="https://goodreads.com/widgets/..." ...></iframe>
+        </div>
+      </div>
+      <div class="widget-column">
+        <h2>GitHub Activity</h2>
+        <div id="github-contributions" data-username="mannepanne"></div>
+        <div id="github-repos"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CRITICAL: Include github-widget.js for client-side data loading -->
+  <script src="/now/github-widget.js"></script>
+</body>
+</html>`;
+}
+```
+
+**Why programmatic over template-based?**
+- Explicit structure (no HTML parsing needed)
+- Matches pattern from `updatePage.ts` (`renderUpdatePageHTML`)
+- Less fragile to changes
+- Clear injection point for content
+
+**Alternative (not recommended):** Fetch `/now/index.html` as template, parse string, inject content at lines 174-189. This is more complex and error-prone.
+
 ### Admin Editor Simplifications
 
 Compared to updates editor (`adminEditor.ts`), the /now editor will:
 - Remove: slug field, excerpt field, status dropdown, published date, image uploads, preview button
 - Keep: content textarea with EasyMDE (same toolbar: bold, italic, links, lists)
 - Simplify: Single "Save" button
-- Optional: Could add simple preview (low cost, reuse sanitizeHTML pattern)
 
 ## Decisions Made
 

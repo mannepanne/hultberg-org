@@ -59,6 +59,16 @@ describe('GET /now', () => {
     expect(html).toContain("What I'm doing now");
   });
 
+  it('handles /now/ with trailing slash', async () => {
+    const request = new Request('http://localhost/now/');
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toContain('text/html');
+    const html = await response.text();
+    expect(html).toContain("What I'm doing now");
+  });
+
   it('renders markdown to HTML', async () => {
     const request = new Request('http://localhost/now');
     const response = await worker.fetch(request, mockEnv, mockCtx);

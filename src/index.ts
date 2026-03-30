@@ -131,8 +131,8 @@ export default {
       return handleUpdatePage(request, env, slug);
     }
 
-    // Route: /now page
-    if (url.pathname === '/now') {
+    // Route: /now page (handle both /now and /now/)
+    if (url.pathname === '/now' || url.pathname === '/now/') {
       return handleNowPage(request, env);
     }
 

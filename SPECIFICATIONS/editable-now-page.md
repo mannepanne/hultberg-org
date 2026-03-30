@@ -46,25 +46,44 @@ Store /now content as JSON file in GitHub repo:
 
 #### Migration
 
-Convert existing HTML content in `public/now/index.html` to Markdown:
-1. Extract the "What I'm doing now" text block
-2. Convert HTML to Markdown format
-3. Create initial `content.json` file
-4. Update `index.html` to load content from JSON
+**Development approach:**
+1. Create `public/now/data/content.json` with placeholder content for development and testing
+2. Implement and test all functionality (editor, save, rendering)
+3. User manually converts current HTML content (lines 174-189) to Markdown via admin editor
+4. Verify rendering matches current appearance
+5. Deploy together: Worker route + content.json + preserved widgets
+
+**Initial content.json for development:**
+```json
+{
+  "markdown": "This is placeholder content for development.\n\n- Test bullet point\n- Another test\n\n(This will be replaced by user after editing functionality is working)",
+  "lastUpdated": "2026-03-30T12:00:00Z"
+}
+```
+
+**No automated migration script needed** - user will manually enter final content via admin interface once editing works.
 
 #### Page Rendering
 
-The `/now` page remains static HTML served via Cloudflare Assets. Add client-side JavaScript:
-1. Fetches `public/now/data/content.json`
-2. Uses `marked` library (same as server-side updates) to parse Markdown to HTML
-3. Injects rendered HTML into `#now-content` div
-4. Preserves existing widgets (Goodreads, GitHub) unchanged
+**Server-side rendering via Worker** (matches updates pattern):
+1. Create Worker route `GET /now`
+2. Fetch `public/now/data/content.json` via ASSETS binding
+3. Parse Markdown to HTML using `marked` library
+4. Sanitize HTML using existing `sanitizeHTML()` function from `src/routes/updatePage.ts`
+5. Render complete page HTML with sanitized content
+6. Return with proper CSP headers (prevent XSS)
 
-**Why client-side rendering?**
-- Simpler (no Worker route needed)
-- Updates use server-side rendering with `sanitizeHTML` function
-- /now content is fully trusted (single admin author)
-- Client-side is acceptable for this use case
+**Why server-side rendering?**
+- Consistent with updates feature (`/updates/{slug}` pattern)
+- Reuses proven security patterns (`sanitizeHTML()`, CSP headers)
+- Simpler to implement (~50 lines copying updatePage.ts)
+- Follows defense-in-depth security principle
+- Prevents XSS vulnerabilities by design
+
+**Widgets remain unchanged:**
+- Goodreads iframe and GitHub widget script work identically
+- They don't care if HTML is static or dynamically generated
+- Same structure, same positioning, same functionality
 
 #### Admin Routes
 
@@ -92,7 +111,7 @@ Current `/now` page structure (`public/now/index.html`):
 <!-- Lines 1-172: Static (head, styles, navigation) -->
 <h1>What I'm doing now</h1>
 
-<!-- Lines 174-189: EDITABLE SECTION (convert to dynamic) -->
+<!-- Lines 174-189: EDITABLE SECTION (will be server-side rendered from content.json) -->
 <p>I live in London, work at char.gy...</p>
 <p>(in order of time spent)</p>
 <ul>
@@ -102,67 +121,132 @@ Current `/now` page structure (`public/now/index.html`):
 <p>also see LinkedIn and GitHub</p>
 <p>(list last updated: February 2026...)</p>
 
-<!-- Lines 191+: Static widgets (unchanged) -->
+<!-- Lines 191+: Static widgets (unchanged, will be preserved in server-rendered HTML) -->
 <div class="widgets-container">
   <div class="widget-column">
     <h2>Reading updates</h2>
-    <!-- Goodreads widget -->
+    <div id="gr_updates_widget">
+      <iframe id="the_iframe" src="https://goodreads.com/widgets/..." ...></iframe>
+    </div>
   </div>
   <div class="widget-column">
-    <!-- GitHub widget -->
+    <h2>GitHub Activity</h2>
+    <div id="github-contributions" data-username="mannepanne"></div>
+    <div id="github-repos"></div>
   </div>
 </div>
+<script src="/now/github-widget.js"></script>
 ```
 
-**Implementation:** Replace lines 174-189 with:
-```html
-<div id="now-content">
-  <p>Discombobulating recent eventings...</p>
-</div>
-```
+**Server-side implementation approach:**
+1. Use current `index.html` as template reference
+2. Worker route generates full HTML dynamically
+3. Inject sanitized markdown content where lines 174-189 currently are
+4. Preserve exact widget structure and positioning
+5. Include github-widget.js script (loads data client-side as before)
+6. Goodreads iframe works identically (browsers load it regardless of HTML source)
 
 ## Implementation Checklist
 
 **Backend:**
+- [ ] Create `src/routes/nowPage.ts` for `GET /now` route (server-side rendering)
+- [ ] Copy and adapt `sanitizeHTML()` function from `updatePage.ts` or import it
 - [ ] Create `src/routes/nowEditor.ts` for `GET /admin/now/edit` route
 - [ ] Create `src/routes/saveNow.ts` for `POST /admin/api/save-now` route
+- [ ] Add rate limiting to save endpoint (reuse `checkRateLimit` from `auth.ts`)
+- [ ] Add content size validation (100KB limit like updates)
 - [ ] Add routes to `src/index.ts` router
 - [ ] Add "Now" navigation link in admin header (update `adminEditor.ts`, `adminDashboard.ts`)
 - [ ] Implement GitHub commit functionality for /now content
+- [ ] Add proper CSP headers to /now route (allow Goodreads iframe, github-widget.js)
 
 **Frontend:**
 - [ ] Create `public/now/data/` directory
-- [ ] Create empty `public/now/data/content.json` with initial structure
-- [ ] Add client-side rendering script to `public/now/index.html`
-- [ ] Load `marked` library in `/now` page via CDN
-- [ ] Update `public/now/index.html` structure to inject content into `#now-content` div
+- [ ] Create `public/now/data/content.json` with placeholder content for development
+- [ ] Keep current `public/now/index.html` as template reference (will be replaced by Worker route)
+- [ ] Preserve exact widget structure (Goodreads iframe, GitHub script) in rendered HTML
 
 **Testing:**
-- [ ] Add integration tests for `GET /admin/now/edit` (auth required, renders form)
-- [ ] Add integration tests for `POST /admin/api/save-now` (auth, validation, GitHub commit)
-- [ ] Manual testing: Edit form, save, page rendering, widget preservation
+- [ ] Add integration tests for `GET /now` (renders page, sanitizes HTML, proper CSP headers)
+- [ ] Add integration tests for `GET /admin/now/edit` (auth required, renders form, loads content)
+- [ ] Add integration tests for `POST /admin/api/save-now` (auth, rate limiting, validation, GitHub commit)
+- [ ] Manual testing: Edit form, save, page rendering, widget functionality, XSS prevention
 
-## Future Enhancements (Out of Scope)
+## Future Enhancements (Out of Scope for MVP)
 
-- Preview before publishing
+- **Preview before publishing** - With server-side rendering, this would be simple (add `/admin/preview/now` route reusing pattern from updates). Low cost, high user value. Could be added in MVP if desired.
 - Version history and revert capability
 - Edit other sections (reading list, project list)
 - Scheduling updates
 - Markdown template snippets
+- Track edit history (add `editedDate` field to match updates pattern)
 
 ## Testing Strategy
 
-- **Unit tests**: Content saving, GitHub commit
-- **Integration tests**: Admin routes, authentication
-- **Manual testing**: Edit form, page rendering, widget preservation
+Follow pattern from `tests/integration/updatePage.test.ts` and `tests/integration/adminEditor.test.ts`.
+
+**GET /now route tests:**
+- Renders page successfully with valid content.json
+- Sanitizes HTML (prevents XSS from malicious markdown)
+- Returns 404 when content.json missing
+- Applies proper CSP headers
+- Handles errors gracefully (server-side logging, generic client message)
+
+**GET /admin/now/edit route tests:**
+- Redirects to login when not authenticated
+- Renders form with loaded content when authenticated
+- Loads existing content from content.json
+- Shows appropriate error if content.json missing
+
+**POST /admin/api/save-now route tests:**
+- Redirects to login when not authenticated
+- Validates content size (rejects >100KB)
+- Rate limiting (rejects after 10 req/min)
+- Commits to GitHub successfully
+- Updates content.json with lastUpdated timestamp
+- Returns success response with appropriate data
+
+**Manual testing:**
+- Edit form: loads content, saves changes, shows status messages
+- Page rendering: markdown renders correctly, widgets work, no layout breakage
+- XSS prevention: try malicious markdown (script tags, onclick handlers)
+- Widget preservation: Goodreads iframe loads, GitHub widget fetches data
 - **Migration testing**: Verify existing content converts correctly
 
 ## Security Considerations
 
-- Reuse existing admin authentication
-- Sanitize Markdown rendering (prevent XSS)
-- Validate JSON structure on save
-- Rate limiting already in place for admin routes
+**Defense-in-depth approach:**
+
+1. **XSS Prevention (Server-side)**
+   - Reuse `sanitizeHTML()` function from `src/routes/updatePage.ts:172-226`
+   - Parse markdown → sanitize HTML → render (never use innerHTML)
+   - Apply CSP headers to prevent inline script execution
+   - Follow exact pattern from updates feature
+
+2. **Authentication**
+   - Reuse existing admin authentication middleware (`requireAuth` from `src/auth.ts`)
+   - Both editor and save routes require valid session
+
+3. **Rate Limiting**
+   - Apply rate limiting to `POST /admin/api/save-now` endpoint
+   - Reuse `checkRateLimit` function from `src/auth.ts`
+   - 10 requests per minute per IP (matches other admin routes)
+
+4. **Input Validation**
+   - Content size limit: 100KB (matches updates pattern)
+   - Validate JSON structure on save
+   - Sanitize all content before GitHub commit
+
+5. **Error Handling**
+   - Log detailed errors server-side (console.error)
+   - Return generic errors to client (don't leak implementation details)
+   - Graceful degradation for /now page load failures
+
+6. **CSP Headers**
+   - Allow Goodreads iframe: `frame-src https://goodreads.com`
+   - Allow GitHub widget script: `script-src 'self' ... (existing domains)`
+   - Prevent inline scripts and unsafe eval
+   - Match CSP pattern from `updatePage.ts` with additions for widgets
 
 ## Dependencies
 
@@ -174,40 +258,65 @@ Current `/now` page structure (`public/now/index.html`):
 
 ## Technical Implementation Notes
 
-### Client-side Rendering Script
+### Server-side Route Handler
 
-Add to `public/now/index.html`:
-```html
-<div id="now-content">
-  <p>Loading...</p>
-</div>
+Create `src/routes/nowPage.ts` following `updatePage.ts` pattern:
 
-<script src="https://cdn.jsdelivr.net/npm/marked@17.0.2/marked.min.js"></script>
-<script>
-  fetch('/now/data/content.json')
-    .then(r => r.json())
-    .then(data => {
-      const html = marked.parse(data.markdown);
-      document.getElementById('now-content').innerHTML = html;
-    })
-    .catch(err => {
-      document.getElementById('now-content').innerHTML =
-        '<p>Unable to load content.</p>';
+```typescript
+// src/routes/nowPage.ts
+import { marked } from 'marked';
+import type { Env } from '@/types';
+
+export async function handleNowPage(request: Request, env: Env): Promise<Response> {
+  try {
+    // Fetch content.json via ASSETS binding (avoid Worker routing loop)
+    const url = new URL(request.url);
+    const contentUrl = `${url.origin}/now/data/content.json`;
+    const response = await (env.ASSETS?.fetch(new Request(contentUrl)) ?? fetch(contentUrl));
+
+    if (!response.ok) {
+      return fetchNotFoundPage(request, env);
+    }
+
+    const data = await response.json();
+
+    // Parse markdown and sanitize (reuse from updatePage.ts)
+    const contentHTML = await marked(data.markdown);
+    const sanitizedHTML = sanitizeHTML(contentHTML);
+
+    // Render full page HTML (fetch current index.html as template, inject content)
+    const html = await renderNowPage(sanitizedHTML, env);
+
+    return new Response(html, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://static.cloudflareinsights.com https://goodreads.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://hultberg.org; frame-src https://goodreads.com; connect-src 'self' https://www.google-analytics.com https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self';",
+      },
     });
-</script>
+  } catch (error) {
+    console.error('Error loading /now page:', error);
+    return new Response('Error loading page', { status: 500 });
+  }
+}
 ```
 
 ### Admin Editor Simplifications
 
 Compared to updates editor (`adminEditor.ts`), the /now editor will:
-- Remove: slug field, excerpt field, status dropdown, published date, image uploads
-- Keep: title field (optional, could be fixed as "What I'm doing now"), content textarea with EasyMDE
-- Simplify: Single "Save" button, no preview button needed
+- Remove: slug field, excerpt field, status dropdown, published date, image uploads, preview button
+- Keep: content textarea with EasyMDE (same toolbar: bold, italic, links, lists)
+- Simplify: Single "Save" button
+- Optional: Could add simple preview (low cost, reuse sanitizeHTML pattern)
 
 ## Decisions Made
 
+✅ **Rendering approach**: Server-side rendering via Worker route (matches updates pattern, better security)
 ✅ **Markdown library**: Use `marked` (v17.0.2) - same library as updates, already in package.json
-✅ **Rendering approach**: Client-side rendering via CDN (simpler, no Worker route needed)
+✅ **Sanitization**: Reuse `sanitizeHTML()` function from `updatePage.ts` (defense-in-depth)
 ✅ **Migration**: Manual content entry by user once editing functionality is working (no migration script needed)
-✅ **Editor**: EasyMDE (same as updates) - simplified version without slug/status/images
+✅ **Editor**: EasyMDE (same as updates) - simplified version without slug/status/images/preview
 ✅ **Storage**: JSON file at `public/now/data/content.json` (matches updates pattern)
+✅ **Rate limiting**: Apply to save endpoint (10 req/min per IP, matches admin routes)
+✅ **Content size limit**: 100KB (matches updates)
+✅ **CSP headers**: Include on /now route (allow Goodreads iframe and GitHub widget script)

@@ -3,9 +3,9 @@
   "title": "On being honest about AI",
   "excerpt": "",
   "content": "I use AI for almost everything on this site. Writing, building, thinking. That's not a confession, it's just true.\n\nRight now I'm spending a lot of time exploring what's possible with LLMs and agentic coding, specifically Claude.ai and Claude Code, because it fascinates me. There's a maker revolution happening around these tools that reminds me of how I felt when I first started tinkering with the web in the early nineties: the sense that something once limited to specialists was suddenly available to anyone curious enough to try.\n\nThat barrier coming down is the interesting part, not the technology itself.\n\nWhat matters more than the fact of AI involvement is what you do with it. Anthropic published a useful [guide to writing an AI diligence statement](https://claude.com/resources/tutorials/writing-an-ai-diligence-statement) recently, and it crystallised something I'd been meaning to do for a while: put in writing how I work, and what I'm responsible for.\n\nSo I did. You can [read it here](https://hultberg.org/use-of-ai).\n\nThe short version: nothing I publish is unedited AI output. Every piece of writing starts with me and ends with me editing it until it sounds like I actually said it. The code running my sites is almost entirely AI-generated, built against specifications I've written and reviewed by sub-agents before anything is merged. I don't write code, but I do make all the decisions that matter.\n\nThe other thing worth saying plainly: all of this is for me. If something here is broken or wrong, I'm the one who bears the consequence. That's the limit I've set deliberately. I wouldn't use this approach for anything someone else was depending on, paying for, or trusting with anything sensitive.\n\nTransparency about AI use is the responsible thing. Not because AI involvement diminishes the work, but because it's a tool. And the tool only adds value if you're honest about what it's doing and what you're doing.",
-  "status": "draft",
-  "publishedDate": "",
-  "editedDate": "2026-03-31T13:25:59.051Z",
+  "status": "published",
+  "publishedDate": "2026-03-31T13:26:05.445Z",
+  "editedDate": "2026-03-31T13:26:05.445Z",
   "author": "Magnus Hultberg",
   "images": []
 }

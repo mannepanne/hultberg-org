@@ -64,6 +64,10 @@ function htmlToMarkdown(html) {
 
   // Clean up whitespace
   html = html.replace(/\n\s*\n\s*\n/g, '\n\n'); // Max 2 newlines
+
+  // Remove leading whitespace from each line (prevents markdown list continuation)
+  html = html.split('\n').map(line => line.trimStart()).join('\n');
+
   html = html.trim();
 
   return html;

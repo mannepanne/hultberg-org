@@ -36,14 +36,17 @@
         return;
       }
 
-      // Add current content as the latest "snapshot"
-      const currentDate = new Date();
-      const currentDateStr = currentDate.toISOString().substring(0, 7); // YYYY-MM format
+      // Fetch current content to get its lastUpdated timestamp
+      const contentResponse = await fetch('/now/data/content.json');
+      const currentContentData = await contentResponse.json();
+      const lastUpdated = currentContentData.lastUpdated || new Date().toISOString();
+      const currentDateStr = lastUpdated.substring(0, 7); // YYYY-MM format
 
+      // Add current content as the latest "snapshot"
       currentContent = {
         date: 'current',
         displayDate: currentDateStr,
-        snapshotDate: currentDate.toISOString(),
+        snapshotDate: lastUpdated,
         preview: 'Current /now content',
         isCurrent: true
       };

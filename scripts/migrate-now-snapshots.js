@@ -18,7 +18,7 @@ const snapshots = [
   { date: '20211124', file: 'index_20211124.CHANGED.html' },
   { date: '20220202', file: 'index_20220202.CHANGED.html' },
   { date: '20241125', file: 'index_20241125.CHANGED.html' },
-  { date: '20260214', file: 'index_20260214.CHANGED.html' }
+  { date: '20250214', file: 'index_20250214.CHANGED.html' }
 ];
 
 /**

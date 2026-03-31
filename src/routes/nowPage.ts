@@ -226,8 +226,6 @@ function renderNowPageHTML(contentHTML: string): string {
   .timeline-container {
     margin: 48px 0;
     padding: 24px 0;
-    border-top: 1px solid #e0e0e0;
-    border-bottom: 1px solid #e0e0e0;
   }
 
   .timeline-bar {
@@ -278,7 +276,6 @@ function renderNowPageHTML(contentHTML: string): string {
     border: 2px solid #333;
     border-radius: 4px;
     font-size: 0.9em;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
   .timeline-node--medium:hover {
@@ -293,7 +290,15 @@ function renderNowPageHTML(contentHTML: string): string {
     font-weight: 600;
     font-size: 1.1em;
     background: #f9f9f9;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  .timeline-node--placeholder {
+    padding: 8px 16px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #999;
+    cursor: not-allowed;
   }
 
   .timeline-arrow {
@@ -330,7 +335,6 @@ function renderNowPageHTML(contentHTML: string): string {
     color: #555;
     margin-bottom: 24px;
     border-radius: 4px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
   .snapshot-banner a {

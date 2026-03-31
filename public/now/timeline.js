@@ -99,8 +99,14 @@
 
     // Render visible snapshots
     visibleIndices.forEach((index, position) => {
-      const node = createTimelineNode(index, position);
-      timelineBar.appendChild(node);
+      if (index === null) {
+        // Placeholder for future
+        const placeholder = createPlaceholderNode();
+        timelineBar.appendChild(placeholder);
+      } else {
+        const node = createTimelineNode(index, position);
+        timelineBar.appendChild(node);
+      }
     });
 
     // Right arrow
@@ -111,6 +117,7 @@
   /**
    * Calculate which 5 snapshot indices should be visible
    * Returns array of indices with center position being selected
+   * null values represent placeholders for future snapshots
    */
   function calculateVisibleIndices(selected, total) {
     const indices = [];
@@ -120,6 +127,9 @@
       const index = selected + offset;
       if (index >= 0 && index < total) {
         indices.push(index);
+      } else if (index >= total) {
+        // Future placeholder (beyond current)
+        indices.push(null);
       }
     }
 
@@ -170,6 +180,18 @@
       }
     });
 
+    return node;
+  }
+
+  /**
+   * Create a placeholder node for future snapshots
+   */
+  function createPlaceholderNode() {
+    const node = document.createElement('div');
+    node.className = 'timeline-node timeline-node--placeholder';
+    node.textContent = '?';
+    node.setAttribute('aria-label', 'Future snapshot');
+    node.setAttribute('role', 'presentation');
     return node;
   }
 

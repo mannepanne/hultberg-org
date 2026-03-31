@@ -270,16 +270,10 @@
    */
   async function loadSnapshotContent(snapshot) {
     const contentDiv = document.getElementById('now-content');
-    const banner = document.querySelector('.snapshot-banner');
-
-    // Remove existing banner if present
-    if (banner) {
-      banner.remove();
-    }
 
     // If current content, restore original and exit
     if (snapshot.isCurrent) {
-      // Original content is already loaded, just remove banner
+      // Original content is already loaded
       return;
     }
 
@@ -309,16 +303,6 @@
         html = `<p>${html}</p>`;
       }
 
-      // Add snapshot indicator banner
-      const bannerEl = document.createElement('div');
-      bannerEl.className = 'snapshot-banner';
-
-      // Format date nicely for banner
-      const bannerDate = formatDateForBanner(snapshot.date);
-      bannerEl.innerHTML = `📸 Viewing snapshot from ${bannerDate} · <a href="/now">View current</a>`;
-
-      contentDiv.parentNode.insertBefore(bannerEl, contentDiv);
-
       // Replace content
       contentDiv.innerHTML = html;
       contentDiv.style.opacity = '1';
@@ -326,27 +310,10 @@
     } catch (error) {
       console.error('Error loading snapshot:', error);
 
-      // Show error message
-      const errorBanner = document.createElement('div');
-      errorBanner.className = 'snapshot-banner';
-      errorBanner.style.background = '#f8d7da';
-      errorBanner.style.color = '#721c24';
-      errorBanner.innerHTML = `⚠️ Could not load snapshot. <a href="/now">View current</a>`;
-
-      contentDiv.parentNode.insertBefore(errorBanner, contentDiv);
+      // Show error in content area
+      contentDiv.innerHTML = '<p><em>⚠️ Could not load snapshot. <a href="/now">View current</a></em></p>';
       contentDiv.style.opacity = '1';
     }
-  }
-
-  /**
-   * Format date for banner display (e.g., "August 2017")
-   */
-  function formatDateForBanner(dateStr) {
-    const year = dateStr.substring(0, 4);
-    const month = dateStr.substring(4, 6);
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                        'July', 'August', 'September', 'October', 'November', 'December'];
-    return `${monthNames[parseInt(month) - 1]} ${year}`;
   }
 
   /**

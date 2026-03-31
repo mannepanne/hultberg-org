@@ -327,21 +327,6 @@ function renderNowPageHTML(contentHTML: string): string {
     cursor: not-allowed;
   }
 
-  .snapshot-banner {
-    background: #f0f0f0;
-    padding: 12px 24px;
-    text-align: center;
-    font-size: 0.9em;
-    color: #555;
-    margin-bottom: 24px;
-    border-radius: 4px;
-  }
-
-  .snapshot-banner a {
-    color: #333;
-    text-decoration: underline;
-  }
-
   /* Timeline responsive */
   @media (max-width: 480px) {
     .timeline-node--medium,
@@ -371,16 +356,16 @@ function renderNowPageHTML(contentHTML: string): string {
 
   <h1 style="font-size: 1.5em; font-weight: bold; line-height: 1.2; margin-bottom: 0.5em;">What I'm doing now</h1>
 
-  <div id="now-content">
-    ${contentHTML}
-  </div>
-
   <!-- Timeline Navigation -->
   <div class="timeline-container">
     <div id="timeline-bar" class="timeline-bar">
       <!-- Timeline will be rendered here by timeline.js -->
       <div class="timeline-loading">Loading timeline...</div>
     </div>
+  </div>
+
+  <div id="now-content">
+    ${contentHTML}
   </div>
 
   <div class="widgets-container">

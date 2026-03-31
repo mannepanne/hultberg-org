@@ -4,7 +4,6 @@ package-lock.json
 .DS_Store
 
 # Local development directories
-.entire/
 nimbalyst-local/
 
 # Test coverage

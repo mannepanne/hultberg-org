@@ -110,7 +110,7 @@ function renderPaginationNav(currentPage: number, totalPages: number, baseUrl: s
     parts.push(`<a href="${baseUrl}?page=${currentPage + 1}" aria-label="Next page">Next ›</a>`);
   }
 
-  return `<nav aria-label="Pagination" style="margin: 2em 0; text-align: center;">${parts.join(' | ')}</nav>`;
+  return `<nav aria-label="Pagination" style="margin: 2em 0;">Browse updates: ${parts.join(' | ')}</nav>`;
 }
 
 /**

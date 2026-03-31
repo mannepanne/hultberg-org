@@ -94,6 +94,7 @@ How-it-works documentation for implemented features:
 - **[environment-setup.md](./REFERENCE/environment-setup.md)** - Secrets and KV configuration
 - **[troubleshooting.md](./REFERENCE/troubleshooting.md)** - Common issues and solutions
 - **[web-analytics.md](./REFERENCE/web-analytics.md)** - GA4 and Cloudflare Web Analytics setup
+- **[now-page-snapshots-timeline.md](./REFERENCE/now-page-snapshots-timeline.md)** - /now page snapshots and timeline feature
 
 ## Code Conventions
 
@@ -154,4 +155,5 @@ npm run test:coverage     # Coverage report
 - **Known issues?** → [technical-debt.md](./REFERENCE/technical-debt.md)
 - **Analytics setup?** → [web-analytics.md](./REFERENCE/web-analytics.md)
 - **Testing strategy?** → [testing-strategy.md](./REFERENCE/testing-strategy.md)
+- **/now snapshots & timeline?** → [now-page-snapshots-timeline.md](./REFERENCE/now-page-snapshots-timeline.md)
 - **Completed specs?** → [SPECIFICATIONS/ARCHIVE/](./SPECIFICATIONS/ARCHIVE/)

@@ -30,7 +30,7 @@ The following deviations from the original plan were made during implementation:
 
 7. **`GET /admin/api/deploy-status` not implemented** — The deploy status polling endpoint described in the spec was not built for MVP. The dashboard does not poll GitHub Actions.
 
-8. **No pagination on `/updates`** — The listing page renders all published updates without pagination. Not yet implemented.
+8. ✅ **Pagination on `/updates` implemented** — Query parameter-based pagination (5 updates per page) with accessibility and SEO features. See PR #24.
 
 ---
 
@@ -488,7 +488,7 @@ Expected output:
 - Read `index.json` from static assets
 - Filter for `status === "published"` updates only
 - Sort by `publishedDate` descending (newest first)
-- Implement pagination (10 per page)
+- Implement pagination (5 per page)
 - Render using `/now` page style as template
 
 **Route handler:**
@@ -1119,10 +1119,10 @@ console.log(`Generated index.json with ${updates.length} published updates`);
 ### Step 35: Test Pagination Edge Cases
 
 **Test cases:**
-- Exactly 10 updates (no pagination)
-- 11 updates (pagination appears)
-- Last page with <10 updates
-- Page number out of range (404)
+- Exactly 5 updates (no pagination)
+- 6 updates (pagination appears)
+- Last page with <5 updates
+- Page number out of range (clamps to last page)
 
 ### Step 36: Security Audit
 

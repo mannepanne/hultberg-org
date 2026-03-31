@@ -1,7 +1,7 @@
 ---
 name: review-pr-team
 description: Comprehensive PR review using multiple specialized reviewers (security, product, architecture). Use when you need thorough, multi-perspective analysis of a pull request.
-disable-model-invocation: true
+disable-model-invocation: false
 user-invocable: true
 argument-hint:
   - PR-number

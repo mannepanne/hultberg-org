@@ -39,7 +39,7 @@ A simple, lightweight blog feature for hultberg.org that allows Magnus to publis
   - Title (linked to individual update page)
   - Excerpt (custom excerpt if provided, otherwise first 150 characters)
   - Published date
-- Pagination: 10 updates per page
+- Pagination: 5 updates per page (updated from original spec of 10 for better mobile UX)
 - Design based on `/now` page template (simple, clean HTML)
 
 ### Individual Update Page (`/updates/{slug}`)
@@ -359,7 +359,7 @@ This feature implements comprehensive security measures including:
 The implementation was organized into 9 phases with 39 detailed steps. Phases 1–7 and 9 are complete; Phase 8 (Testing & Polish) is partially complete.
 
 **Known gaps vs. original spec:**
-- Pagination on `/updates` not yet implemented (listing renders all updates)
+- ✅ **Pagination on `/updates`** — Implemented (5 updates per page with query param navigation)
 - Deploy status polling (`GET /admin/api/deploy-status`) not implemented
 
 **For detailed phase-by-phase instructions and deviations, see:** [blog-updates-implementation.md](./blog-updates-implementation.md)

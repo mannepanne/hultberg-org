@@ -1,7 +1,7 @@
 ---
 name: review-pr
 description: Full-Stack Developer PR Review
-disable-model-invocation: true
+disable-model-invocation: false
 user-invocable: true
 argument-hint:
   - PR-number

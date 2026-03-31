@@ -254,11 +254,11 @@ function renderNowPageHTML(contentHTML: string): string {
   .timeline-line::after {
     content: '';
     position: absolute;
-    right: -8px;
+    right: -7px;
     top: -3px;
     width: 0;
     height: 0;
-    border-left: 8px solid #ddd;
+    border-left: 7px solid #ddd;
     border-top: 4px solid transparent;
     border-bottom: 4px solid transparent;
   }
@@ -272,10 +272,10 @@ function renderNowPageHTML(contentHTML: string): string {
   }
 
   .timeline-node--small {
-    width: 26px;
-    height: 26px;
+    width: 23px;
+    height: 23px;
     background: #fff;
-    border: 2px solid #000;
+    border: 2px solid #8AAED6;
     border-radius: 4px;
   }
 
@@ -285,33 +285,33 @@ function renderNowPageHTML(contentHTML: string): string {
   }
 
   .timeline-node--medium {
-    padding: 8px 16px;
-    border: 2px solid #333;
+    padding: 7px 14px;
+    border: 2px solid #8AAED6;
     border-radius: 4px;
-    font-size: 0.9em;
+    font-size: 0.81em;
   }
 
   .timeline-node--medium:hover {
-    border-color: #000;
+    border-color: #6B8FC0;
     transform: translateY(-2px);
   }
 
   .timeline-node--large {
-    padding: 12px 20px;
-    border: 3px solid #000;
+    padding: 11px 18px;
+    border: 3px solid #8AAED6;
     border-radius: 4px;
     font-weight: 600;
-    font-size: 1.1em;
+    font-size: 1em;
     background: #f9f9f9;
   }
 
   .timeline-node--placeholder {
-    width: 26px;
-    height: 26px;
+    width: 23px;
+    height: 23px;
     background: #fff;
     border: 2px solid #ddd;
     border-radius: 4px;
-    font-size: 0.9em;
+    font-size: 0.81em;
     color: #999;
     cursor: not-allowed;
     display: flex;
@@ -320,9 +320,9 @@ function renderNowPageHTML(contentHTML: string): string {
   }
 
   .timeline-arrow {
-    width: 40px;
-    height: 40px;
-    border: 2px solid #333;
+    width: 36px;
+    height: 36px;
+    border: 2px solid #8AAED6;
     border-radius: 4px;
     background: #fff;
     cursor: pointer;
@@ -330,7 +330,7 @@ function renderNowPageHTML(contentHTML: string): string {
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
-    font-size: 1.2em;
+    font-size: 1.1em;
     flex-shrink: 0;
     position: relative;
     z-index: 2;
@@ -338,7 +338,7 @@ function renderNowPageHTML(contentHTML: string): string {
 
   .timeline-arrow:hover:not(:disabled) {
     background: #f5f5f5;
-    border-color: #000;
+    border-color: #6B8FC0;
   }
 
   .timeline-arrow:disabled {
@@ -353,14 +353,14 @@ function renderNowPageHTML(contentHTML: string): string {
   @media (max-width: 480px) {
     .timeline-node--medium,
     .timeline-node--large {
-      font-size: 0.8em;
-      padding: 6px 12px;
+      font-size: 0.72em;
+      padding: 5px 11px;
     }
 
     .timeline-arrow {
-      width: 36px;
-      height: 36px;
-      font-size: 1em;
+      width: 32px;
+      height: 32px;
+      font-size: 0.9em;
     }
 
     .timeline-bar {

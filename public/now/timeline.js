@@ -7,12 +7,17 @@
   let snapshots = [];
   let currentContent = null;
   let selectedIndex = 0;
+  let originalContentHTML = '';
 
   /**
    * Initialize the timeline component
    */
   async function initTimeline() {
     try {
+      // Store original content HTML before doing anything
+      const contentDiv = document.getElementById('now-content');
+      originalContentHTML = contentDiv.innerHTML;
+
       // Fetch snapshots index
       const response = await fetch('/now/snapshots/index.json');
 
@@ -278,9 +283,9 @@
   async function loadSnapshotContent(snapshot) {
     const contentDiv = document.getElementById('now-content');
 
-    // If current content, restore original and exit
+    // If current content, restore original HTML
     if (snapshot.isCurrent) {
-      // Original content is already loaded
+      contentDiv.innerHTML = originalContentHTML;
       return;
     }
 

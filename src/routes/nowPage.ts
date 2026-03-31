@@ -247,8 +247,20 @@ function renderNowPageHTML(contentHTML: string): string {
     height: 2px;
     background: #ddd;
     z-index: 0;
-    left: 10%;
+    left: 0;
     right: 10%;
+  }
+
+  .timeline-line::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: -3px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid #ddd;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
   }
 
   .timeline-node {
@@ -331,6 +343,8 @@ function renderNowPageHTML(contentHTML: string): string {
   }
 
   /* Timeline responsive */
+  /* Desktop (>768px): 7 visible nodes (center + 3 on each side) */
+  /* Mobile/Tablet (≤768px): 5 visible nodes (center + 2 on each side) */
   @media (max-width: 480px) {
     .timeline-node--medium,
     .timeline-node--large {

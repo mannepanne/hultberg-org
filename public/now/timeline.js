@@ -115,15 +115,21 @@
   }
 
   /**
-   * Calculate which 5 snapshot indices should be visible
+   * Calculate which snapshot indices should be visible
    * Returns array of indices with center position being selected
    * null values represent placeholders for future snapshots
+   * Desktop: 7 nodes (center + 3 on each side)
+   * Mobile: 5 nodes (center + 2 on each side)
    */
   function calculateVisibleIndices(selected, total) {
     const indices = [];
 
-    // We want to show: selected-2, selected-1, selected, selected+1, selected+2
-    for (let offset = -2; offset <= 2; offset++) {
+    // Check if desktop (wider than 768px) for 7 nodes, otherwise 5 nodes
+    const isDesktop = window.innerWidth > 768;
+    const range = isDesktop ? 3 : 2;
+
+    // Show: selected-range, ..., selected, ..., selected+range
+    for (let offset = -range; offset <= range; offset++) {
       const index = selected + offset;
       if (index >= 0 && index < total) {
         indices.push(index);
@@ -338,6 +344,17 @@
       await loadSnapshotContent(snapshots[selectedIndex]);
       renderTimeline();
     }
+  });
+
+  /**
+   * Handle window resize to adjust number of visible nodes
+   */
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      renderTimeline();
+    }, 250);
   });
 
   // Initialize on page load

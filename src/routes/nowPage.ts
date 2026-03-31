@@ -382,7 +382,7 @@ function renderNowPageHTML(contentHTML: string): string {
 
 <div id="content" style="max-width: 800px; margin: 0 auto; padding: 2em;">
 
-  <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+  <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="/now">Now</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a> | <a href="/use-of-ai">Use of AI</a></p>
 
   <h1 style="font-size: 1.5em; font-weight: bold; line-height: 1.2; margin-bottom: 0.5em;">What I'm doing now</h1>
 
@@ -420,7 +420,7 @@ function renderNowPageHTML(contentHTML: string): string {
 
   </div>
 
-  <p style="clear: both; margin-top: 2em;">← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+  <p style="clear: both; margin-top: 2em;">← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="/now">Now</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a> | <a href="/use-of-ai">Use of AI</a></p>
 
   <script src="/now/github-widget.js"></script>
   <script src="/now/timeline.js"></script>

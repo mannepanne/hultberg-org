@@ -24,6 +24,7 @@ import { handleSaveNow } from './routes/saveNow';
 import { handleCreateNowSnapshot } from './routes/createNowSnapshot';
 import { handleListNowSnapshots } from './routes/listNowSnapshots';
 import { handleDeleteNowSnapshot } from './routes/deleteNowSnapshot';
+import { handleUseOfAiPage } from './routes/useOfAiPage';
 import { GITHUB_REPO } from './github';
 
 export default {
@@ -154,6 +155,11 @@ export default {
       return handleNowPage(request, env);
     }
 
+    // Route: /use-of-ai page
+    if (url.pathname === '/use-of-ai' || url.pathname === '/use-of-ai/') {
+      return handleUseOfAiPage(request, env);
+    }
+
     // Route: /images/updates/* - proxy uploaded images from GitHub raw content
     // Images are stored in GitHub via the admin API; this route serves them without
     // requiring a full site redeploy after each upload.
@@ -197,12 +203,12 @@ export default {
     </head>
     <body>
         <div style="max-width: 800px; margin: 0 auto; padding: 2em;">
-            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="/now">Now</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a> | <a href="/use-of-ai">Use of AI</a></p>
             <img src="/errors/bazinga.gif" alt="bazinga!" /><br /><br />
             sorry, the page or file you are looking for isn't here...<br />
             <a href="/" onclick="history.back(); return false;">go back from whence you came</a>, or tell me what a klutz I am by messaging me on
             <a href="https://uk.linkedin.com/in/hultberg" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="/now">Now</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a> | <a href="/use-of-ai">Use of AI</a></p>
         </div>
     </body>
 </html>

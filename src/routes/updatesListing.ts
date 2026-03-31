@@ -100,12 +100,12 @@ function renderUpdatesListingHTML(updates: UpdateIndex['updates']): string {
     </head>
     <body style="font-family: Georgia, serif; line-height: 1.5;">
         <div style="max-width: 800px; margin: 0 auto; padding: 2em;">
-            <p>← <a href="/">Home</a> | <a href="/updates/feed.xml">RSS</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+            <p>← <a href="/">Home</a> | <a href="/updates/feed.xml">RSS</a> | <a href="/now">Now</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a> | <a href="/use-of-ai">Use of AI</a></p>
             <h1 style="font-size: 1.5em; font-weight: bold; line-height: 1.2; margin-bottom: 0.5em;">Updates</h1>
 
             ${updatesHTML}
 
-            <p>← <a href="/">Home</a> | <a href="/updates/feed.xml">RSS</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+            <p>← <a href="/">Home</a> | <a href="/updates/feed.xml">RSS</a> | <a href="/now">Now</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a> | <a href="/use-of-ai">Use of AI</a></p>
         </div>
     </body>
 </html>

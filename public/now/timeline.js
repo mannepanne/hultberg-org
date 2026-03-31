@@ -104,7 +104,7 @@
         const placeholder = createPlaceholderNode();
         timelineBar.appendChild(placeholder);
       } else {
-        const node = createTimelineNode(index, position);
+        const node = createTimelineNode(index, position, visibleIndices);
         timelineBar.appendChild(node);
       }
     });
@@ -145,14 +145,15 @@
   /**
    * Create a timeline node element
    * @param {number} index - Snapshot index in array
-   * @param {number} position - Position in visible array (0-4)
+   * @param {number} position - Position in visible array (0-6)
+   * @param {Array} visibleIndices - Array of visible snapshot indices
    */
-  function createTimelineNode(index, position) {
+  function createTimelineNode(index, position, visibleIndices) {
     const snapshot = snapshots[index];
     const isSelected = index === selectedIndex;
 
     // Calculate distance from center (0 = center, 1 = adjacent, 2 = edge)
-    const centerPosition = Math.floor(calculateVisibleIndices(selectedIndex, snapshots.length).length / 2);
+    const centerPosition = visibleIndices.indexOf(selectedIndex);
     const distance = Math.abs(position - centerPosition);
 
     const node = document.createElement('div');

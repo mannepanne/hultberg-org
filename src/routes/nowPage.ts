@@ -306,12 +306,17 @@ function renderNowPageHTML(contentHTML: string): string {
   }
 
   .timeline-node--placeholder {
-    padding: 8px 16px;
+    width: 26px;
+    height: 26px;
+    background: #fff;
     border: 2px solid #ddd;
     border-radius: 4px;
     font-size: 0.9em;
     color: #999;
     cursor: not-allowed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .timeline-arrow {

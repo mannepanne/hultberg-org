@@ -1,7 +1,8 @@
 # /now Page Snapshots
 
-**Status:** 📋 Planned
+**Status:** ✅ Phase 4A & 4B Complete | 📋 Phase 5 (Public Display) Planned
 **Created:** 2026-03-30
+**Completed:** 2026-03-31 (Phase 4A & 4B)
 **Depends on:** Editable /now page (completed in PRs #17, #18, #19)
 
 ## Overview
@@ -301,3 +302,127 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 - [x] All 9 historical snapshots migrated to JSON format
 - [x] Existing HTML files kept as reference
 - [x] No data loss during migration
+
+## Completed Implementation (Phase 4A & 4B)
+
+### What Was Built
+
+**Completed:** 2026-03-31 in PR #20 and #21
+
+**Admin snapshot management** (`/admin/now/edit`):
+- ✅ "Archive Snapshot" button creates snapshots of current editor content
+- ✅ Snapshots list shows all archived snapshots (date, preview, delete button)
+- ✅ Delete functionality with confirmation dialog
+- ✅ Overwrite detection when creating snapshot for same date
+
+**API endpoints:**
+- ✅ `POST /admin/api/create-now-snapshot` - Create/update snapshot
+  - Accepts optional `date` parameter (YYYYMMDD format) for backdating
+  - Validates date format, checks date exists, prevents future dates
+  - Returns `{ success, date, overwritten }` response
+- ✅ `GET /admin/api/list-now-snapshots` - List all snapshots
+- ✅ `DELETE /admin/api/delete-now-snapshot?date=YYYYMMDD` - Delete snapshot
+
+**Data structure:**
+- ✅ Storage: `public/now/snapshots/`
+- ✅ Format: `YYYYMMDD.json` (e.g., `20260330.json`)
+- ✅ Index: `public/now/snapshots/index.json` (managed automatically)
+- ✅ GitHub commits for all snapshot operations
+
+**Testing:**
+- ✅ Full integration test coverage (325 tests total)
+- ✅ Tests for create, list, delete operations
+- ✅ Edge case coverage (overwrite, validation, rate limiting)
+
+**Historical migration:**
+- ✅ Created `scripts/migrate-now-snapshots.js` for automated migration
+- ✅ Extracts markdown content from HTML files
+- ✅ Imports via API with custom dates
+- ✅ All 9 historical snapshots migrated successfully:
+  - 20160926 - Planday era
+  - 20170521 - WINNOW, learning Python
+  - 20170801 - WINNOW, data science
+  - 20180727 - WINNOW, slipped disc diagnosis
+  - 20190326 - WINNOW, Vue.js interest
+  - 20211124 - WINNOW, lockdown gardening
+  - 20220202 - WINNOW to Ocado transition
+  - 20241125 - Ocado Technology
+  - 20260214 - Claude Code experiments
+
+### Known Issues from PR Review
+
+**From PR #20 review (addressed in PR #21):**
+- ✅ Optional `date` parameter implemented for backdating snapshots
+- ✅ JavaScript syntax error in delete button onclick handler (fixed with event delegation)
+- ✅ Debug code cleanup completed
+
+## Phase 5: Public Snapshot Display (Next)
+
+**Status:** 📋 Planned
+
+Now that snapshots are captured and managed, the next phase is displaying them on the public `/now` page.
+
+### Potential Approaches
+
+**Option A: Timeline View**
+- Add a "History" or "Timeline" section at the bottom of `/now` page
+- Show snapshots chronologically with date markers
+- Click to expand/view historical content
+- Visual timeline UI with dots/markers for each snapshot
+
+**Option B: Dropdown/Selector**
+- Add a date selector at the top: "View /now page as of: [Date dropdown]"
+- Selecting a date replaces page content with snapshot
+- "Current" option shows latest content
+- URL parameter support: `/now?date=20160926`
+
+**Option C: Separate Archive Page**
+- Keep `/now` showing only current content
+- Add `/now/archive` or `/now/history` page
+- Lists all snapshots with previews
+- Click to view full snapshot content
+
+**Option D: Minimal "Previous Updates" Link**
+- Add simple link: "See previous versions →"
+- Links to minimal archive page
+- Focus stays on current content
+
+### Design Considerations
+
+**User Experience:**
+- Should historical content be prominently displayed or tucked away?
+- How do we indicate "this is old content" vs current?
+- Should we show comparison/diff between snapshots?
+- Do we want search/filter across historical content?
+
+**Technical:**
+- Fetch snapshots client-side or server-side render?
+- Use existing page template or create new layout?
+- Support deep-linking to specific snapshot dates?
+- Cache strategy for snapshot data?
+
+**Content Strategy:**
+- Are snapshots interesting enough for public display?
+- Does showing history add value for visitors?
+- Should snapshots have commentary/reflection added?
+
+### Questions to Resolve
+
+Before implementing Phase 5:
+
+1. **Primary use case:** Is this for Magnus to reflect on his journey, or for visitors to understand his evolution?
+2. **Visibility:** Should historical snapshots be prominent or subtle?
+3. **Interaction:** Read-only view, or interactive exploration?
+4. **Scope:** All snapshots public, or curated selection?
+
+### Next Steps
+
+1. **Decide on approach** - Which option (A/B/C/D) or hybrid?
+2. **Design mockup** - What should it look like?
+3. **Implement display** - Build the UI components
+4. **Test with real data** - Use the 9 migrated snapshots
+5. **Iterate based on feedback**
+
+---
+
+**Note:** No code changes needed yet for Phase 5. This is purely a product/design decision about how to present the captured snapshot data to visitors.

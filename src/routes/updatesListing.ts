@@ -90,27 +90,27 @@ function renderPaginationNav(currentPage: number, totalPages: number, baseUrl: s
   // Previous link (hide on page 1)
   if (currentPage > 1) {
     const prevUrl = currentPage === 2 ? baseUrl : `${baseUrl}?page=${currentPage - 1}`;
-    parts.push(`<a href="${prevUrl}">‹ Prev</a>`);
+    parts.push(`<a href="${prevUrl}" aria-label="Previous page">‹ Prev</a>`);
   }
 
   // Page numbers
   const pageLinks: string[] = [];
   for (let i = 1; i <= totalPages; i++) {
     if (i === currentPage) {
-      pageLinks.push(`<strong>[${i}]</strong>`);
+      pageLinks.push(`<strong aria-current="page">[${i}]</strong>`);
     } else {
       const pageUrl = i === 1 ? baseUrl : `${baseUrl}?page=${i}`;
-      pageLinks.push(`<a href="${pageUrl}">${i}</a>`);
+      pageLinks.push(`<a href="${pageUrl}" aria-label="Page ${i}">${i}</a>`);
     }
   }
   parts.push(pageLinks.join(' '));
 
   // Next link (hide on last page)
   if (currentPage < totalPages) {
-    parts.push(`<a href="${baseUrl}?page=${currentPage + 1}">Next ›</a>`);
+    parts.push(`<a href="${baseUrl}?page=${currentPage + 1}" aria-label="Next page">Next ›</a>`);
   }
 
-  return `<div style="margin: 2em 0; text-align: center;">${parts.join(' | ')}</div>`;
+  return `<nav aria-label="Pagination" style="margin: 2em 0; text-align: center;">${parts.join(' | ')}</nav>`;
 }
 
 /**
@@ -162,6 +162,8 @@ function renderUpdatesListingHTML(
 
         <link rel="alternate" type="application/rss+xml" title="Updates - Magnus Hultberg" href="/updates/feed.xml" />
         ${currentPage === 1 ? '<link rel="canonical" href="https://hultberg.org/updates" />' : ''}
+        ${currentPage > 1 ? `<link rel="prev" href="https://hultberg.org${currentPage === 2 ? baseUrl : `${baseUrl}?page=${currentPage - 1}`}" />` : ''}
+        ${currentPage < totalPages ? `<link rel="next" href="https://hultberg.org${baseUrl}?page=${currentPage + 1}" />` : ''}
 
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-D1L22CCJTJ"></script>
         <script>

@@ -256,8 +256,8 @@ describe('GET /updates - Pagination', () => {
     const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
-    // Page 1 link should be clean /updates URL
-    expect(html).toContain('href="/updates">1</a>');
+    // Page 1 link should be clean /updates URL with ARIA label
+    expect(html).toContain('href="/updates" aria-label="Page 1">1</a>');
   });
 
   it('page 2+ links go to /updates?page=N', async () => {
@@ -273,8 +273,8 @@ describe('GET /updates - Pagination', () => {
     const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
-    // Prev link from page 2 should go to /updates (page 1)
-    expect(html).toContain('href="/updates">‹ Prev</a>');
+    // Prev link from page 2 should go to /updates (page 1) with ARIA label
+    expect(html).toContain('href="/updates" aria-label="Previous page">‹ Prev</a>');
   });
 
   // Content verification tests

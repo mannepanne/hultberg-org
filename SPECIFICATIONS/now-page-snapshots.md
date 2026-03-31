@@ -358,71 +358,63 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 
 ## Phase 5: Public Snapshot Display (Next)
 
-**Status:** 📋 Planned
+**Status:** 📋 Planned - Specification Complete
 
-Now that snapshots are captured and managed, the next phase is displaying them on the public `/now` page.
+**Full specification:** [now-page-timeline-display.md](./now-page-timeline-display.md)
 
-### Potential Approaches
+**Chosen approach:** Interactive timeline component
 
-**Option A: Timeline View**
-- Add a "History" or "Timeline" section at the bottom of `/now` page
-- Show snapshots chronologically with date markers
-- Click to expand/view historical content
-- Visual timeline UI with dots/markers for each snapshot
+### Overview
 
-**Option B: Dropdown/Selector**
-- Add a date selector at the top: "View /now page as of: [Date dropdown]"
-- Selecting a date replaces page content with snapshot
-- "Current" option shows latest content
-- URL parameter support: `/now?date=20160926`
+Add an interactive timeline to the public `/now` page, positioned between the main content and Reading/GitHub widgets. The timeline allows visitors to navigate through historical snapshots.
 
-**Option C: Separate Archive Page**
-- Keep `/now` showing only current content
-- Add `/now/archive` or `/now/history` page
-- Lists all snapshots with previews
-- Click to view full snapshot content
+### Timeline Structure
 
-**Option D: Minimal "Previous Updates" Link**
-- Add simple link: "See previous versions →"
-- Links to minimal archive page
-- Focus stays on current content
+```
+[←] [◦] [2016-09] [2017-08] [2018-07] [◦] [→]
+                  ^^^^^^^^
+              (selected - large)
+```
 
-### Design Considerations
+**Features:**
+- 5 snapshots visible at once (selected + 2 on each side)
+- Center position shows selected snapshot (large, prominent)
+- Adjacent positions (±1) show date labels (medium size)
+- Edge positions (±2) show small shapes only
+- Arrow buttons navigate to earlier/later snapshots
+- Clicking any snapshot centers it and loads its content
+- URL support: `/now?date=20170801`
+- Responsive: Shows 3 snapshots on mobile/tablet
 
-**User Experience:**
-- Should historical content be prominently displayed or tucked away?
-- How do we indicate "this is old content" vs current?
-- Should we show comparison/diff between snapshots?
-- Do we want search/filter across historical content?
+### Design Goals
 
-**Technical:**
-- Fetch snapshots client-side or server-side render?
-- Use existing page template or create new layout?
-- Support deep-linking to specific snapshot dates?
-- Cache strategy for snapshot data?
+1. **Subtle but accessible** - Timeline visible but doesn't dominate
+2. **Personal reflection** - Primarily for Magnus to reflect on journey
+3. **Public transparency** - Visitors can explore evolution over time
+4. **Intuitive navigation** - Clear interaction model
 
-**Content Strategy:**
-- Are snapshots interesting enough for public display?
-- Does showing history add value for visitors?
-- Should snapshots have commentary/reflection added?
+### Implementation Phases
 
-### Questions to Resolve
+**Phase 5A: Timeline UI Component** (3-4 hours)
+- Create timeline HTML structure
+- JavaScript component for rendering/interaction
+- CSS styling (desktop, tablet, mobile)
 
-Before implementing Phase 5:
+**Phase 5B: Content Loading** (2-3 hours)
+- Fetch and render snapshot markdown
+- Snapshot indicator banner
+- Loading states and error handling
 
-1. **Primary use case:** Is this for Magnus to reflect on his journey, or for visitors to understand his evolution?
-2. **Visibility:** Should historical snapshots be prominent or subtle?
-3. **Interaction:** Read-only view, or interactive exploration?
-4. **Scope:** All snapshots public, or curated selection?
+**Phase 5C: URL Integration** (1-2 hours)
+- Parse `?date=` parameter on load
+- Update URL when selecting snapshots
+- Browser back/forward support
 
-### Next Steps
+**Phase 5D: Polish & Testing** (2-3 hours)
+- Accessibility (keyboard navigation, screen readers)
+- Cross-browser testing
+- Performance optimization
 
-1. **Decide on approach** - Which option (A/B/C/D) or hybrid?
-2. **Design mockup** - What should it look like?
-3. **Implement display** - Build the UI components
-4. **Test with real data** - Use the 9 migrated snapshots
-5. **Iterate based on feedback**
+**Estimated total:** 8-12 hours
 
----
-
-**Note:** No code changes needed yet for Phase 5. This is purely a product/design decision about how to present the captured snapshot data to visitors.
+See [now-page-timeline-display.md](./now-page-timeline-display.md) for complete specification including mockups, technical details, styling guidelines, and implementation plan.

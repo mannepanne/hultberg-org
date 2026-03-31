@@ -224,14 +224,14 @@ function renderNowPageHTML(contentHTML: string): string {
 
   /* Timeline styles */
   .timeline-container {
-    margin: 48px 0;
-    padding: 24px 0;
+    margin: 24px 0;
+    padding: 12px 0;
   }
 
   .timeline-bar {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 16px;
     position: relative;
     min-height: 60px;
@@ -260,15 +260,16 @@ function renderNowPageHTML(contentHTML: string): string {
   }
 
   .timeline-node--small {
-    width: 12px;
-    height: 12px;
-    background: #999;
-    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    background: #fff;
+    border: 2px solid #000;
+    border-radius: 4px;
   }
 
   .timeline-node--small:hover {
-    background: #666;
-    transform: scale(1.2);
+    background: #f5f5f5;
+    transform: scale(1.1);
   }
 
   .timeline-node--medium {
@@ -314,6 +315,8 @@ function renderNowPageHTML(contentHTML: string): string {
     transition: all 0.2s ease;
     font-size: 1.2em;
     flex-shrink: 0;
+    position: relative;
+    z-index: 2;
   }
 
   .timeline-arrow:hover:not(:disabled) {

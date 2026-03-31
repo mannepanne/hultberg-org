@@ -90,6 +90,9 @@ function renderNowPageHTML(contentHTML: string): string {
 <!-- Marked.js for client-side markdown rendering (timeline snapshots) -->
 <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
 
+<!-- DOMPurify for XSS protection on snapshot content -->
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
+
 <style>
   /* Goodreads widget styles */
   #customize-list{

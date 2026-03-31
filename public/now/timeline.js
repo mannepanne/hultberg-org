@@ -318,6 +318,11 @@
         html = `<p>${html}</p>`;
       }
 
+      // Sanitize HTML to prevent XSS attacks
+      if (typeof DOMPurify !== 'undefined') {
+        html = DOMPurify.sanitize(html);
+      }
+
       // Replace content
       contentDiv.innerHTML = html;
       contentDiv.style.opacity = '1';

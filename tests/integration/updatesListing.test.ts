@@ -1,5 +1,6 @@
 // ABOUT: Integration tests for /updates listing page
-// ABOUT: Tests pagination, filtering, and sorting of published updates
+// ABOUT: Tests basic functionality, filtering, and sorting of published updates
+// NOTE: See updatesListingPagination.test.ts for pagination-specific tests
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import worker from '@/index';

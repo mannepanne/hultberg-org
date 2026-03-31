@@ -48,7 +48,7 @@ function htmlToMarkdown(html) {
 
   // Convert unordered lists
   html = html.replace(/<ul[^>]*>/gi, '\n');
-  html = html.replace(/<\/ul>/gi, '\n');
+  html = html.replace(/<\/ul>/gi, '\n\n');
   html = html.replace(/\s*<li[^>]*>(.*?)<\/li>/gi, '\n- $1');
 
   // Remove remaining HTML tags

@@ -46,7 +46,7 @@ async function renderNowPage(content: NowContent): Promise<Response> {
     status: 200,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://i.gr-assets.net; connect-src 'self' https://www.google-analytics.com https://cloudflareinsights.com https://api.github.com; frame-src https://goodreads.com https://*.goodreads.com; frame-ancestors 'none'; base-uri 'self';",
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://static.cloudflareinsights.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' https://i.gr-assets.net; connect-src 'self' https://www.google-analytics.com https://cloudflareinsights.com https://api.github.com; frame-src https://goodreads.com https://*.goodreads.com; frame-ancestors 'none'; base-uri 'self';",
       'Cache-Control': 'public, max-age=60, s-maxage=60',
     },
   });
@@ -86,6 +86,9 @@ function renderNowPageHTML(contentHTML: string): string {
 </script>
 
 <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "f71c3c28b82c4c6991ec3d41b7f1496f"}'></script><!-- End Cloudflare Web Analytics -->
+
+<!-- Marked.js for client-side markdown rendering (timeline snapshots) -->
+<script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
 
 <style>
   /* Goodreads widget styles */
@@ -218,6 +221,141 @@ function renderNowPageHTML(contentHTML: string): string {
       flex-direction: column;
     }
   }
+
+  /* Timeline styles */
+  .timeline-container {
+    margin: 48px 0;
+    padding: 24px 0;
+    border-top: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .timeline-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    position: relative;
+    min-height: 60px;
+  }
+
+  .timeline-loading {
+    font-size: 0.9em;
+    color: #999;
+  }
+
+  .timeline-line {
+    position: absolute;
+    height: 2px;
+    background: #ddd;
+    z-index: 0;
+    left: 10%;
+    right: 10%;
+  }
+
+  .timeline-node {
+    position: relative;
+    z-index: 1;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fff;
+  }
+
+  .timeline-node--small {
+    width: 12px;
+    height: 12px;
+    background: #999;
+    border-radius: 50%;
+  }
+
+  .timeline-node--small:hover {
+    background: #666;
+    transform: scale(1.2);
+  }
+
+  .timeline-node--medium {
+    padding: 8px 16px;
+    border: 2px solid #333;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  .timeline-node--medium:hover {
+    border-color: #000;
+    transform: translateY(-2px);
+  }
+
+  .timeline-node--large {
+    padding: 12px 20px;
+    border: 3px solid #000;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 1.1em;
+    background: #f9f9f9;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  .timeline-arrow {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #333;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 1.2em;
+    flex-shrink: 0;
+  }
+
+  .timeline-arrow:hover:not(:disabled) {
+    background: #f5f5f5;
+    border-color: #000;
+  }
+
+  .timeline-arrow:disabled {
+    border-color: #ddd;
+    color: #ddd;
+    cursor: not-allowed;
+  }
+
+  .snapshot-banner {
+    background: #f0f0f0;
+    padding: 12px 24px;
+    text-align: center;
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 24px;
+    border-radius: 4px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  .snapshot-banner a {
+    color: #333;
+    text-decoration: underline;
+  }
+
+  /* Timeline responsive */
+  @media (max-width: 480px) {
+    .timeline-node--medium,
+    .timeline-node--large {
+      font-size: 0.8em;
+      padding: 6px 12px;
+    }
+
+    .timeline-arrow {
+      width: 36px;
+      height: 36px;
+      font-size: 1em;
+    }
+
+    .timeline-bar {
+      gap: 12px;
+    }
+  }
 </style>
 
 </head>
@@ -229,7 +367,17 @@ function renderNowPageHTML(contentHTML: string): string {
 
   <h1 style="font-size: 1.5em; font-weight: bold; line-height: 1.2; margin-bottom: 0.5em;">What I'm doing now</h1>
 
-  ${contentHTML}
+  <div id="now-content">
+    ${contentHTML}
+  </div>
+
+  <!-- Timeline Navigation -->
+  <div class="timeline-container">
+    <div id="timeline-bar" class="timeline-bar">
+      <!-- Timeline will be rendered here by timeline.js -->
+      <div class="timeline-loading">Loading timeline...</div>
+    </div>
+  </div>
 
   <div class="widgets-container">
 
@@ -256,6 +404,7 @@ function renderNowPageHTML(contentHTML: string): string {
   <p style="clear: both; margin-top: 2em;">← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a></p>
 
   <script src="/now/github-widget.js"></script>
+  <script src="/now/timeline.js"></script>
 
 </div>
 

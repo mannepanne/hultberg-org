@@ -18,7 +18,7 @@ const snapshots = [
   { date: '20211124', file: 'index_20211124.CHANGED.html' },
   { date: '20220202', file: 'index_20220202.CHANGED.html' },
   { date: '20241125', file: 'index_20241125.CHANGED.html' },
-  { date: '20260214', file: 'index_20260214.CHANGED.html' }
+  { date: '20250214', file: 'index_20250214.CHANGED.html' }
 ];
 
 /**
@@ -48,7 +48,7 @@ function htmlToMarkdown(html) {
 
   // Convert unordered lists
   html = html.replace(/<ul[^>]*>/gi, '\n');
-  html = html.replace(/<\/ul>/gi, '\n');
+  html = html.replace(/<\/ul>/gi, '\n\n');
   html = html.replace(/\s*<li[^>]*>(.*?)<\/li>/gi, '\n- $1');
 
   // Remove remaining HTML tags
@@ -64,6 +64,10 @@ function htmlToMarkdown(html) {
 
   // Clean up whitespace
   html = html.replace(/\n\s*\n\s*\n/g, '\n\n'); // Max 2 newlines
+
+  // Remove leading whitespace from each line (prevents markdown list continuation)
+  html = html.split('\n').map(line => line.trimStart()).join('\n');
+
   html = html.trim();
 
   return html;

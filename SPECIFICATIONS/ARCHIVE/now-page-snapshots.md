@@ -1,8 +1,8 @@
 # /now Page Snapshots
 
-**Status:** ✅ Phase 4A & 4B Complete | 📋 Phase 5 (Public Display) Planned
+**Status:** ✅ Complete (Phases 4A, 4B, 5)
 **Created:** 2026-03-30
-**Completed:** 2026-03-31 (Phase 4A & 4B)
+**Completed:** 2026-03-31 (All Phases)
 **Depends on:** Editable /now page (completed in PRs #17, #18, #19)
 
 ## Overview
@@ -356,65 +356,73 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 - ✅ JavaScript syntax error in delete button onclick handler (fixed with event delegation)
 - ✅ Debug code cleanup completed
 
-## Phase 5: Public Snapshot Display (Next)
+## Phase 5: Public Snapshot Display
 
-**Status:** 📋 Planned - Specification Complete
-
+**Status:** ✅ Complete
+**Completed:** 2026-03-31 in PR #22
 **Full specification:** [now-page-timeline-display.md](./now-page-timeline-display.md)
 
-**Chosen approach:** Interactive timeline component
+### What Was Built
 
-### Overview
+**Interactive timeline component:**
+- ✅ Timeline positioned above content (between h1 and main content)
+- ✅ 7 visible nodes on desktop (center + 3 on each side)
+- ✅ 5 visible nodes on mobile/tablet (center + 2 on each side)
+- ✅ Three-tier sizing: large (center), medium (±1), small (±2)
+- ✅ Arrow buttons for navigation
+- ✅ Connecting line with directional arrow
+- ✅ Pale blue color scheme (#8AAED6) for subtle appearance
 
-Add an interactive timeline to the public `/now` page, positioned between the main content and Reading/GitHub widgets. The timeline allows visitors to navigate through historical snapshots.
+**Client-side functionality:**
+- ✅ Fetches `/now/snapshots/index.json` on page load
+- ✅ Loads snapshot content on demand from `/now/snapshots/{date}.json`
+- ✅ Renders markdown using marked.js (CDN)
+- ✅ Sanitizes HTML using DOMPurify (XSS protection)
+- ✅ Restores original content when returning to current
+- ✅ Uses actual `lastUpdated` timestamp from content.json for current date label
 
-### Timeline Structure
+**Navigation & interaction:**
+- ✅ Click snapshot to center and load content
+- ✅ Arrow buttons navigate earlier/later
+- ✅ URL parameter support: `/now?date=20170801`
+- ✅ Browser back/forward navigation (popstate listener)
+- ✅ Keyboard navigation (Tab + Enter/Space)
+- ✅ Responsive window resize handling (debounced)
 
-```
-[←] [◦] [2016-09] [2017-08] [2018-07] [◦] [→]
-                  ^^^^^^^^
-              (selected - large)
-```
+**Visual design refinements:**
+- ✅ Reduced prominence (10% smaller, pale blue instead of black)
+- ✅ Left-aligned instead of centered
+- ✅ Halved whitespace (24px/12px instead of 48px/24px)
+- ✅ Future placeholder nodes ("?") for visual balance
+- ✅ Small nodes as rounded squares (not circles)
 
-**Features:**
-- 5 snapshots visible at once (selected + 2 on each side)
-- Center position shows selected snapshot (large, prominent)
-- Adjacent positions (±1) show date labels (medium size)
-- Edge positions (±2) show small shapes only
-- Arrow buttons navigate to earlier/later snapshots
-- Clicking any snapshot centers it and loads its content
-- URL support: `/now?date=20170801`
-- Responsive: Shows 3 snapshots on mobile/tablet
+**Security:**
+- ✅ DOMPurify sanitization before innerHTML
+- ✅ CSP header includes cdn.jsdelivr.net
+- ✅ Fallback markdown rendering if CDN unavailable
 
-### Design Goals
+**Bug fixes during implementation:**
+- ✅ Fixed center position calculation near timeline edges
+- ✅ Fixed placeholder box sizing (26px → 23px to match small nodes)
+- ✅ Fixed navigation returning to current content (restores original HTML)
+- ✅ Fixed markdown list formatting (stripped leading whitespace)
+- ✅ Fixed current date label to use lastUpdated instead of new Date()
+- ✅ Corrected snapshot date: 20260214 → 20250214
 
-1. **Subtle but accessible** - Timeline visible but doesn't dominate
-2. **Personal reflection** - Primarily for Magnus to reflect on journey
-3. **Public transparency** - Visitors can explore evolution over time
-4. **Intuitive navigation** - Clear interaction model
+**Files created/modified:**
+- `public/now/timeline.js` (new, 380 lines) - Timeline component
+- `src/routes/nowPage.ts` - Timeline HTML structure and CSS
+- `scripts/migrate-now-snapshots.js` - Updated with formatting fixes
+- `public/now/snapshots/*.json` - All 9 snapshots with corrected markdown
+- `public/now/snapshots/index.json` - Snapshot index with corrected dates
 
-### Implementation Phases
+**Total implementation time:** ~6 hours (faster than estimated 8-12 hours)
 
-**Phase 5A: Timeline UI Component** (3-4 hours)
-- Create timeline HTML structure
-- JavaScript component for rendering/interaction
-- CSS styling (desktop, tablet, mobile)
+### Design Goals Achieved
 
-**Phase 5B: Content Loading** (2-3 hours)
-- Fetch and render snapshot markdown
-- Snapshot indicator banner
-- Loading states and error handling
+1. ✅ **Subtle but accessible** - Pale blue, smaller sizing, doesn't dominate page
+2. ✅ **Personal reflection** - Easy to step through Magnus's journey over time
+3. ✅ **Public transparency** - Visitors can explore evolution transparently
+4. ✅ **Intuitive navigation** - Clear interaction model, smooth transitions
 
-**Phase 5C: URL Integration** (1-2 hours)
-- Parse `?date=` parameter on load
-- Update URL when selecting snapshots
-- Browser back/forward support
-
-**Phase 5D: Polish & Testing** (2-3 hours)
-- Accessibility (keyboard navigation, screen readers)
-- Cross-browser testing
-- Performance optimization
-
-**Estimated total:** 8-12 hours
-
-See [now-page-timeline-display.md](./now-page-timeline-display.md) for complete specification including mockups, technical details, styling guidelines, and implementation plan.
+See [now-page-timeline-display.md](./now-page-timeline-display.md) for original specification and technical details.

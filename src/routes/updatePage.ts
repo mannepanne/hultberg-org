@@ -135,7 +135,7 @@ function renderUpdatePageHTML(update: Update, contentHTML: string): string {
     </head>
     <body style="font-family: Georgia, serif; line-height: 1.5;">
         <div style="max-width: 800px; margin: 0 auto; padding: 2em;">
-            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="/now">Now</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a> | <a href="/use-of-ai">Use of AI</a></p>
 
             <article>
                 <header>
@@ -151,7 +151,7 @@ function renderUpdatePageHTML(update: Update, contentHTML: string): string {
                 </div>
             </article>
 
-            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+            <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="/now">Now</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a> | <a href="/use-of-ai">Use of AI</a></p>
         </div>
     </body>
 </html>

@@ -289,10 +289,12 @@ function renderNowPageHTML(contentHTML: string): string {
     border: 2px solid #8AAED6;
     border-radius: 4px;
     font-size: 0.81em;
+    color: #8AAED6;
   }
 
   .timeline-node--medium:hover {
     border-color: #6B8FC0;
+    color: #6B8FC0;
     transform: translateY(-2px);
   }
 
@@ -303,6 +305,7 @@ function renderNowPageHTML(contentHTML: string): string {
     font-weight: 600;
     font-size: 1em;
     background: #f9f9f9;
+    color: #8AAED6;
   }
 
   .timeline-node--placeholder {
@@ -325,6 +328,7 @@ function renderNowPageHTML(contentHTML: string): string {
     border: 2px solid #8AAED6;
     border-radius: 4px;
     background: #fff;
+    color: #8AAED6;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -339,6 +343,7 @@ function renderNowPageHTML(contentHTML: string): string {
   .timeline-arrow:hover:not(:disabled) {
     background: #f5f5f5;
     border-color: #6B8FC0;
+    color: #6B8FC0;
   }
 
   .timeline-arrow:disabled {

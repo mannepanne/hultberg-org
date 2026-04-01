@@ -358,11 +358,28 @@ function renderNowPageHTML(contentHTML: string): string {
   /* Timeline responsive */
   /* Desktop (>768px): 7 visible nodes (center + 3 on each side) */
   /* Mobile/Tablet (≤768px): 5 visible nodes (center + 2 on each side) */
-  @media (max-width: 480px) {
-    .timeline-node--medium,
+
+  /* On mobile/tablet, hide labels on medium nodes (adjacent to center) */
+  /* Keep only the center (large) node labeled for clarity */
+  @media (max-width: 768px) {
+    .timeline-node--medium {
+      width: 23px;
+      height: 23px;
+      padding: 0;
+      font-size: 0;
+      min-width: 23px;
+    }
+
     .timeline-node--large {
-      font-size: 0.72em;
-      padding: 5px 11px;
+      font-size: 0.78em;
+      padding: 8px 14px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .timeline-node--large {
+      font-size: 0.68em;
+      padding: 6px 10px;
     }
 
     .timeline-arrow {

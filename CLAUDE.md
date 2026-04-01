@@ -149,6 +149,7 @@ npm run test:coverage     # Coverage report
 
 ## Quick Reference Links
 
+- **Architecture decisions?** → [decisions/](./REFERENCE/decisions/) - ADRs explaining why things are this way
 - **Getting unstuck?** → [troubleshooting.md](./REFERENCE/troubleshooting.md)
 - **Setting up environment?** → [environment-setup.md](./REFERENCE/environment-setup.md)
 - **Security patterns?** → [blog-security.md](./REFERENCE/blog-security.md)

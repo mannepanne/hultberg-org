@@ -1,25 +1,49 @@
 ---
 name: review-pr-team
-description: Comprehensive PR review using multiple specialized reviewers (security, product, architecture). Use when you need thorough, multi-perspective analysis of a pull request.
+description: Comprehensive PR review using agent teams - security, product, and architecture specialists who debate and challenge each other's findings. Use for critical changes requiring thorough multi-perspective analysis.
 disable-model-invocation: false
 user-invocable: true
 argument-hint:
   - PR-number
 ---
-# Multi-Perspective PR Review
 
-This skill provides comprehensive pull request review from three specialized perspectives:
-1. **Security Reviewer** - Authentication, secrets, XSS, CSRF, input validation, SQL injection
-2. **Product Manager** - Business value, market and customer fit, user experience, features, edge cases, requirements alignment
-3. **Senior Architect** - Design patterns, scalability, maintainability, tech debt, suitability for autonomous LLM agents, 100% code coverage
+# Multi-Perspective PR Review with Agent Teams
+
+This skill provides comprehensive pull request review using **agent teams** - three specialized reviewers who independently analyze the PR, then **discuss findings, debate severity, and challenge each other's conclusions** to reach collaborative consensus.
 
 ## How This Works
 
-Three independent reviews are conducted **sequentially**:
-- Each reviewer analyzes the PR from their unique perspective
-- Reviews are independent (no bias from seeing others' feedback)
-- All findings are synthesized and posted to the PR
-- Conflicts or overlaps between reviews are highlighted
+**Phase 1: Independent Review**
+- Security Specialist, Product Manager, and Senior Architect each review the PR from their unique perspective
+- Each has fresh context (no bias from the main session)
+
+**Phase 2: Collaborative Discussion**
+- Reviewers share findings with each other
+- Challenge assumptions and debate severity ratings
+- Propose solutions collaboratively
+- Reach consensus on critical vs non-critical issues
+
+**Phase 3: Synthesis**
+- Lead synthesizes the team's collaborative findings
+- Posts unified review to PR with clear consensus/disagreements noted
+
+This is fundamentally different from independent reviews - the **discussion phase** surfaces insights that isolated reviewers would miss.
+
+---
+
+## Prerequisites
+
+Agent teams are **experimental and disabled by default**. This skill requires the feature flag to be enabled in `.claude/settings.json`:
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+
+This project template comes with it enabled. When copying this skill to a different project, add the flag to that project's `.claude/settings.json`.
 
 ---
 
@@ -27,287 +51,217 @@ Three independent reviews are conducted **sequentially**:
 
 When this skill is invoked with a PR number (e.g., `/review-pr-team 1`):
 
-### Step 1: Fetch PR Context
+### Step 1: Create Agent Team
 
-Use GitHub CLI to gather PR information:
+**CRITICAL:** You must create an **agent team**, not spawn sequential subagents. The reviewers need to discuss findings with each other, not just report back to you.
 
-```bash
-gh pr view $ARGUMENTS
-gh pr diff $ARGUMENTS
-gh pr view $ARGUMENTS --comments
-```
+Create an agent team for reviewing PR #$ARGUMENTS with the following instruction:
 
-Review the files changed, commit messages, and any existing comments.
+**Team Creation Prompt:**
 
----
+"Create an agent team to conduct a comprehensive, collaborative review of PR #$ARGUMENTS.
 
-### Step 2: Intelligently Gather Relevant Context
+**Team Structure:**
 
-Use this systematic approach to gather just enough context for a thorough review:
+Spawn **3 teammates** using these named subagents:
 
-**A. Always Read Foundation (MANDATORY):**
+**1. Security Specialist** (Subagent: `security-specialist`, Teammate name: `security-reviewer`)
+Your task: conduct a security-focused review of PR #$ARGUMENTS. Follow your review checklist and output format.
 
-1. Read `CLAUDE.md` in repository root for:
-   - Project architecture and structure
-   - Development workflow and conventions
-   - Key patterns and technology stack
-   - Testing philosophy
+**2. Product Manager** (Subagent: `product-reviewer`, Teammate name: `product-reviewer`)
+Your task: conduct a product-focused review of PR #$ARGUMENTS. Follow your review checklist and output format.
 
-**B. Extract PR Keywords:**
-
-From PR title, description, and changed file paths, extract relevant keywords:
-- Feature names (blog, auth, admin, api, etc.)
-- Component types (routes, utils, components, etc.)
-- Phase numbers (phase-1, phase-2, etc.)
-- Technical areas (security, testing, deployment, etc.)
-
-Examples:
-- PR title "Phase 2: Public pages" → keywords: "public", "pages", "phase", "2"
-- Changed files include `src/routes/updatesList.ts` → keywords: "updates", "routes", "list"
-- PR mentions "authentication" → keywords: "auth", "login", "security"
-
-**C. Discover Relevant Specifications:**
-
-1. List files in `SPECIFICATIONS/` directory using Bash or Glob
-2. Match spec filenames against PR keywords
-3. Read specifications that match, prioritizing:
-   - Files matching feature names (e.g., `*blog*.md` if PR involves blog)
-   - `*-implementation.md` if PR implements a feature
-   - `*-security.md` if security-related changes detected
-   - `testing-*.md` if tests are included or test files changed
-   - `*-mvp.md` or `*-plan.md` for main feature specs
-
-**D. Follow Relevant Links (Selective):**
-
-- In each spec read, check "Related Documents" sections
-- Follow links to specs that match PR keywords
-- Don't read every linked doc - be selective based on relevance
-- Example: If spec links to testing strategy and PR includes tests, read it
-
-**E. Create Context Summary:**
-
-Synthesize gathered information into a structured summary including:
-- Project architecture and conventions (from CLAUDE.md)
-- What this PR should achieve (from specs and PR description)
-- Key requirements and success criteria
-- Security requirements (if applicable)
-- Testing expectations (if applicable)
-- Architectural decisions made
-
-This context will be provided to each reviewer so they can evaluate whether the PR matches the project architecture and intended design.
-
-**If no specifications found:** Note this and reviewers will evaluate based on project architecture (from CLAUDE.md) and general best practices.
-
-**Note:** This approach is future-proof - it discovers relevant context for any PR without hard-coding specific files.
+**3. Senior Architect** (Subagent: `architect-reviewer`, Teammate name: `architect-reviewer`)
+Your task: conduct an architecture-focused review of PR #$ARGUMENTS. Follow your review checklist and output format.
 
 ---
 
-### Step 3: Security Review (Subagent 1)
+**Team Mission - Two Phases:**
 
-Spawn a **general-purpose** subagent with this task:
+**PHASE 1: Independent Review**
 
-**Task:** "Act as a security specialist reviewing PR #$ARGUMENTS for security issues.
+Each teammate:
+1. Follow your agent definition instructions to gather context and conduct review
+2. Document findings as specified in your agent definition
+3. Focus on your specialized perspective
 
-**Project Context:**
-[Paste the context summary from Step 2, including project architecture from CLAUDE.md and security requirements if specified]
+**PHASE 2: Collaborative Discussion**
 
-Focus on:
+After all three reviewers complete their independent analysis:
 
-**Authentication & Authorization:**
-- Are credentials/secrets properly protected?
-- Are authentication flows secure?
-- Is authorization checked on all protected endpoints?
+1. **Share findings** via broadcast:
+   - Each reviewer shares their complete findings with the team
+   - Highlight issues you think are most critical
 
-**Input Validation:**
-- Is user input validated and sanitized?
-- Are there SQL injection, XSS, or command injection risks?
-- Are file uploads validated (type, size)?
+2. **Challenge and debate**:
+   - Question each other's severity assessments
+   - Challenge assumptions and conclusions
+   - Ask: 'Did you consider...?' or 'What about...?'
+   - If you disagree with another reviewer's rating, say why
+   - If security and architect disagree on a fix approach, debate the trade-offs
 
-**Data Protection:**
-- Are secrets stored securely (not in code)?
-- Is sensitive data encrypted/hashed appropriately?
-- Are API keys and tokens handled correctly?
+3. **Propose collaborative solutions**:
+   - For critical issues, work together to identify best fixes
+   - Security: ensure fixes don't create new vulnerabilities
+   - Product: ensure fixes maintain good UX
+   - Architect: ensure fixes align with design patterns
 
-**CSRF & Session Management:**
-- Is CSRF protection implemented?
-- Are cookies configured securely (HttpOnly, Secure, SameSite)?
-- Is session management robust?
+4. **Reach consensus**:
+   - Agree on which issues are truly blocking vs nice-to-have
+   - Document where the team agrees and where you still disagree
+   - Note: It's OK to have disagreements - document them clearly
 
-**Dependencies:**
-- Are new dependencies from trusted sources?
-- Any known vulnerabilities in added packages?
+**Discussion Guidelines:**
+- Use `broadcast` to share findings with the whole team
+- Use `message` to directly question or challenge a specific reviewer
+- Be rigorous but constructive
+- Focus on the code, not personalities
+- When you disagree, explain your reasoning with specifics
+- Update your findings based on discussion insights
 
-**Output Format:**
-- ✅ **Secure Practices**: What's done well
-- 🔴 **Critical Issues**: Must fix before merge
-- ⚠️ **Warnings**: Should fix, not blocking
-- 💡 **Suggestions**: Nice-to-haves
-
-Be specific with file:line references."
-
-Wait for the security review to complete.
-
----
-
-### Step 4: Product Manager Review (Subagent 2)
-
-Spawn a **general-purpose** subagent with this task:
-
-**Task:** "Act as a product manager reviewing PR #$ARGUMENTS for product quality and user experience.
-
-**Project Context:**
-[Paste the context summary from Step 2, including project architecture from CLAUDE.md, feature requirements, and success criteria]
-
-Focus on:
-
-**Requirements Alignment:**
-- Does this PR match the stated goals/requirements?
-- Are all acceptance criteria met?
-- Is anything out of scope or missing?
-
-**User Experience:**
-- Is the feature intuitive and user-friendly?
-- Are error messages clear and helpful?
-- Is the UI/UX consistent with existing patterns?
-
-**Edge Cases:**
-- Are edge cases handled (empty states, errors, etc.)?
-- What happens when things go wrong?
-- Are loading states and feedback clear?
-
-**Completeness:**
-- Is the feature fully functional?
-- Are there half-finished parts?
-- Is documentation updated (if needed)?
-
-**Future Impact:**
-- Does this create technical debt?
-- Will this be easy to extend later?
-- Any backward compatibility issues?
-
-**Output Format:**
-- ✅ **Well Done**: What meets/exceeds expectations
-- 🔴 **Blocking Issues**: Must address before ship
-- ⚠️ **Concerns**: Should address, worth discussing
-- 💡 **Enhancements**: Ideas for improvement
-
-Be specific with examples and file references."
-
-Wait for the product review to complete.
+**Expected Outcome:**
+After the collaborative discussion, each teammate should have refined their findings based on team input. The lead will then synthesize all perspectives into a unified review.
 
 ---
 
-### Step 5: Senior Architect Review (Subagent 3)
+**Team Coordination:**
+- All teammates work from the shared task list in parallel
+- Each reviewer conducts their independent review simultaneously
+- Once all three are done, open discussion begins for debate and consensus-building
 
-Spawn a **general-purpose** subagent with this task:
-
-**Task:** "Act as a senior software architect reviewing PR #$ARGUMENTS for design quality and long-term maintainability.
-
-**Project Context:**
-[Paste the context summary from Step 2, including project architecture from CLAUDE.md, architectural decisions, and implementation approach]
-
-Focus on:
-
-**Architecture & Design:**
-- Does this fit well with existing architecture?
-- Are design patterns used appropriately?
-- Is the code organization logical?
-
-**Code Quality:**
-- Is the code readable and well-structured?
-- Are functions/components properly sized?
-- Are naming conventions clear and consistent?
-
-**Scalability & Performance:**
-- Will this perform well under load?
-- Are there potential bottlenecks?
-- Is caching/optimization appropriate?
-
-**Maintainability:**
-- Is the code easy to understand and modify?
-- Are abstractions appropriate (not over/under-engineered)?
-- Are there code smells or anti-patterns?
-
-**Testing:**
-- Is test coverage adequate?
-- Are the right things being tested?
-- Are tests maintainable?
-
-**Technical Debt:**
-- Does this introduce debt?
-- Does it pay down existing debt?
-- Are shortcuts documented and justified?
-
-**Output Format:**
-- ✅ **Architectural Strengths**: Good design decisions
-- 🔴 **Critical Issues**: Fundamental problems to fix
-- ⚠️ **Design Concerns**: Worth reconsidering
-- 💡 **Suggestions**: Ways to improve design
-
-Be specific with code examples and file:line references."
-
-Wait for the architecture review to complete.
+Start the review process now."
 
 ---
 
-### Step 6: Synthesize and Post Results
+### Step 2: Monitor Team Progress
 
-After all three reviews are complete:
+While the team works:
 
-1. **Analyze findings across all reviews:**
-  - Identify overlapping concerns (mentioned by multiple reviewers)
-  - Flag conflicts (if reviewers disagree)
-  - Highlight critical issues that appear in multiple perspectives
+1. **Watch for the discussion phase** - Ensure teammates are actually messaging each other, not just completing reviews in isolation
+2. **Encourage debate** if the discussion is too polite - tell them: "Challenge each other's conclusions more directly"
+3. **Intervene if stuck** - If reviewers can't reach consensus on a critical issue, ask them to document both positions clearly
 
-2. **Create unified summary:**
+**If teammates aren't discussing:** Send a message to all three: "Please share your findings with each other via broadcast and debate the severity ratings."
+
+---
+
+### Step 3: Synthesize Collaborative Findings
+
+After all teammates complete the discussion phase:
+
+1. **Gather final findings** from all three reviewers (after they've refined based on team discussion)
+
+2. **Create unified review** that captures the collaborative analysis:
 
 ```markdown
-## Comprehensive PR Review - Multiple Perspectives
+## Comprehensive PR Review - Collaborative Team Analysis
 
-### 🔴 Critical Issues (Must Fix Before Merge)
+> This review was conducted by a team of specialized reviewers who independently analyzed the PR, then discussed findings, debated severity, and reached collaborative consensus.
 
-[List all critical issues from all reviewers, grouped by theme]
-[Mark with [Security], [Product], or [Architecture] badges]
-[Note if multiple reviewers flagged the same issue]
+### ✅ Completion Requirements Met?
+- [ ] Tests exist and pass (95%+ coverage shown)
+- [ ] Documentation updated (check REFERENCE/ if implementation work)
+- [ ] Code quality verified (conventions, no secrets, clean history)
 
-### ⚠️ Warnings & Concerns (Should Address)
+### 🔴 Critical Issues - Must Fix Before Merge
 
-[List warnings from all reviewers, grouped by theme]
+[List all blocking issues with consensus severity]
+[For each issue, show which reviewers flagged it]
+[If reviewers debated and reached consensus, note: "Team consensus after discussion"]
+[If reviewers still disagree, note both positions clearly]
+
+**Example:**
+**Issue: Hardcoded API key in config.ts:42** 🛡️ Security 🏗️ Architecture
+- **Severity:** Critical (unanimous)
+- **Security perspective:** Secrets in code = immediate vulnerability
+- **Architect perspective:** Violates 12-factor app principles
+- **Recommended fix:** Use environment variables with validation
+- **Team consensus:** Block merge until fixed
+
+### ⚠️ Warnings & Concerns - Should Address
+
+[List non-blocking but important issues]
+[Show which perspectives raised each concern]
+[Note where team discussion added nuance]
+
+**Example:**
+**Issue: No error handling in user input handler** 🛡️ Security 📦 Product
+- **Initial severity:** Security rated Critical, Product rated Warning
+- **After discussion:** Agreed on Warning (non-critical path, but should fix)
+- **Why not blocking:** Input is already validated upstream (Architect confirmed)
+- **Recommended fix:** Add defensive error handling for future-proofing
 
 ### ✅ Strengths & Good Practices
 
-[Highlight what all reviewers praised]
+[Highlight what the team praised]
+[Note patterns multiple reviewers appreciated]
+
+**Example:**
+**Comprehensive test coverage** ✅ All reviewers
+- Unit tests, integration tests, and edge cases covered
+- Architect: "Test structure is exemplary"
+- Product: "Edge cases thoroughly tested"
+- Security: "Attack vectors properly validated in tests"
 
 ### 💡 Suggestions for Improvement
 
-[Compile suggestions, note if multiple reviewers suggested similar improvements]
+[Compile suggestions from team discussion]
+[Note where reviewers built on each other's ideas]
+
+### 🤝 Team Discussion Highlights
+
+[Capture key moments from the collaborative discussion]
+- Where debate changed severity ratings
+- Where one reviewer's insight helped others
+- Tradeoffs that were discussed
+- Creative solutions that emerged from collaboration
 
 ### 📊 Review Summary
 
-- **Security Review**: [X critical, Y warnings, Z suggestions]
-- **Product Review**: [X critical, Y warnings, Z suggestions]
-- **Architecture Review**: [X critical, Y warnings, Z suggestions]
+**Team Composition:**
+- 🛡️ Security Specialist: [X critical, Y warnings, Z suggestions]
+- 📦 Product Manager: [X critical, Y warnings, Z suggestions]
+- 🏗️ Senior Architect: [X critical, Y warnings, Z suggestions]
+
+**Consensus Status:**
+- Issues with unanimous agreement: X
+- Issues with 2/3 agreement: Y
+- Issues with split opinions: Z (documented above)
+
+**Recommendation:** [BLOCK MERGE / APPROVE WITH CHANGES / APPROVE]
 
 ---
 
-**Recommendation:** [Clear merge/don't merge recommendation based on critical issues]
-
----
-
-*Reviews conducted by specialized subagents: Security Specialist, Product Manager, Senior Architect*
+*This review was conducted by an agent team using collaborative discussion. Reviewers independently analyzed the PR, then shared findings, challenged each other's conclusions, and reached consensus through structured debate.*
 ```
 
-3. **Post the synthesized review** as a comment on the PR using:
+3. **Post the synthesized review** as a comment on the PR:
 
 ```bash
 gh pr comment $ARGUMENTS --body "[markdown content from above]"
 ```
 
 4. **Provide user summary:**
-  - Total critical issues found
-  - Key themes across reviews
-  - Clear next steps
-  - Link to PR comment
+   - Total critical issues found
+   - Key insights from team discussion
+   - Whether reviewers reached consensus
+   - Clear next steps
+   - Link to PR comment
+
+---
+
+### Step 4: Clean Up Team
+
+After posting the review:
+
+1. **Shut down all teammates gracefully:**
+   - Ask each teammate to shut down
+   - Wait for confirmation from each
+
+2. **Clean up team resources:**
+```text
+Clean up the team
+```
 
 ---
 
@@ -318,43 +272,61 @@ gh pr comment $ARGUMENTS --body "[markdown content from above]"
 ```
 
 This will:
-1. Fetch PR #1 details
-2. Run security review (sequential)
-3. Run product review (sequential)
-4. Run architecture review (sequential)
-5. Synthesize all findings
+1. Create agent team with security, product, and architect reviewers
+2. Team gathers their own context (PR details, CLAUDE.md, specs, changed files)
+3. Reviewers independently analyze the PR
+4. Reviewers discuss findings, debate severity, and reach consensus
+5. Lead synthesizes collaborative findings
 6. Post comprehensive review to PR #1
+7. Clean up team
+
+Expected time: 5-10 minutes (depending on PR size and discussion depth)
 
 ---
 
 ## Tips for Best Results
 
-- **Use on non-trivial PRs** - Overkill for typo fixes
-- **Run before final approval** - Catch issues early
-- **Read individual reviews** - Each perspective provides unique value
-- **Address critical issues first** - Don't merge with red flags
+- **Use for non-trivial PRs** - The collaborative discussion adds value for complex changes
+- **Let the debate happen** - Don't rush the discussion phase; insights emerge from challenge
+- **Watch for politeness** - If reviewers are too agreeable, encourage more rigorous debate
+- **Document disagreements** - Split opinions are valuable information for the PR author
+- **Trust the process** - The discussion phase often surfaces issues individual reviewers miss
 
 ---
 
-<!-- NOTE: This is NOT part of the skill instructions -->
+## When to Use Which Review
 
-## Future Enhancement: Parallel Execution (Option A)
+**Use `/review-pr`:**
+- Quick sanity checks
+- Small, straightforward changes
+- Non-critical bug fixes
+- Documentation updates
+- You want fast feedback (1-2 minutes)
 
-**Current implementation:** Reviews run sequentially (one after another)
-- Security → Product → Architecture
-- Total time: ~3-5 minutes depending on PR size
+**Use `/review-pr-team`:**
+- Critical infrastructure changes
+- Security-sensitive features
+- Major architectural decisions
+- Complex multi-file changes
+- When multiple perspectives add real value
+- You want thorough collaborative analysis (5-10 minutes)
 
-**Future upgrade:** Agent Teams for parallel execution
-- All three reviewers analyze simultaneously
-- Total time: ~1-2 minutes (faster)
-- Requires: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in settings
+---
 
-**When agent teams feature is stable**, this skill can be upgraded to spawn parallel reviewers instead of sequential ones. The skill structure and review criteria would remain the same—only the execution model changes.
+## Troubleshooting
 
-**To upgrade later:**
-1. Enable experimental flag in `.claude/settings.json`
-2. Modify Step 2-4 to spawn teammates instead of sequential subagents
-3. Teammates review in parallel
-4. Main agent still synthesizes results
+**If teammates aren't discussing:**
+- Tell them explicitly: "Share your findings via broadcast and debate the severity ratings"
+- Check that they've all completed Phase 1 before expecting Phase 2
 
-The sequential approach works perfectly fine for now and proves the concept.
+**If discussion is too shallow:**
+- Encourage deeper debate: "Challenge each other's assumptions more directly"
+- Ask specific questions: "Security reviewer - do you agree with the architect's assessment of this pattern?"
+
+**If team doesn't shut down cleanly:**
+- List running teammates and shut them down individually
+- Run cleanup manually after all teammates are stopped
+
+**If you see "session resumption" issues:**
+- Known limitation: `/resume` doesn't restore in-process teammates
+- Tell the lead to spawn new teammates if this happens

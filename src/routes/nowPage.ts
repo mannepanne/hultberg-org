@@ -366,8 +366,13 @@ function renderNowPageHTML(contentHTML: string): string {
       width: 23px;
       height: 23px;
       padding: 0;
-      font-size: 0;
       min-width: 23px;
+      overflow: hidden;
+      text-indent: -9999px; /* Better screen reader support than font-size: 0 */
+    }
+
+    .timeline-node--medium:hover {
+      transform: scale(1.1); /* Match small node behavior instead of translateY */
     }
 
     .timeline-node--large {
@@ -379,7 +384,7 @@ function renderNowPageHTML(contentHTML: string): string {
   @media (max-width: 480px) {
     .timeline-node--large {
       font-size: 0.68em;
-      padding: 6px 10px;
+      padding: 8px 10px; /* Increased from 6px for better touch target size (WCAG 2.5.5) */
     }
 
     .timeline-arrow {

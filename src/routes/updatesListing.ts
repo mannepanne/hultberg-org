@@ -67,7 +67,7 @@ export async function handleUpdatesListing(request: Request, env: Env): Promise<
       status: 200,
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self' https://www.google-analytics.com https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self';",
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self';",
       },
     });
   } catch (error) {
@@ -164,14 +164,6 @@ function renderUpdatesListingHTML(
         ${currentPage === 1 ? '<link rel="canonical" href="https://hultberg.org/updates" />' : ''}
         ${currentPage > 1 ? `<link rel="prev" href="https://hultberg.org${currentPage === 2 ? baseUrl : `${baseUrl}?page=${currentPage - 1}`}" />` : ''}
         ${currentPage < totalPages ? `<link rel="next" href="https://hultberg.org${baseUrl}?page=${currentPage + 1}" />` : ''}
-
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-D1L22CCJTJ"></script>
-        <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-D1L22CCJTJ');
-        </script>
 
         <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "f71c3c28b82c4c6991ec3d41b7f1496f"}'></script><!-- End Cloudflare Web Analytics -->
     </head>

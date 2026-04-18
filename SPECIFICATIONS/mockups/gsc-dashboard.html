@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<!--
+  ABOUT: High-fidelity mockup for the GSC Insights widget on /admin/dashboard.
+  ABOUT: Standalone HTML seeded with plausible-but-fake data for hultberg.org.
+
+  This file is NOT wired into the Worker — open it directly in a browser to
+  review layout, density, and visual hierarchy.
+
+  Design notes:
+  - Widget sits ABOVE the existing Updates table so SEO status is the first
+    thing seen on visiting /admin/dashboard (the "morning check").
+  - Uses the same design tokens as src/routes/adminDashboard.ts (fonts,
+    colours, card shadows, badge palette).
+  - Four KPI tiles (Indexed / Sitemap / Clicks / Impressions) provide at-a-glance
+    health.
+  - One compact "top queries" list keeps the performance story close without
+    turning the dashboard into a mini-GSC.
+  - Alerts render inline at the top of the widget when present.
+  - A small "Manual actions & security" reminder acknowledges the GSC API gap.
+-->
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Admin Dashboard (mockup) - hultberg.org</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+      color: #333;
+      margin: 0;
+      background: #f8f9fa;
+    }
+    /* Mockup banner */
+    .mockup-banner {
+      background: #fff3cd;
+      color: #856404;
+      padding: 8px 16px;
+      text-align: center;
+      font-size: 0.85em;
+      border-bottom: 1px solid #ffeaa7;
+    }
+    .mockup-banner strong { font-weight: 600; }
+
+    /* Header — copied from adminDashboard.ts */
+    header {
+      background: #212529;
+      color: #fff;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header .brand { font-weight: 700; font-size: 1.1em; flex: 1; color: #fff; text-decoration: none; }
+    header nav a { color: #adb5bd; text-decoration: none; margin-right: 16px; }
+    header nav a:hover { color: #fff; }
+    header .user { color: #adb5bd; font-size: 0.85em; margin-right: 12px; }
+    header form { margin: 0; }
+    header button {
+      background: transparent;
+      border: 1px solid #6c757d;
+      color: #adb5bd;
+      padding: 4px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85em;
+    }
+    header button:hover { border-color: #adb5bd; color: #fff; }
+    main { max-width: 960px; margin: 32px auto; padding: 0 24px; }
+    h1 { font-size: 1.4em; margin: 0 0 20px; }
+
+    a { color: #0d6efd; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* GSC widget */
+    .widget {
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.1);
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .widget-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-bottom: 1px solid #f1f3f5;
+    }
+    .widget-header h2 {
+      font-size: 1em;
+      font-weight: 600;
+      margin: 0;
+      flex: 1;
+      color: #212529;
+    }
+    .widget-header h2 a { color: #0d6efd; text-decoration: none; }
+    .widget-header h2 a:hover { text-decoration: underline; }
+    .widget-header .freshness {
+      font-size: 0.8em;
+      color: #6c757d;
+    }
+    .widget-header .freshness.stale { color: #dc3545; font-weight: 600; }
+    .widget-header button.refresh {
+      background: transparent;
+      border: 1px solid #dee2e6;
+      color: #495057;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8em;
+    }
+    .widget-header button.refresh:hover { border-color: #adb5bd; background: #f8f9fa; }
+
+    /* Alerts strip */
+    .alerts {
+      padding: 0 20px;
+    }
+    .alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 4px;
+      margin: 12px 0;
+      font-size: 0.88em;
+    }
+    .alert .icon { font-size: 1.1em; line-height: 1; }
+    .alert .body { flex: 1; }
+    .alert .body .title { font-weight: 600; color: #212529; }
+    .alert .body .meta { color: #6c757d; font-size: 0.85em; margin-top: 2px; }
+    .alert.medium { background: #fff3cd; border-left: 3px solid #ffc107; }
+    .alert.high   { background: #f8d7da; border-left: 3px solid #dc3545; }
+    .alert button.dismiss {
+      background: transparent;
+      border: none;
+      color: #6c757d;
+      cursor: pointer;
+      font-size: 1.1em;
+      padding: 0 4px;
+    }
+    .alert button.dismiss:hover { color: #212529; }
+
+    /* KPI tiles */
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 16px 20px;
+    }
+    .tile {
+      background: #f8f9fa;
+      border: 1px solid #f1f3f5;
+      border-radius: 6px;
+      padding: 14px;
+    }
+    .tile .label {
+      font-size: 0.75em;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #6c757d;
+      margin-bottom: 6px;
+    }
+    .tile .value {
+      font-size: 1.6em;
+      font-weight: 700;
+      color: #212529;
+      line-height: 1.1;
+    }
+    .tile .sub {
+      font-size: 0.8em;
+      color: #6c757d;
+      margin-top: 4px;
+    }
+    .tile .delta.up { color: #155724; }
+    .tile .delta.down { color: #721c24; }
+    .tile .delta.flat { color: #6c757d; }
+
+    /* Top queries */
+    .queries {
+      padding: 4px 20px 16px;
+    }
+    .queries h3 {
+      font-size: 0.8em;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #6c757d;
+      margin: 12px 0 8px;
+    }
+    .queries table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9em;
+    }
+    .queries td {
+      padding: 6px 0;
+      border-top: 1px solid #f1f3f5;
+      vertical-align: middle;
+    }
+    .queries tr:first-child td { border-top: none; }
+    .queries td.query { color: #212529; }
+    .queries td.metrics {
+      text-align: right;
+      color: #6c757d;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .queries td.metrics .clicks { font-weight: 600; color: #212529; margin-right: 10px; }
+
+    /* Manual-actions reminder */
+    .manual-reminder {
+      padding: 12px 20px;
+      font-size: 0.82em;
+      color: #6c757d;
+      background: #fafbfc;
+      border-top: 1px solid #f1f3f5;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .manual-reminder .icon { font-size: 1em; }
+    .manual-reminder a { color: #0d6efd; }
+
+    /* Existing dashboard styles (for context) */
+    .actions { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+    .btn-primary {
+      background: #212529;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 0.9em;
+    }
+    .btn-primary:hover { background: #343a40; }
+    table.updates { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+    table.updates th { background: #f1f3f5; font-size: 0.8em; text-transform: uppercase; letter-spacing: .05em; color: #6c757d; padding: 10px 14px; text-align: left; }
+    table.updates td { padding: 12px 14px; border-top: 1px solid #f1f3f5; vertical-align: middle; font-size: 0.9em; }
+    table.updates tr:hover td { background: #fafafa; }
+    .badge { padding: 2px 8px; border-radius: 12px; font-size: 0.8em; font-weight: 600; }
+    .badge.published { background: #d4edda; color: #155724; }
+    .badge.draft { background: #fff3cd; color: #856404; }
+    footer { text-align: center; color: #adb5bd; font-size: 0.8em; padding: 32px 24px; }
+    footer a { color: #adb5bd; }
+
+    @media (max-width: 720px) {
+      .tiles { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="mockup-banner">
+    <strong>Mockup</strong> — Static HTML, dummy data. See <code>SPECIFICATIONS/gsc-insights-and-alerts.md</code> for spec.
+  </div>
+
+  <header>
+    <a class="brand" href="#">hultberg.org admin</a>
+    <nav>
+      <a href="#" aria-current="page">Dashboard</a>
+      <a href="#">Now</a>
+    </nav>
+    <span class="user">magnus.hultberg@gmail.com</span>
+    <form method="POST" action="#">
+      <button type="submit">Logout</button>
+    </form>
+  </header>
+
+  <main>
+
+    <!-- ==================== GSC INSIGHTS WIDGET ==================== -->
+    <section class="widget" aria-label="Search visibility">
+      <div class="widget-header">
+        <h2>Search visibility (<a href="https://search.google.com/search-console?resource_id=http%3A%2F%2Fhultberg.org%2F" target="_blank" rel="noopener">GSC</a>)</h2>
+        <span class="freshness">Last refreshed 4h ago</span>
+        <button class="refresh" type="button">↻ Refresh</button>
+      </div>
+
+      <!-- Alerts strip: shown only when alerts exist. Dummy: one medium alert. -->
+      <div class="alerts">
+        <div class="alert medium">
+          <span class="icon">⚠️</span>
+          <div class="body">
+            <div class="title">Sitemap reports 1 warning</div>
+            <div class="meta">Google couldn't reach <code>/updates/old-slug-that-got-renamed</code>. Seen for 2 consecutive days.</div>
+          </div>
+          <button class="dismiss" type="button" aria-label="Dismiss">×</button>
+        </div>
+      </div>
+
+      <!-- KPI tiles -->
+      <div class="tiles">
+        <div class="tile">
+          <div class="label">Indexed pages</div>
+          <div class="value">24</div>
+          <div class="sub"><span class="delta up">+2</span> vs 28d ago</div>
+        </div>
+        <div class="tile">
+          <div class="label">Sitemap</div>
+          <div class="value">24<span style="font-size:0.6em;color:#6c757d;font-weight:400;"> / 26</span></div>
+          <div class="sub">indexed / submitted</div>
+        </div>
+        <div class="tile">
+          <div class="label">Clicks (28d)</div>
+          <div class="value">312</div>
+          <div class="sub"><span class="delta up">+18%</span> vs prior 28d</div>
+        </div>
+        <div class="tile">
+          <div class="label">Impressions (28d)</div>
+          <div class="value">8,432</div>
+          <div class="sub"><span class="delta up">+12%</span> vs prior 28d</div>
+        </div>
+      </div>
+
+      <!-- Top queries -->
+      <div class="queries">
+        <h3>Top queries · last 28 days</h3>
+        <table>
+          <tbody>
+            <tr>
+              <td class="query">magnus hultberg</td>
+              <td class="metrics"><span class="clicks">145</span> 3,204 impr · 4.5% CTR · pos 2.1</td>
+            </tr>
+            <tr>
+              <td class="query">flying jacob recipe</td>
+              <td class="metrics"><span class="clicks">62</span> 1,128 impr · 5.5% CTR · pos 4.8</td>
+            </tr>
+            <tr>
+              <td class="query">char.gy product manager</td>
+              <td class="metrics"><span class="clicks">42</span> 981 impr · 4.3% CTR · pos 6.2</td>
+            </tr>
+            <tr>
+              <td class="query">now page idea</td>
+              <td class="metrics"><span class="clicks">28</span> 452 impr · 6.2% CTR · pos 3.4</td>
+            </tr>
+            <tr>
+              <td class="query">claude code template</td>
+              <td class="metrics"><span class="clicks">19</span> 614 impr · 3.1% CTR · pos 8.9</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Manual actions reminder -->
+      <div class="manual-reminder">
+        <span class="icon">ⓘ</span>
+        <div>
+          Manual actions &amp; security issues aren't in the GSC API — Google emails you directly when they occur.
+          Last checked in GSC UI: <strong>12 days ago</strong>.
+          <a href="https://search.google.com/search-console/manual-actions" target="_blank" rel="noopener">Check now ↗</a>
+        </div>
+      </div>
+    </section>
+    <!-- ==================== /GSC INSIGHTS WIDGET ==================== -->
+
+    <!-- Existing updates management (unchanged, shown for context) -->
+    <div class="actions">
+      <a class="btn-primary" href="#">+ New Update</a>
+    </div>
+
+    <table class="updates">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Status</th>
+          <th>Published</th>
+          <th>Last edited</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="#">Are you over-engineering your Claude Code projects?</a></td>
+          <td><span class="badge published">published</span></td>
+          <td>6 Apr 2026</td>
+          <td>6 Apr 2026</td>
+          <td><a href="#">Edit</a></td>
+        </tr>
+        <tr>
+          <td><a href="#">Ansible: AI-powered triage for your Readwise library</a></td>
+          <td><span class="badge published">published</span></td>
+          <td>2 Apr 2026</td>
+          <td>2 Apr 2026</td>
+          <td><a href="#">Edit</a></td>
+        </tr>
+        <tr>
+          <td><a href="#">On being honest about AI</a></td>
+          <td><span class="badge draft">draft</span></td>
+          <td>—</td>
+          <td>31 Mar 2026</td>
+          <td><a href="#">Edit</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+
+  <footer>
+    Mockup preview · not connected to live data · iterate freely
+  </footer>
+
+</body>
+</html>

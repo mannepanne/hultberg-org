@@ -1,7 +1,51 @@
 // ABOUT: Email sending utilities using Resend.com API
-// ABOUT: Handles magic link emails for authentication
+// ABOUT: Handles magic link emails for authentication and acts as a fallback
+// ABOUT: provider for the notifier when Cloudflare Email Sending is unavailable.
 
 import type { Env } from './types';
+
+/**
+ * Shape of a Resend send request (the subset we use).
+ */
+export interface ResendMessage {
+  from: string;
+  to: string;
+  subject: string;
+  html: string;
+}
+
+/**
+ * Send an email via Resend. Returns true on success, false on any failure
+ * (missing API key, non-2xx response, network error).
+ * Used directly for magic-link auth and as a fallback from the notifier.
+ */
+export async function sendViaResend(env: Env, message: ResendMessage): Promise<boolean> {
+  if (!env.RESEND_API_KEY) {
+    console.error('RESEND_API_KEY not configured');
+    return false;
+  }
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(message),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Resend API error:', response.status, errorText);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Failed to send email:', error);
+    return false;
+  }
+}
 
 /**
  * Send magic link email via Resend.com
@@ -13,11 +57,6 @@ export async function sendMagicLinkEmail(
   token: string,
   origin: string
 ): Promise<boolean> {
-  if (!env.RESEND_API_KEY) {
-    console.error('RESEND_API_KEY not configured');
-    return false;
-  }
-
   const magicLink = `${origin}/admin/api/verify-token?token=${token}`;
 
   const emailHtml = `
@@ -64,30 +103,10 @@ export async function sendMagicLinkEmail(
 </html>
   `.trim();
 
-  try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Hultberg.org Admin <noreply@hultberg.org>',
-        to: email,
-        subject: 'Your admin login link',
-        html: emailHtml,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Resend API error:', response.status, errorText);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Failed to send email:', error);
-    return false;
-  }
+  return sendViaResend(env, {
+    from: 'Hultberg.org Admin <noreply@hultberg.org>',
+    to: email,
+    subject: 'Your admin login link',
+    html: emailHtml,
+  });
 }

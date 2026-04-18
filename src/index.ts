@@ -6,6 +6,8 @@ import { handleUpdatesListing } from './routes/updatesListing';
 import { handleUpdatePage } from './routes/updatePage';
 import { handleRSSFeed } from './routes/rssFeed';
 import { handleSitemap } from './routes/sitemap';
+import { handleGscDebug } from './routes/gscDebug';
+import { handleScheduled } from './scheduled';
 import { handleAdminLogin } from './routes/adminLogin';
 import { handleAdminLogout } from './routes/adminLogout';
 import { handleSendMagicLink } from './routes/sendMagicLink';
@@ -99,6 +101,12 @@ export default {
     // API: DELETE /admin/api/delete-now-snapshot (authenticated)
     if (url.pathname === '/admin/api/delete-now-snapshot' && request.method === 'DELETE') {
       return handleDeleteNowSnapshot(request, env);
+    }
+
+    // API: GET /admin/api/gsc-debug (authenticated)
+    // Smoke-tests the GSC service account credentials — lists sites + sitemaps.
+    if (url.pathname === '/admin/api/gsc-debug' && request.method === 'GET') {
+      return handleGscDebug(request, env);
     }
 
     // Editor: GET /admin/now/edit
@@ -218,4 +226,8 @@ export default {
       },
     });
   },
+
+  // Cron trigger — runs daily per wrangler.toml. Wraps runDailyPoll in
+  // ctx.waitUntil so async work completes after the outer handler returns.
+  scheduled: handleScheduled,
 };

@@ -21,6 +21,16 @@ export interface Env {
 
   // Static assets binding — use env.ASSETS.fetch() to serve files from public/
   ASSETS?: Fetcher;
+
+  // Google Search Console service-account JSON (stringified)
+  GSC_SERVICE_ACCOUNT_JSON?: string;
+
+  // KV namespace storing GSC snapshots and alert dedup keys
+  GSC_KV?: KVNamespace;
+
+  // Cloudflare Email Sending binding (beta) — used by the notifier with Resend fallback.
+  // Sending magic-link auth emails continues to use Resend directly.
+  SEND_EMAIL?: SendEmail;
 }
 
 /**
@@ -101,4 +111,77 @@ export interface NowSnapshotIndexEntry {
  */
 export interface NowSnapshotsIndex {
   snapshots: NowSnapshotIndexEntry[];
+}
+
+/**
+ * Types of alerts the scheduled GSC poll can raise.
+ * Keep in sync with SPECIFICATIONS/gsc-insights-and-alerts.md.
+ */
+export type GSCAlertType =
+  | 'indexed-drop'
+  | 'sitemap-error'
+  | 'new-crawl-warning'
+  | 'impressions-drop';
+
+export interface GSCAlert {
+  type: GSCAlertType;
+  severity: 'high' | 'medium';
+  subject: string; // short, magnitude-aware summary used for email subject lines
+  message: string; // full message body explaining the condition
+  detectedAt: string;
+  emailSent: boolean;
+  discriminator?: string; // optional per-alert dedup key (e.g. sitemap path)
+}
+
+export interface GSCPendingAlert {
+  type: GSCAlertType;
+  firstDetectedAt: string;
+}
+
+export interface GSCSitemapStatus {
+  path: string;
+  lastSubmitted: string | null;
+  lastDownloaded: string | null;
+  errors: number;
+  warnings: number;
+  submitted: number;
+  indexed: number;
+}
+
+export interface GSCTopQuery {
+  query: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+export interface GSCPerformance {
+  period: '28d';
+  totalClicks: number;
+  totalImpressions: number;
+  avgCtr: number;
+  avgPosition: number;
+  topQueries: GSCTopQuery[];
+  priorPeriodClicks: number;
+  priorPeriodImpressions: number;
+}
+
+export interface GSCEmailDelivery {
+  lastProvider: 'cf' | 'resend' | 'none' | null;
+  lastSuccessAt: string | null;
+  lastErrorAt: string | null;
+}
+
+export interface GSCSnapshot {
+  capturedAt: string;
+  siteUrl: string;
+  sitemaps: GSCSitemapStatus[];
+  indexing: {
+    indexedCount: number;
+  };
+  performance: GSCPerformance;
+  alerts: GSCAlert[];
+  pendingAlerts: GSCPendingAlert[];
+  emailDelivery: GSCEmailDelivery;
 }

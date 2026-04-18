@@ -5,6 +5,7 @@ import type { Env } from './types';
 import { handleUpdatesListing } from './routes/updatesListing';
 import { handleUpdatePage } from './routes/updatePage';
 import { handleRSSFeed } from './routes/rssFeed';
+import { handleSitemap } from './routes/sitemap';
 import { handleAdminLogin } from './routes/adminLogin';
 import { handleAdminLogout } from './routes/adminLogout';
 import { handleSendMagicLink } from './routes/sendMagicLink';
@@ -136,6 +137,11 @@ export default {
     // Route: /updates/feed.xml RSS feed
     if (url.pathname === '/updates/feed.xml') {
       return handleRSSFeed(request, env);
+    }
+
+    // Route: /sitemap.xml — sitemaps.org-compliant XML sitemap
+    if (url.pathname === '/sitemap.xml') {
+      return handleSitemap(request, env);
     }
 
     // Route: /updates listing page

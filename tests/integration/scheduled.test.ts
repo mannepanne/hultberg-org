@@ -237,6 +237,9 @@ describe('runDailyPoll', () => {
     expect(snapshot.alerts).toHaveLength(1);
     expect(snapshot.alerts[0].emailSent).toBe(false);
     expect(sendEmailMock).not.toHaveBeenCalled();
+    // Dedup-suppressed dispatches must not advance email-delivery state —
+    // otherwise the dashboard reads chronic alerts as chronic delivery failure.
+    expect(snapshot.emailDelivery).toEqual(previousLatest.emailDelivery);
   });
 
   it('handles an empty sitemap list gracefully', async () => {

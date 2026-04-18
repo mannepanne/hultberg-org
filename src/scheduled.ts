@@ -4,6 +4,11 @@
 
 import { GSCClient } from '@/gsc';
 import { sendAlert } from '@/notifier';
+import {
+  mergeEmailDelivery,
+  sanitiseUpstreamError,
+  type DispatchResult,
+} from '@/gscHelpers';
 import type {
   Env,
   GSCAlert,
@@ -196,47 +201,64 @@ interface ResolveAlertsOutput {
   pendingAlerts: GSCPendingAlert[];
 }
 
+interface AlertCondition {
+  type: GSCAlertType;
+  severity: 'high' | 'medium';
+  subject: string;      // magnitude-aware, fits in an email subject line
+  message: string;      // full body explanation
+  discriminator?: string; // per-alert dedup discriminator (e.g. sitemap path)
+}
+
 /**
- * Decide which conditions fire as alerts (graduated from pending → real) vs
- * which are flagged as pending on this observation.
- * Exported for testing — no I/O, no time-of-day surprises.
+ * Decide which conditions fire as alerts (graduated from pending → real, or
+ * continuation from the prior run's alerts) vs which are flagged as pending
+ * on this observation. Exported for testing — no I/O, no time surprises.
+ *
+ * State machine per alert type:
+ *   not-pending/not-alerted  + triggered  → pending (no email yet)
+ *   pending                  + triggered  → alert (graduated; email dispatched)
+ *   alerted                  + triggered  → alert (continuation; dedup prevents re-email within 24h)
+ *   anything                 + resolved   → drops out entirely
  */
 export function resolveAlerts(input: ResolveAlertsInput): ResolveAlertsOutput {
   const { now, current, previousLatest, weekAgo } = input;
   const previousPending = new Map<GSCAlertType, GSCPendingAlert>(
     (previousLatest?.pendingAlerts ?? []).map((p) => [p.type, p]),
   );
+  const previouslyAlerted = new Set<GSCAlertType>(
+    (previousLatest?.alerts ?? []).map((a) => a.type),
+  );
 
   const alerts: GSCAlert[] = [];
   const pendingAlerts: GSCPendingAlert[] = [];
-
-  const conditions: Array<{
-    type: GSCAlertType;
-    triggered: boolean;
-    severity: 'high' | 'medium';
-    message: string;
-  }> = [];
+  const conditions: AlertCondition[] = [];
 
   if (weekAgo && weekAgo.indexing.indexedCount > 0) {
     const ratio = current.indexedCount / weekAgo.indexing.indexedCount;
     if (ratio < INDEXED_DROP_RATIO) {
+      const dropPct = Math.round((1 - ratio) * 100);
       conditions.push({
         type: 'indexed-drop',
-        triggered: true,
         severity: 'high',
-        message: `Indexed pages dropped from ${weekAgo.indexing.indexedCount} to ${current.indexedCount} (${Math.round((1 - ratio) * 100)}% decrease) over the last 7 days.`,
+        subject: `Indexed pages dropped ${dropPct}% (${weekAgo.indexing.indexedCount}→${current.indexedCount})`,
+        message: `Indexed pages dropped from ${weekAgo.indexing.indexedCount} to ${current.indexedCount} (${dropPct}% decrease) over the last 7 days.`,
       });
     }
   }
 
-  const totalSitemapErrors = current.sitemaps.reduce((sum, sm) => sum + sm.errors, 0);
-  if (totalSitemapErrors > 0) {
-    const paths = current.sitemaps.filter((sm) => sm.errors > 0).map((sm) => sm.path).join(', ');
+  const sitemapsWithErrors = current.sitemaps.filter((sm) => sm.errors > 0);
+  if (sitemapsWithErrors.length > 0) {
+    const totalErrors = sitemapsWithErrors.reduce((sum, sm) => sum + sm.errors, 0);
+    const paths = sitemapsWithErrors.map((sm) => sm.path).join(', ');
     conditions.push({
       type: 'sitemap-error',
-      triggered: true,
       severity: 'high',
-      message: `Sitemap reports ${totalSitemapErrors} error(s): ${paths}`,
+      subject: `Sitemap has ${totalErrors} error${totalErrors === 1 ? '' : 's'}`,
+      message: `Sitemap reports ${totalErrors} error(s): ${paths}`,
+      // Per-path discriminator keeps future multi-sitemap setups from silently
+      // squashing each other in the dedup window. Single-sitemap today just
+      // gives a stable key.
+      discriminator: sitemapsWithErrors.map((sm) => sm.path).sort().join('|'),
     });
   }
 
@@ -244,11 +266,12 @@ export function resolveAlerts(input: ResolveAlertsInput): ResolveAlertsOutput {
     const newWarnings = current.sitemaps.reduce((sum, sm) => sum + sm.warnings, 0);
     const oldWarnings = previousLatest.sitemaps.reduce((sum, sm) => sum + sm.warnings, 0);
     if (newWarnings > oldWarnings) {
+      const delta = newWarnings - oldWarnings;
       conditions.push({
-        type: 'new-crawl-error',
-        triggered: true,
+        type: 'new-crawl-warning',
         severity: 'medium',
-        message: `New sitemap warning(s) appeared: ${newWarnings - oldWarnings} more than the last check.`,
+        subject: `${delta} new sitemap warning${delta === 1 ? '' : 's'}`,
+        message: `New sitemap warning(s) appeared: ${delta} more than the last check (${oldWarnings}→${newWarnings}).`,
       });
     }
   }
@@ -256,29 +279,33 @@ export function resolveAlerts(input: ResolveAlertsInput): ResolveAlertsOutput {
   if (current.performance.priorPeriodImpressions > 0) {
     const ratio = current.performance.totalImpressions / current.performance.priorPeriodImpressions;
     if (ratio < IMPRESSIONS_DROP_RATIO) {
+      const dropPct = Math.round((1 - ratio) * 100);
       conditions.push({
         type: 'impressions-drop',
-        triggered: true,
         severity: 'medium',
-        message: `28-day impressions dropped from ${current.performance.priorPeriodImpressions} to ${current.performance.totalImpressions} (${Math.round((1 - ratio) * 100)}% decrease) vs the prior 28 days.`,
+        subject: `Impressions dropped ${dropPct}% (${current.performance.priorPeriodImpressions}→${current.performance.totalImpressions})`,
+        message: `28-day impressions dropped from ${current.performance.priorPeriodImpressions} to ${current.performance.totalImpressions} (${dropPct}% decrease) vs the prior 28 days.`,
       });
     }
   }
 
   for (const cond of conditions) {
-    if (!cond.triggered) continue;
-    const previousPendingEntry = previousPending.get(cond.type);
-    if (previousPendingEntry) {
-      // Graduated: condition was pending last run, still met this run → alert.
+    const wasAlerted = previouslyAlerted.has(cond.type);
+    const wasPending = previousPending.has(cond.type);
+
+    if (wasAlerted || wasPending) {
+      // Continuation (alerted → still alerting) or graduation (pending → alert).
       alerts.push({
         type: cond.type,
         severity: cond.severity,
+        subject: cond.subject,
         message: cond.message,
         detectedAt: now.toISOString(),
         emailSent: false,
+        discriminator: cond.discriminator,
       });
     } else {
-      // First observation — mark pending, do not alert yet.
+      // First observation of this condition — mark pending, no email yet.
       pendingAlerts.push({ type: cond.type, firstDetectedAt: now.toISOString() });
     }
   }
@@ -288,27 +315,22 @@ export function resolveAlerts(input: ResolveAlertsInput): ResolveAlertsOutput {
 
 // ---- Alert dispatch ----
 
-interface AlertDispatchResult {
-  sent: boolean;
-  provider: 'cf' | 'resend' | 'none';
-}
-
 async function dispatchAlerts(
   env: Env,
   kv: KVNamespace,
   alerts: GSCAlert[],
   now: Date,
-): Promise<AlertDispatchResult[]> {
-  const results: AlertDispatchResult[] = [];
+): Promise<DispatchResult[]> {
+  const results: DispatchResult[] = [];
   for (const alert of alerts) {
-    const dedupKey = `alert:dedup:${alert.type}`;
+    const dedupKey = `alert:dedup:${alert.type}:${alert.discriminator ?? ''}`;
     const existing = await kv.get(dedupKey);
     if (existing) {
       results.push({ sent: false, provider: 'none' });
       continue;
     }
 
-    const subject = `[hultberg.org] ${subjectForAlert(alert)}`;
+    const subject = `[hultberg.org] ${alert.subject}`;
     const body = `${alert.message}\n\nDetected at: ${alert.detectedAt}\n\nOpen Search Console: https://search.google.com/search-console?resource_id=sc-domain%3Ahultberg.org`;
 
     const result = await sendAlert(env, { subject, body });
@@ -321,42 +343,6 @@ async function dispatchAlerts(
     }
   }
   return results;
-}
-
-function subjectForAlert(alert: GSCAlert): string {
-  switch (alert.type) {
-    case 'indexed-drop':
-      return 'Indexed page count dropped';
-    case 'sitemap-error':
-      return 'Sitemap error detected';
-    case 'new-crawl-error':
-      return 'New sitemap warning';
-    case 'impressions-drop':
-      return 'Search impressions dropped';
-  }
-}
-
-function mergeEmailDelivery(
-  previous: GSCSnapshot['emailDelivery'],
-  dispatched: AlertDispatchResult[],
-  now: Date,
-): GSCSnapshot['emailDelivery'] {
-  const lastResult = dispatched[dispatched.length - 1];
-  if (!lastResult) return previous;
-
-  const nowIso = now.toISOString();
-  if (lastResult.sent) {
-    return {
-      lastProvider: lastResult.provider,
-      lastSuccessAt: nowIso,
-      lastErrorAt: previous.lastErrorAt,
-    };
-  }
-  return {
-    lastProvider: lastResult.provider,
-    lastSuccessAt: previous.lastSuccessAt,
-    lastErrorAt: nowIso,
-  };
 }
 
 // ---- KV helpers ----
@@ -397,7 +383,7 @@ export async function handleScheduled(
 ): Promise<void> {
   ctx.waitUntil(
     runDailyPoll(env).catch((err) => {
-      console.error('Scheduled GSC poll failed:', err);
+      console.error(`Scheduled GSC poll failed: ${sanitiseUpstreamError(err)}`);
     }),
   );
 }

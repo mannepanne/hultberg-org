@@ -178,24 +178,6 @@ describe('GSCClient API methods', () => {
     expect(sites[0].siteUrl).toBe('sc-domain:hultberg.org');
   });
 
-  it('inspectUrl POSTs to the urlInspection endpoint with siteUrl + inspectionUrl', async () => {
-    let capturedUrl = '';
-    let capturedBody = '';
-    mockFetch((url, init) => {
-      capturedUrl = url;
-      capturedBody = init?.body?.toString() ?? '';
-      return mockSuccess({ inspectionResult: { indexStatusResult: { verdict: 'PASS' } } });
-    });
-
-    await client.inspectUrl('https://hultberg.org/updates/newer-update');
-
-    expect(capturedUrl).toBe('https://searchconsole.googleapis.com/v1/urlInspection/index:inspect');
-    expect(JSON.parse(capturedBody)).toEqual({
-      inspectionUrl: 'https://hultberg.org/updates/newer-update',
-      siteUrl: SITE_URL,
-    });
-  });
-
   it('API methods bubble up descriptive errors on non-success', async () => {
     mockFetch(() => new Response('forbidden', { status: 403 }));
     await expect(client.listSitemaps()).rejects.toThrow(/403/);

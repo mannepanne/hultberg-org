@@ -227,8 +227,8 @@ describe('runDailyPoll', () => {
     };
     await env.GSC_KV!.put('status:history:2026-04-11', JSON.stringify(weekAgo));
     await env.GSC_KV!.put('status:latest', JSON.stringify(previousLatest));
-    // Dedup key already present
-    await env.GSC_KV!.put('alert:dedup:indexed-drop', '2026-04-18T00:00:00Z');
+    // Dedup key already present (new shape per spec: alert:dedup:{type}:{discriminator})
+    await env.GSC_KV!.put('alert:dedup:indexed-drop:', '2026-04-18T00:00:00Z');
 
     mockGSCApi({ sitemaps: goodSitemapsResponse({ indexed: '10' }) });
 

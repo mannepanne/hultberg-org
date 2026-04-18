@@ -3,10 +3,10 @@
 // ABOUT: we actually use: sitemaps.list, searchanalytics.query, urlInspection.inspect.
 
 import { signServiceAccountJWT } from '@/jwt';
+import { sanitiseUpstreamError } from '@/gscHelpers';
 
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const API_BASE = 'https://www.googleapis.com/webmasters/v3';
-const INSPECT_URL = 'https://searchconsole.googleapis.com/v1/urlInspection/index:inspect';
 const SCOPE = 'https://www.googleapis.com/auth/webmasters.readonly';
 
 /**
@@ -113,7 +113,7 @@ export class GSCClient {
 
     if (!response.ok) {
       const body = await response.text();
-      throw new Error(`GSC: token exchange failed (${response.status}): ${body}`);
+      throw new Error(`GSC: token exchange failed (${response.status}): ${sanitiseUpstreamError(body)}`);
     }
 
     const data = await response.json() as { access_token: string; expires_in: number };
@@ -158,30 +158,6 @@ export class GSCClient {
     return data.rows ?? [];
   }
 
-  /**
-   * POST urlInspection.index:inspect — per-URL indexing status.
-   * Separate endpoint host from the other APIs.
-   */
-  async inspectUrl(url: string): Promise<unknown> {
-    const token = await this.getAccessToken();
-    const response = await fetch(INSPECT_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        inspectionUrl: url,
-        siteUrl: this.siteUrl,
-      }),
-    });
-    if (!response.ok) {
-      const body = await response.text();
-      throw new Error(`GSC: urlInspection failed (${response.status}): ${body}`);
-    }
-    return response.json();
-  }
-
   private async call<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
     const token = await this.getAccessToken();
     const init: RequestInit = {
@@ -197,7 +173,7 @@ export class GSCClient {
     const response = await fetch(`${API_BASE}${path}`, init);
     if (!response.ok) {
       const text = await response.text();
-      throw new Error(`GSC: ${method} ${path} failed (${response.status}): ${text}`);
+      throw new Error(`GSC: ${method} ${path} failed (${response.status}): ${sanitiseUpstreamError(text)}`);
     }
     return response.json() as Promise<T>;
   }

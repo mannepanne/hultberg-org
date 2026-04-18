@@ -143,7 +143,7 @@ describe('resolveAlerts — sitemap-error', () => {
   });
 });
 
-describe('resolveAlerts — new-crawl-error (warnings)', () => {
+describe('resolveAlerts — new-crawl-warning (warnings)', () => {
   it('flags when warnings increase compared to previous snapshot', () => {
     const current = {
       indexedCount: 18,
@@ -159,7 +159,7 @@ describe('resolveAlerts — new-crawl-error (warnings)', () => {
       weekAgo: null,
     });
 
-    expect(pendingAlerts.map((p) => p.type)).toContain('new-crawl-error');
+    expect(pendingAlerts.map((p) => p.type)).toContain('new-crawl-warning');
   });
 
   it('does not flag when warning count is stable', () => {
@@ -179,6 +179,93 @@ describe('resolveAlerts — new-crawl-error (warnings)', () => {
 
     expect(alerts).toEqual([]);
     expect(pendingAlerts).toEqual([]);
+  });
+});
+
+describe('resolveAlerts — continuation (no pending re-pending oscillation)', () => {
+  it('keeps a previously-alerted, still-triggering condition in alerts (not recycled to pending)', () => {
+    const previousLatest = makeSnapshot({
+      alerts: [{
+        type: 'indexed-drop',
+        severity: 'high',
+        subject: 'Indexed pages dropped 50% (20→10)',
+        message: 'x',
+        detectedAt: '2026-04-17T08:00:00Z',
+        emailSent: true,
+      }],
+      pendingAlerts: [],
+    });
+
+    const { alerts, pendingAlerts } = resolveAlerts({
+      now: NOW,
+      current: { indexedCount: 10, sitemaps: [makeSitemap({ indexed: 10 })], performance: makePerformance() },
+      previousLatest,
+      weekAgo: makeSnapshot({ indexing: { indexedCount: 20 } }),
+    });
+
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0].type).toBe('indexed-drop');
+    expect(pendingAlerts).toEqual([]);
+  });
+
+  it('drops a previously-alerted condition that has resolved (neither alerts nor pending)', () => {
+    const previousLatest = makeSnapshot({
+      alerts: [{
+        type: 'indexed-drop',
+        severity: 'high',
+        subject: 'x',
+        message: 'x',
+        detectedAt: '2026-04-17T08:00:00Z',
+        emailSent: true,
+      }],
+    });
+
+    const { alerts, pendingAlerts } = resolveAlerts({
+      now: NOW,
+      // Recovered: current matches week-ago
+      current: { indexedCount: 20, sitemaps: [makeSitemap({ indexed: 20 })], performance: makePerformance() },
+      previousLatest,
+      weekAgo: makeSnapshot({ indexing: { indexedCount: 20 } }),
+    });
+
+    expect(alerts).toEqual([]);
+    expect(pendingAlerts).toEqual([]);
+  });
+});
+
+describe('resolveAlerts — subject magnitude', () => {
+  it('indexed-drop subject includes percent and from→to numbers', () => {
+    const previous = makeSnapshot({
+      pendingAlerts: [{ type: 'indexed-drop', firstDetectedAt: '2026-04-17T08:00:00Z' }],
+    });
+    const { alerts } = resolveAlerts({
+      now: NOW,
+      current: { indexedCount: 10, sitemaps: [makeSitemap({ indexed: 10 })], performance: makePerformance() },
+      previousLatest: previous,
+      weekAgo: makeSnapshot({ indexing: { indexedCount: 20 } }),
+    });
+
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0].subject).toBe('Indexed pages dropped 50% (20→10)');
+  });
+
+  it('impressions-drop subject includes percent and from→to numbers', () => {
+    const previous = makeSnapshot({
+      pendingAlerts: [{ type: 'impressions-drop', firstDetectedAt: '2026-04-17T08:00:00Z' }],
+    });
+    const { alerts } = resolveAlerts({
+      now: NOW,
+      current: {
+        indexedCount: 18,
+        sitemaps: [makeSitemap()],
+        performance: makePerformance({ totalImpressions: 1000, priorPeriodImpressions: 5000 }),
+      },
+      previousLatest: previous,
+      weekAgo: null,
+    });
+
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0].subject).toBe('Impressions dropped 80% (5000→1000)');
   });
 });
 

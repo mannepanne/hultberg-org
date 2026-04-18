@@ -120,15 +120,17 @@ export interface NowSnapshotsIndex {
 export type GSCAlertType =
   | 'indexed-drop'
   | 'sitemap-error'
-  | 'new-crawl-error'
+  | 'new-crawl-warning'
   | 'impressions-drop';
 
 export interface GSCAlert {
   type: GSCAlertType;
   severity: 'high' | 'medium';
-  message: string;
+  subject: string; // short, magnitude-aware summary used for email subject lines
+  message: string; // full message body explaining the condition
   detectedAt: string;
   emailSent: boolean;
+  discriminator?: string; // optional per-alert dedup key (e.g. sitemap path)
 }
 
 export interface GSCPendingAlert {

@@ -227,7 +227,7 @@ export interface GSCSnapshot {
 }
 
 export interface GSCAlert {
-  type: 'indexed-drop' | 'sitemap-error' | 'new-crawl-error' | 'impressions-drop';
+  type: 'indexed-drop' | 'sitemap-error' | 'new-crawl-warning' | 'impressions-drop';
   severity: 'high' | 'medium';
   message: string;
   detectedAt: string;
@@ -302,6 +302,8 @@ Branch naming: `feature/gsc-insights-plumbing` and `feature/gsc-insights-ui`.
 4. **Lint warning UI.** Toast / banner / inline next to fields? Assumption: a yellow banner above the editor's publish button.
 5. **CF Email Sending cost.** Pricing not finalized as of Apr 2026. We accept this — re-evaluate if billing surprises us.
 6. ~~**Search Analytics property URL form.**~~ **Decided (2026-04-18):** `sc-domain:hultberg.org` (Domain property). Aggregates http/https/www and all subdomains, including `tummyrumble.hultberg.org` — accepted as negligible mixing. Service account was verified with `siteFullUser` permission on this property via a local verification script before any Worker code was written.
+
+7. ~~**`urlInspection` wiring.**~~ **Decided during PR 1 review (2026-04-18):** deferred to PR 2. The method was removed from the GSC client in the plumbing PR to avoid shipping dead code. PR 2 will reintroduce it alongside the dashboard work, which is the right moment to design where per-URL inspection data lives on the snapshot shape.
 
 ## Future work — Layer 2 placeholder
 

@@ -9,6 +9,7 @@
 import { EmailMessage } from 'cloudflare:email';
 import type { Env } from './types';
 import { sendViaResend } from './email';
+import { sanitiseUpstreamError } from './gscHelpers';
 
 const ALERT_FROM = 'alerts@hultberg.org';
 const ALERT_FROM_DISPLAY = 'Hultberg.org Alerts <alerts@hultberg.org>';
@@ -46,8 +47,7 @@ export async function sendAlert(env: Env, alert: Alert): Promise<NotifierResult>
       await env.SEND_EMAIL.send(new EmailMessage(ALERT_FROM, to, mime));
       return { provider: 'cf' };
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.warn(`Notifier: CF Email Sending failed (${message}); falling back to Resend`);
+      console.warn(`Notifier: CF Email Sending failed (${sanitiseUpstreamError(err)}); falling back to Resend`);
     }
   }
 
@@ -66,6 +66,10 @@ export async function sendAlert(env: Env, alert: Alert): Promise<NotifierResult>
 /**
  * Build a minimal RFC 822 MIME message for a plain-text alert.
  * Exported for testing — pure string transformation.
+ *
+ * Header fields (from/to/subject) are sanitised to strip CR and LF so that
+ * future callers with user-controlled input can't inject additional headers
+ * or prematurely end the header section.
  */
 export function buildMimeMessage(params: {
   from: string;
@@ -73,11 +77,14 @@ export function buildMimeMessage(params: {
   subject: string;
   body: string;
 }): string {
+  const from = stripCRLF(params.from);
+  const to = stripCRLF(params.to);
+  const subject = stripCRLF(params.subject);
   const date = new Date().toUTCString();
   return [
-    `From: ${params.from}`,
-    `To: ${params.to}`,
-    `Subject: ${params.subject}`,
+    `From: ${from}`,
+    `To: ${to}`,
+    `Subject: ${subject}`,
     `Date: ${date}`,
     'MIME-Version: 1.0',
     'Content-Type: text/plain; charset=utf-8',
@@ -85,6 +92,10 @@ export function buildMimeMessage(params: {
     params.body,
     '',
   ].join('\r\n');
+}
+
+function stripCRLF(s: string): string {
+  return s.replace(/[\r\n]/g, ' ');
 }
 
 function htmlFromText(body: string): string {

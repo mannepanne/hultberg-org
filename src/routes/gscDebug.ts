@@ -5,6 +5,7 @@
 import type { Env } from '@/types';
 import { requireAuth } from '@/auth';
 import { GSCClient } from '@/gsc';
+import { sanitiseUpstreamError } from '@/gscHelpers';
 
 const SITE_URL = 'sc-domain:hultberg.org';
 
@@ -24,8 +25,9 @@ export async function handleGscDebug(request: Request, env: Env): Promise<Respon
     const sitemaps = await client.listSitemaps();
     return json({ ok: true, siteUrl: SITE_URL, sites, sitemaps });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return json({ ok: false, error: message }, 500);
+    // Sanitise before returning over HTTP — auth-gated, but don't echo full upstream bodies.
+    console.error('gsc-debug failed:', err);
+    return json({ ok: false, error: sanitiseUpstreamError(err) }, 500);
   }
 }
 

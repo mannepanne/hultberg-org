@@ -25,9 +25,10 @@ export async function handleGscDebug(request: Request, env: Env): Promise<Respon
     const sitemaps = await client.listSitemaps();
     return json({ ok: true, siteUrl: SITE_URL, sites, sitemaps });
   } catch (err) {
-    // Sanitise before returning over HTTP — auth-gated, but don't echo full upstream bodies.
-    console.error('gsc-debug failed:', err);
-    return json({ ok: false, error: sanitiseUpstreamError(err) }, 500);
+    // Sanitise on both log and HTTP — auth-gated, but don't echo full upstream bodies.
+    const message = sanitiseUpstreamError(err);
+    console.error('gsc-debug failed:', message);
+    return json({ ok: false, error: message }, 500);
   }
 }
 

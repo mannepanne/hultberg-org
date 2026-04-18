@@ -95,7 +95,10 @@ export function buildMimeMessage(params: {
 }
 
 function stripCRLF(s: string): string {
-  return s.replace(/[\r\n]/g, ' ');
+  // Collapse consecutive CR/LF into a single space so a `\r\n` pair doesn't
+  // produce two spaces (which would be ugly in legitimate inputs and surprising
+  // in test fixtures).
+  return s.replace(/[\r\n]+/g, ' ');
 }
 
 function htmlFromText(body: string): string {

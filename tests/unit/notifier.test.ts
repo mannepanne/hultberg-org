@@ -37,6 +37,38 @@ describe('buildMimeMessage', () => {
     // Headers terminated by CRLF CRLF before the body.
     expect(mime).toContain('\r\n\r\n');
   });
+
+  it('strips CR and LF from subject so injected tokens never start a new header line', () => {
+    const mime = buildMimeMessage({
+      from: 'alerts@hultberg.org',
+      to: 'magnus@example.com',
+      subject: 'legit\r\nX-Injected: evil\r\nAlso-Injected: bad',
+      body: 'body',
+    });
+    const lines = mime.split('\r\n');
+    // The attacker headers must not appear as their own lines.
+    expect(lines.some((l) => l.startsWith('X-Injected:'))).toBe(false);
+    expect(lines.some((l) => l.startsWith('Also-Injected:'))).toBe(false);
+    // The sanitised subject collapses the tokens into a single header value.
+    expect(lines.find((l) => l.startsWith('Subject:'))).toBe('Subject: legit X-Injected: evil Also-Injected: bad');
+  });
+
+  it('strips CR and LF from from/to headers so no injected header survives on its own line', () => {
+    const mime = buildMimeMessage({
+      from: 'alerts@hultberg.org\r\nBcc: sneaky@evil.test',
+      to: 'magnus@example.com\r\nBcc: also-sneaky@evil.test',
+      subject: 'ok',
+      body: 'body',
+    });
+    // Injected tokens survive as substrings of the collapsed From/To header values
+    // (stripCRLF replaces with spaces). The security guarantee is that no NEW header
+    // line starts with Bcc: — only that From/To fields carry the sanitised text.
+    const lines = mime.split('\r\n');
+    expect(lines.some((l) => l.startsWith('Bcc:'))).toBe(false);
+    // Confirm injected content ended up inside the legitimate headers as a substring.
+    expect(lines.find((l) => l.startsWith('From:'))).toContain('Bcc: sneaky@evil.test');
+    expect(lines.find((l) => l.startsWith('To:'))).toContain('Bcc: also-sneaky@evil.test');
+  });
 });
 
 describe('sendAlert', () => {

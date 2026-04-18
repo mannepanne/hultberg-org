@@ -1,6 +1,6 @@
 // ABOUT: Google Search Console API client for Workers runtime.
-// ABOUT: Handles service-account auth, token caching, and the three endpoints
-// ABOUT: we actually use: sitemaps.list, searchanalytics.query, urlInspection.inspect.
+// ABOUT: Handles service-account auth, token caching, and the endpoints we use:
+// ABOUT: sites.list (debug), sitemaps.list, and searchAnalytics.query.
 
 import { signServiceAccountJWT } from '@/jwt';
 import { sanitiseUpstreamError } from '@/gscHelpers';

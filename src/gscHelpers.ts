@@ -19,12 +19,17 @@ export function sanitiseUpstreamError(err: unknown): string {
  * Merge a previous email-delivery state with per-alert dispatch results.
  * Updates lastSuccessAt and lastErrorAt independently so that one failed
  * send in a batch doesn't erase a successful one, and vice versa.
- * lastProvider reflects the most recent attempt in `results` (whether
- * success or failure) to help the dashboard show what was tried last.
+ * lastProvider reflects the most recent *attempted* delivery (dedup-
+ * suppressed entries are skipped — they're not a provider outcome).
+ *
+ * provider values:
+ *   'cf' | 'resend'  — a real delivery attempt that succeeded
+ *   'none'           — a real delivery attempt that failed (both providers)
+ *   'dedup'          — suppressed by the 24h dedup key; not a delivery attempt
  */
 export interface DispatchResult {
   sent: boolean;
-  provider: 'cf' | 'resend' | 'none';
+  provider: 'cf' | 'resend' | 'none' | 'dedup';
 }
 
 export function mergeEmailDelivery(
@@ -32,17 +37,18 @@ export function mergeEmailDelivery(
   results: DispatchResult[],
   now: Date,
 ): GSCEmailDelivery {
-  if (results.length === 0) {
+  const attempts = results.filter((r) => r.provider !== 'dedup');
+  if (attempts.length === 0) {
     return previous;
   }
 
   const nowIso = now.toISOString();
-  const anySuccess = results.some((r) => r.sent);
-  const anyFailure = results.some((r) => !r.sent);
-  const lastResult = results[results.length - 1];
+  const anySuccess = attempts.some((r) => r.sent);
+  const anyFailure = attempts.some((r) => !r.sent);
+  const lastAttempt = attempts[attempts.length - 1];
 
   return {
-    lastProvider: lastResult.provider,
+    lastProvider: lastAttempt.provider as GSCEmailDelivery['lastProvider'],
     lastSuccessAt: anySuccess ? nowIso : previous.lastSuccessAt,
     lastErrorAt: anyFailure ? nowIso : previous.lastErrorAt,
   };

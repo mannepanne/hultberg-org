@@ -107,4 +107,35 @@ describe('mergeEmailDelivery', () => {
     expect(merged.lastSuccessAt).toBe(NOW.toISOString());
     expect(merged.lastErrorAt).toBe(NOW.toISOString());
   });
+
+  it('treats dedup-suppressed entries as non-attempts (not failures)', () => {
+    // Regression guard: a steady-state alert within the 24h dedup window must
+    // not advance lastErrorAt. The dashboard would otherwise show chronic
+    // "email failing" for a condition that's been correctly delivered.
+    const prev: GSCEmailDelivery = { lastProvider: 'cf', lastSuccessAt: EARLIER, lastErrorAt: null };
+    const results: DispatchResult[] = [{ sent: false, provider: 'dedup' }];
+    expect(mergeEmailDelivery(prev, results, NOW)).toEqual(prev);
+  });
+
+  it('ignores leading dedup entries when computing lastProvider', () => {
+    const results: DispatchResult[] = [
+      { sent: false, provider: 'dedup' },
+      { sent: true, provider: 'cf' },
+    ];
+    const merged = mergeEmailDelivery(freshPrev, results, NOW);
+    expect(merged.lastProvider).toBe('cf');
+    expect(merged.lastSuccessAt).toBe(NOW.toISOString());
+  });
+
+  it('handles mixed dedup + attempt + dedup correctly', () => {
+    const results: DispatchResult[] = [
+      { sent: false, provider: 'dedup' },
+      { sent: false, provider: 'none' },
+      { sent: false, provider: 'dedup' },
+    ];
+    const merged = mergeEmailDelivery(freshPrev, results, NOW);
+    expect(merged.lastProvider).toBe('none');
+    expect(merged.lastErrorAt).toBe(NOW.toISOString());
+    expect(merged.lastSuccessAt).toBeNull();
+  });
 });

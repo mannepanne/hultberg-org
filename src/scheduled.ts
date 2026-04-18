@@ -326,7 +326,9 @@ async function dispatchAlerts(
     const dedupKey = `alert:dedup:${alert.type}:${alert.discriminator ?? ''}`;
     const existing = await kv.get(dedupKey);
     if (existing) {
-      results.push({ sent: false, provider: 'none' });
+      // Dedup suppression is not a delivery failure — tag as 'dedup' so
+      // mergeEmailDelivery doesn't advance lastErrorAt for steady-state alerts.
+      results.push({ sent: false, provider: 'dedup' });
       continue;
     }
 

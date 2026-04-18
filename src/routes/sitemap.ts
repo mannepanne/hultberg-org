@@ -27,7 +27,7 @@ export async function handleSitemap(request: Request, env: Env): Promise<Respons
       status: 200,
       headers: {
         'Content-Type': 'application/xml; charset=utf-8',
-        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+        'Cache-Control': 'public, max-age=3600, s-maxage=86400',
       },
     });
   } catch (error) {
@@ -67,18 +67,8 @@ function generateSitemapXML(
   const entries: string[] = [];
 
   entries.push(buildUrl(`${origin}/`, undefined, '1.0'));
-
-  entries.push(buildUrl(
-    `${origin}/now`,
-    nowContent?.lastUpdated ? toW3CDate(nowContent.lastUpdated) : undefined,
-    '0.9',
-  ));
-
-  entries.push(buildUrl(
-    `${origin}/updates`,
-    newestUpdateDate ? toW3CDate(newestUpdateDate) : undefined,
-    '0.8',
-  ));
+  entries.push(buildUrl(`${origin}/now`, toW3CDate(nowContent?.lastUpdated), '0.9'));
+  entries.push(buildUrl(`${origin}/updates`, toW3CDate(newestUpdateDate), '0.8'));
 
   for (const update of publishedUpdates) {
     entries.push(buildUrl(
@@ -107,15 +97,13 @@ function buildUrl(loc: string, lastmod: string | undefined, priority: string): s
 
 /**
  * Convert an ISO 8601 timestamp to a W3C Datetime sitemap-friendly form.
- * Returns the original string if it isn't a valid date — better to emit
- * something than to drop the lastmod entirely.
+ * Returns undefined for missing or unparseable input so callers can omit
+ * the <lastmod> entirely rather than emit malformed XML.
  */
-function toW3CDate(iso: string): string {
+function toW3CDate(iso: string | undefined): string | undefined {
+  if (!iso) return undefined;
   const date = new Date(iso);
-  if (isNaN(date.getTime())) {
-    return iso;
-  }
-  return date.toISOString();
+  return isNaN(date.getTime()) ? undefined : date.toISOString();
 }
 
 function escapeXML(unsafe: string): string {

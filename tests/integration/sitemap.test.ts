@@ -208,6 +208,44 @@ describe('GET /sitemap.xml', () => {
     expect(nowBlock![0]).not.toContain('<lastmod>');
   });
 
+  it('lists updates newest-first', async () => {
+    const request = new Request('http://localhost/sitemap.xml');
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+    const xml = await response.text();
+
+    const newerIndex = xml.indexOf('/updates/newer-update');
+    const olderIndex = xml.indexOf('/updates/older-update');
+
+    expect(newerIndex).toBeGreaterThan(-1);
+    expect(olderIndex).toBeGreaterThan(-1);
+    expect(newerIndex).toBeLessThan(olderIndex);
+  });
+
+  it('omits lastmod when an update has an unparseable publishedDate', async () => {
+    mockFetch(
+      {
+        updates: [
+          {
+            slug: 'broken-date-update',
+            title: 'Broken Date',
+            excerpt: 'X',
+            publishedDate: 'not-a-real-date',
+            status: 'published',
+          },
+        ],
+      },
+      sampleNow,
+    );
+
+    const request = new Request('http://localhost/sitemap.xml');
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+    const xml = await response.text();
+
+    const block = xml.match(/<url>\s*<loc>http:\/\/localhost\/updates\/broken-date-update<\/loc>[\s\S]*?<\/url>/);
+    expect(block).toBeTruthy();
+    expect(block![0]).not.toContain('<lastmod>');
+  });
+
   it('returns sitemap entries even with an empty updates list', async () => {
     mockFetch({ updates: [] }, sampleNow);
 

@@ -242,6 +242,44 @@ describe('runDailyPoll', () => {
     expect(snapshot.emailDelivery).toEqual(previousLatest.emailDelivery);
   });
 
+  it('skipDispatch: graduates alerts but does NOT send email or write dedup keys', async () => {
+    // Set up for graduation: previous pending, conditions still trigger today.
+    const weekAgo: GSCSnapshot = {
+      capturedAt: '2026-04-11T08:00:00Z',
+      siteUrl: SITE_URL, sitemaps: [],
+      indexing: { indexedCount: 20 },
+      performance: {
+        period: '28d', totalClicks: 0, totalImpressions: 0, avgCtr: 0, avgPosition: 0,
+        topQueries: [], priorPeriodClicks: 0, priorPeriodImpressions: 0,
+      },
+      alerts: [], pendingAlerts: [],
+      emailDelivery: { lastProvider: null, lastSuccessAt: null, lastErrorAt: null },
+    };
+    const previousLatest: GSCSnapshot = {
+      ...weekAgo,
+      capturedAt: '2026-04-17T08:00:00Z',
+      indexing: { indexedCount: 10 },
+      pendingAlerts: [{ type: 'indexed-drop', firstDetectedAt: '2026-04-17T08:00:00Z' }],
+    };
+    await env.GSC_KV!.put('status:history:2026-04-11', JSON.stringify(weekAgo));
+    await env.GSC_KV!.put('status:latest', JSON.stringify(previousLatest));
+
+    mockGSCApi({ sitemaps: goodSitemapsResponse({ indexed: '10' }) });
+
+    const snapshot = await runDailyPoll(env, { now: NOW, siteUrl: SITE_URL, skipDispatch: true });
+
+    // Alert is graduated and present in snapshot (state machine still runs).
+    expect(snapshot.alerts).toHaveLength(1);
+    expect(snapshot.alerts[0].type).toBe('indexed-drop');
+    // But no email was sent and emailSent stays false.
+    expect(snapshot.alerts[0].emailSent).toBe(false);
+    expect(sendEmailMock).not.toHaveBeenCalled();
+    // Email delivery state is untouched — refresh doesn't advance it.
+    expect(snapshot.emailDelivery).toEqual(previousLatest.emailDelivery);
+    // Crucially: no dedup key written, so the next cron run will attempt delivery.
+    expect(await env.GSC_KV!.get('alert:dedup:indexed-drop:')).toBeNull();
+  });
+
   it('handles an empty sitemap list gracefully', async () => {
     mockGSCApi({ sitemaps: { sitemap: [] } });
 

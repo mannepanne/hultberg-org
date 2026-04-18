@@ -128,9 +128,13 @@ export interface GSCAlert {
   severity: 'high' | 'medium';
   subject: string; // short, magnitude-aware summary used for email subject lines
   message: string; // full message body explaining the condition
-  detectedAt: string;
+  firstDetectedAt: string; // ISO 8601 — when the condition was *first* observed
+                           // (preserved from the original pending entry through
+                           // graduation + continuation, so the UI can render
+                           // "seen for N days")
+  detectedAt: string;      // ISO 8601 — when this run observed the condition
   emailSent: boolean;
-  discriminator?: string; // optional per-alert dedup key (e.g. sitemap path)
+  discriminator?: string;  // optional per-alert dedup key (e.g. sitemap path)
 }
 
 export interface GSCPendingAlert {
@@ -167,6 +171,18 @@ export interface GSCPerformance {
   priorPeriodImpressions: number;
 }
 
+/**
+ * Email delivery state surfaced on the dashboard widget.
+ *
+ * `lastProvider` semantics:
+ *   `null`     — no delivery has been attempted yet (fresh state, no alerts fired)
+ *   `'cf'`     — most recent attempt succeeded via Cloudflare Email Sending
+ *   `'resend'` — most recent attempt succeeded via Resend (CF failed, fallback worked)
+ *   `'none'`   — most recent attempt failed at both providers
+ *
+ * Resolves GitHub issue #32: explicit documentation of the semantics
+ * the dashboard widget relies on.
+ */
 export interface GSCEmailDelivery {
   lastProvider: 'cf' | 'resend' | 'none' | null;
   lastSuccessAt: string | null;

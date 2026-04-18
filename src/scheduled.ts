@@ -31,6 +31,13 @@ const HISTORY_TTL_SECONDS = 35 * 24 * 60 * 60;
 export interface RunDailyPollOptions {
   siteUrl?: string;
   now?: Date;
+  /**
+   * If true, compute the snapshot (including alerts graduation) and persist
+   * it to KV, but do NOT send emails and do NOT write dedup keys. Used by the
+   * manual-refresh endpoint so a user clicking "Refresh" doesn't trigger
+   * surprise emails — email is a cron-only side effect.
+   */
+  skipDispatch?: boolean;
 }
 
 /**
@@ -85,12 +92,18 @@ export async function runDailyPoll(
     },
   };
 
-  const dispatched = await dispatchAlerts(env, kv, alerts, now);
-  snapshot.emailDelivery = mergeEmailDelivery(snapshot.emailDelivery, dispatched, now);
-  snapshot.alerts = snapshot.alerts.map((a, i) => ({
-    ...a,
-    emailSent: dispatched[i]?.sent ?? false,
-  }));
+  if (!opts.skipDispatch) {
+    const dispatched = await dispatchAlerts(env, kv, alerts, now);
+    snapshot.emailDelivery = mergeEmailDelivery(snapshot.emailDelivery, dispatched, now);
+    snapshot.alerts = snapshot.alerts.map((a, i) => ({
+      ...a,
+      emailSent: dispatched[i]?.sent ?? false,
+    }));
+  }
+  // When skipDispatch: alerts retain emailSent=false from resolveAlerts,
+  // emailDelivery is unchanged from previous, no dedup keys written. Next
+  // cron run will still see these alerts (via continuation logic) and deliver
+  // emails if conditions still hold.
 
   await Promise.all([
     kv.put('status:latest', JSON.stringify(snapshot)),
@@ -289,17 +302,29 @@ export function resolveAlerts(input: ResolveAlertsInput): ResolveAlertsOutput {
     }
   }
 
-  for (const cond of conditions) {
-    const wasAlerted = previouslyAlerted.has(cond.type);
-    const wasPending = previousPending.has(cond.type);
+  const previousAlertedByType = new Map<GSCAlertType, GSCAlert>(
+    (previousLatest?.alerts ?? []).map((a) => [a.type, a]),
+  );
 
-    if (wasAlerted || wasPending) {
+  for (const cond of conditions) {
+    const previousAlert = previousAlertedByType.get(cond.type);
+    const previousPendingEntry = previousPending.get(cond.type);
+
+    if (previousAlert || previousPendingEntry) {
       // Continuation (alerted → still alerting) or graduation (pending → alert).
+      // Preserve the ORIGINAL firstDetectedAt so the widget can render
+      // "seen for N days" honestly.
+      const firstDetectedAt =
+        previousAlert?.firstDetectedAt ??
+        previousPendingEntry?.firstDetectedAt ??
+        now.toISOString();
+
       alerts.push({
         type: cond.type,
         severity: cond.severity,
         subject: cond.subject,
         message: cond.message,
+        firstDetectedAt,
         detectedAt: now.toISOString(),
         emailSent: false,
         discriminator: cond.discriminator,

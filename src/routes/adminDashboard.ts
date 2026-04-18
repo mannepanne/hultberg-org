@@ -110,6 +110,49 @@ function renderDashboard(email: string, updates: Update[]): string {
       font-size: 0.9em;
     }
     .btn-primary:hover { background: #343a40; }
+    /* GSC widget */
+    .widget { background: #fff; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.1); margin-bottom: 24px; overflow: hidden; }
+    .widget-header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid #f1f3f5; }
+    .widget-header h2 { font-size: 1em; font-weight: 600; margin: 0; flex: 1; color: #212529; }
+    .widget-header h2 a { color: #0d6efd; text-decoration: none; }
+    .widget-header h2 a:hover { text-decoration: underline; }
+    .widget-header .freshness { font-size: 0.8em; color: #6c757d; }
+    .widget-header .freshness.stale { color: #dc3545; font-weight: 600; }
+    .widget-header button.refresh { background: transparent; border: 1px solid #dee2e6; color: #495057; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em; }
+    .widget-header button.refresh:hover:not(:disabled) { border-color: #adb5bd; background: #f8f9fa; }
+    .widget-header button.refresh:disabled { opacity: 0.6; cursor: wait; }
+    .widget-body { padding: 16px 20px; }
+    .widget-body.error { color: #721c24; background: #f8d7da; }
+    .alerts { padding: 0 20px; }
+    .alert { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 4px; margin: 12px 0; font-size: 0.88em; }
+    .alert .icon { font-size: 1.1em; line-height: 1; }
+    .alert .body { flex: 1; }
+    .alert .body .title { font-weight: 600; color: #212529; }
+    .alert .body .meta { color: #6c757d; font-size: 0.9em; margin-top: 2px; }
+    .alert.medium { background: #fff3cd; border-left: 3px solid #ffc107; }
+    .alert.high { background: #f8d7da; border-left: 3px solid #dc3545; }
+    .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 16px 20px; }
+    .tile { background: #f8f9fa; border: 1px solid #f1f3f5; border-radius: 6px; padding: 14px; }
+    .tile .label { font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.05em; color: #6c757d; margin-bottom: 6px; }
+    .tile .value { font-size: 1.6em; font-weight: 700; color: #212529; line-height: 1.1; }
+    .tile .sub { font-size: 0.8em; color: #6c757d; margin-top: 4px; }
+    .tile .sub.delta.up { color: #155724; }
+    .tile .sub.delta.down { color: #721c24; }
+    .queries { padding: 4px 20px 16px; }
+    .queries h3 { font-size: 0.8em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #6c757d; margin: 12px 0 8px; }
+    .queries table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+    .queries td { padding: 6px 0; border-top: 1px solid #f1f3f5; vertical-align: middle; }
+    .queries tr:first-child td { border-top: none; }
+    .queries td.query { color: #212529; }
+    .queries td.metrics { text-align: right; color: #6c757d; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .queries td.metrics .clicks { font-weight: 600; color: #212529; margin-right: 10px; }
+    .gsc-footer { padding: 12px 20px; font-size: 0.82em; color: #6c757d; background: #fafbfc; border-top: 1px solid #f1f3f5; display: flex; gap: 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    .gsc-footer .email-delivery.ok { color: #155724; }
+    .gsc-footer .email-delivery.warn { color: #856404; }
+    .gsc-footer .email-delivery.error { color: #721c24; font-weight: 600; }
+    .gsc-footer .email-delivery.idle { color: #6c757d; }
+    @media (max-width: 720px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
+
     table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
     th { background: #f1f3f5; font-size: 0.8em; text-transform: uppercase; letter-spacing: .05em; color: #6c757d; padding: 10px 14px; text-align: left; }
     td { padding: 12px 14px; border-top: 1px solid #f1f3f5; vertical-align: middle; font-size: 0.9em; }
@@ -134,6 +177,8 @@ function renderDashboard(email: string, updates: Update[]): string {
   </header>
 
   <main>
+    <div id="gsc-widget-root"></div>
+
     <div class="actions">
       <a class="btn-primary" href="/admin/updates/new">+ New Update</a>
     </div>
@@ -180,6 +225,7 @@ function renderDashboard(email: string, updates: Update[]): string {
       .catch(function() { alert('Delete failed: network error'); });
     }
   </script>
+  <script src="/admin/gsc-widget.js"></script>
 </body>
 </html>`;
 }

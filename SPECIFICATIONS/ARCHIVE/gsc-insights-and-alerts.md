@@ -1,8 +1,10 @@
 # GSC Insights & Alerts (Layer 1)
 
-**Status:** 📝 Draft — pending review
+**Status:** ✅ Complete
 **Created:** 2026-04-18
+**Completed:** 2026-04-18 (PR #29 plumbing, PR 2 UI + lint)
 **Depends on:** `/sitemap.xml` route (PR #27, merged 2026-04-18)
+**How-it-works doc:** [REFERENCE/gsc-insights.md](../../REFERENCE/gsc-insights.md)
 
 ## Overview
 

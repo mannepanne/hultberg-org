@@ -17,3 +17,10 @@ RESEND_API_KEY=re_your_resend_api_key_here
 # Generate at: https://github.com/settings/tokens
 # Permissions: Contents (Read and write) for hultberg-org repo
 GITHUB_TOKEN=github_pat_your_token_here
+
+# Google Search Console service-account key (stringified JSON).
+# The service account must be added as a user on the sc-domain:hultberg.org
+# property with Owner or Full permission.
+# Setup: REFERENCE/environment-setup.md → "GSC service account"
+# Production: set via `wrangler secret put GSC_SERVICE_ACCOUNT_JSON` (never commit).
+GSC_SERVICE_ACCOUNT_JSON='{"type":"service_account","client_email":"...","private_key":"..."}'

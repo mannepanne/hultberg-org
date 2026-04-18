@@ -301,7 +301,7 @@ Branch naming: `feature/gsc-insights-plumbing` and `feature/gsc-insights-ui`.
 3. **Indexed-drop threshold.** Defaulting to 20% / 2 consecutive observations. Magnus to confirm.
 4. **Lint warning UI.** Toast / banner / inline next to fields? Assumption: a yellow banner above the editor's publish button.
 5. **CF Email Sending cost.** Pricing not finalized as of Apr 2026. We accept this — re-evaluate if billing surprises us.
-6. **Search Analytics property URL form.** GSC supports both URL-prefix and Domain properties. Which is configured for hultberg.org? (Will check during PR 1 setup.)
+6. ~~**Search Analytics property URL form.**~~ **Decided (2026-04-18):** `sc-domain:hultberg.org` (Domain property). Aggregates http/https/www and all subdomains, including `tummyrumble.hultberg.org` — accepted as negligible mixing. Service account was verified with `siteFullUser` permission on this property via a local verification script before any Worker code was written.
 
 ## Future work — Layer 2 placeholder
 

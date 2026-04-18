@@ -17,6 +17,7 @@ export function createMockEnv(overrides?: Partial<Env>): Env {
     GITHUB_TOKEN: 'test-github-token',
     AUTH_KV: createMockKV(),
     RATE_LIMIT_KV: createMockKV(),
+    GSC_KV: createMockKV(),
     ...overrides,
   };
 }

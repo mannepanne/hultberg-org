@@ -23,3 +23,22 @@ preview_id = "c3b1ac5eaae44f56b2aca621d87160ef"
 binding = "RATE_LIMIT_KV"
 id = "67fa0308c3614932a44c29c64e48b1c8"
 preview_id = "ad999a0cd6394a6ba1ce76e6cebe4e0a"
+
+# GSC_KV: Stores daily Google Search Console snapshots and alert dedup keys.
+# Create both namespaces before first deploy:
+#   wrangler kv namespace create GSC_KV
+#   wrangler kv namespace create GSC_KV --preview
+# Then paste the returned IDs below.
+[[kv_namespaces]]
+binding = "GSC_KV"
+id = "REPLACE_WITH_GSC_KV_ID"
+preview_id = "REPLACE_WITH_GSC_KV_PREVIEW_ID"
+
+# Cloudflare Email Sending binding (beta). Sends GSC alert emails.
+# Magic-link auth emails still go through Resend (src/email.ts) until this service is GA.
+[[send_email]]
+name = "SEND_EMAIL"
+
+# Daily GSC poll — 08:00 UTC.
+[triggers]
+crons = ["0 8 * * *"]

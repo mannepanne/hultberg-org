@@ -131,7 +131,9 @@ grep -r "authentication" REFERENCE/decisions/
 
 **Format:** Listed chronologically (newest first)
 
-*(No ADRs yet - this section will be updated as decisions are recorded)*
+- **[2026-04-18-defer-gsc-auto-fix-layer.md](./2026-04-18-defer-gsc-auto-fix-layer.md)** — Autonomous GSC auto-fix is deferred until Layer 1 data informs which fixers are worth building.
+- **[2026-04-18-cf-email-sending-with-resend-fallback.md](./2026-04-18-cf-email-sending-with-resend-fallback.md)** — GSC alerts use Cloudflare Email Sending (beta) with Resend as fallback; magic-link auth stays on Resend.
+- **[2026-04-18-gsc-service-account-auth.md](./2026-04-18-gsc-service-account-auth.md)** — Use a Google service account (not user OAuth) for GSC API access.
 
 ---
 

@@ -182,6 +182,48 @@ describe('resolveAlerts — new-crawl-warning (warnings)', () => {
   });
 });
 
+describe('resolveAlerts — firstDetectedAt preservation', () => {
+  it('preserves firstDetectedAt from a pending entry on graduation', () => {
+    const pendingTimestamp = '2026-04-17T08:00:00Z';
+    const { alerts } = resolveAlerts({
+      now: NOW,
+      current: { indexedCount: 10, sitemaps: [makeSitemap({ indexed: 10 })], performance: makePerformance() },
+      previousLatest: makeSnapshot({
+        pendingAlerts: [{ type: 'indexed-drop', firstDetectedAt: pendingTimestamp }],
+      }),
+      weekAgo: makeSnapshot({ indexing: { indexedCount: 20 } }),
+    });
+
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0].firstDetectedAt).toBe(pendingTimestamp);
+    expect(alerts[0].detectedAt).toBe(NOW.toISOString());
+  });
+
+  it('preserves firstDetectedAt from a previously-alerted entry on continuation', () => {
+    const originalFirstDetected = '2026-04-15T08:00:00Z';
+    const { alerts } = resolveAlerts({
+      now: NOW,
+      current: { indexedCount: 10, sitemaps: [makeSitemap({ indexed: 10 })], performance: makePerformance() },
+      previousLatest: makeSnapshot({
+        alerts: [{
+          type: 'indexed-drop',
+          severity: 'high',
+          subject: 'Indexed pages dropped 50% (20→10)',
+          message: 'x',
+          firstDetectedAt: originalFirstDetected,
+          detectedAt: '2026-04-17T08:00:00Z',
+          emailSent: true,
+        }],
+      }),
+      weekAgo: makeSnapshot({ indexing: { indexedCount: 20 } }),
+    });
+
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0].firstDetectedAt).toBe(originalFirstDetected);
+    expect(alerts[0].detectedAt).toBe(NOW.toISOString());
+  });
+});
+
 describe('resolveAlerts — continuation (no pending re-pending oscillation)', () => {
   it('keeps a previously-alerted, still-triggering condition in alerts (not recycled to pending)', () => {
     const previousLatest = makeSnapshot({
@@ -190,6 +232,7 @@ describe('resolveAlerts — continuation (no pending re-pending oscillation)', (
         severity: 'high',
         subject: 'Indexed pages dropped 50% (20→10)',
         message: 'x',
+        firstDetectedAt: '2026-04-15T08:00:00Z',
         detectedAt: '2026-04-17T08:00:00Z',
         emailSent: true,
       }],
@@ -215,6 +258,7 @@ describe('resolveAlerts — continuation (no pending re-pending oscillation)', (
         severity: 'high',
         subject: 'x',
         message: 'x',
+        firstDetectedAt: '2026-04-15T08:00:00Z',
         detectedAt: '2026-04-17T08:00:00Z',
         emailSent: true,
       }],

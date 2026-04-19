@@ -85,6 +85,12 @@ function renderEditor(email: string, update: Partial<Update> | null, images: Ima
     .status-msg { font-size: 0.85em; padding: 6px 12px; border-radius: 4px; display: none; }
     .status-msg.success { display: inline-block; background: #d4edda; color: #155724; }
     .status-msg.error { display: inline-block; background: #f8d7da; color: #721c24; }
+    .lint-warnings { margin: 12px 0; padding: 12px 16px; background: #fff3cd; border-left: 3px solid #ffc107; border-radius: 4px; font-size: 0.9em; color: #856404; display: none; }
+    .lint-warnings.visible { display: block; }
+    .lint-warnings .title { font-weight: 600; margin-bottom: 6px; }
+    .lint-warnings ul { margin: 0; padding-left: 20px; }
+    .lint-warnings li { margin: 2px 0; }
+    .lint-warnings .note { font-size: 0.85em; color: #6c757d; margin-top: 8px; font-style: italic; }
     .images-section { margin-top: 32px; border-top: 1px solid #dee2e6; padding-top: 24px; }
     .images-section h2 { font-size: 1em; margin: 0 0 16px; }
     .img-gallery { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
@@ -153,6 +159,8 @@ function renderEditor(email: string, update: Partial<Update> | null, images: Ima
       ${!isNew ? `<a class="btn btn-secondary" href="/admin/preview/${escapeHtml(slug)}" target="_blank">Preview</a>` : ''}
       <span class="status-msg" id="status-msg"></span>
     </div>
+
+    <div class="lint-warnings" id="lint-warnings" role="status" aria-live="polite"></div>
 
     <div class="images-section">
       <h2>Images</h2>
@@ -369,12 +377,40 @@ function renderEditor(email: string, update: Partial<Update> | null, images: Ima
             }
           }
           showMessage('Saved!', 'success');
+          renderLintWarnings(data.warnings || []);
         } else {
           showMessage('Save failed: ' + (data.error || 'Unknown error'), 'error');
         }
       } catch (e) {
         showMessage('Save failed: network error', 'error');
       }
+    }
+
+    function renderLintWarnings(warnings) {
+      var box = document.getElementById('lint-warnings');
+      if (!box) return;
+      if (!warnings || warnings.length === 0) {
+        box.className = 'lint-warnings';
+        box.innerHTML = '';
+        return;
+      }
+      var items = warnings.map(function (w) {
+        return '<li>' + escapeTextForHtml(w.message) + '</li>';
+      }).join('');
+      box.innerHTML =
+        '<div class="title">Published with ' + warnings.length + ' warning' + (warnings.length === 1 ? '' : 's') + '</div>' +
+        '<ul>' + items + '</ul>' +
+        '<div class="note">These are advisory — your update was saved. Fix before next publish if you want.</div>';
+      box.className = 'lint-warnings visible';
+    }
+
+    function escapeTextForHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
     function showMessage(msg, type) {

@@ -6,6 +6,7 @@ import type { UpdateStatus } from '@/types';
 import { requireAuth } from '@/auth';
 import { fetchAllUpdates, fetchUpdateBySlug, saveUpdateFile } from '@/github';
 import { generateSlugFromTitle } from '@/utils';
+import { lintUpdate, type LintWarning } from '@/lint';
 
 const MAX_CONTENT_BYTES = 100 * 1024; // 100KB
 const VALID_STATUSES: UpdateStatus[] = ['draft', 'published', 'unpublished'];
@@ -117,7 +118,23 @@ export async function handleSaveUpdate(request: Request, env: Env): Promise<Resp
       return new Response(JSON.stringify({ error: result.error ?? 'Failed to save' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 
-    return new Response(JSON.stringify({ success: true, slug, isNew }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    // Compute non-blocking lint warnings. Only run when status is 'published' —
+    // drafts don't need lint noise. For duplicate-title detection we need the
+    // full existing-updates list; reuse the one already fetched for isNew, or
+    // fetch it once for edits being published.
+    let warnings: LintWarning[] = [];
+    if (status === 'published') {
+      const existingUpdates = isNew
+        ? (await fetchAllUpdates(env)).filter((u) => u.slug !== slug)
+        : await fetchAllUpdates(env);
+      warnings = lintUpdate({
+        update,
+        existingUpdates,
+        currentSlug: slug,
+      });
+    }
+
+    return new Response(JSON.stringify({ success: true, slug, isNew, warnings }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('Error in handleSaveUpdate:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });

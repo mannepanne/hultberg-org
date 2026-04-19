@@ -40,6 +40,16 @@ export interface WidgetViewModel {
     kind: 'ok' | 'warn' | 'error' | 'idle';
   };
   /**
+   * Recency nudge for the "Check Search Console" link. Rendered in the
+   * footer as either "Last checked in GSC UI: N days ago" or "Never
+   * checked" — encourages the admin to periodically visit GSC directly
+   * for manual actions / security issues that aren't in the API.
+   */
+  manualCheckRecency: {
+    label: string;
+    neverClicked: boolean;
+  };
+  /**
    * Optional advisory line shown above the alerts strip. Set when a manual
    * refresh has graduated at least one alert that has not yet been emailed —
    * tells the admin that dispatch will happen on the next 08:00 UTC cron.
@@ -52,8 +62,18 @@ const STALE_HOURS = 36;
 /**
  * Build a view-model from a snapshot + current time.
  * If snapshot is null (no data yet), returns the empty state.
+ *
+ * `manualCheckLastClicked` is the ISO timestamp of the last time the admin
+ * clicked the "Check Search Console" link in the widget footer, or `null`
+ * if never clicked (fresh install, or never-clicked state).
  */
-export function renderViewModel(snapshot: GSCSnapshot | null, now: Date): WidgetViewModel {
+export function renderViewModel(
+  snapshot: GSCSnapshot | null,
+  now: Date,
+  manualCheckLastClicked: string | null = null,
+): WidgetViewModel {
+  const manualCheckRecency = buildManualCheckRecency(manualCheckLastClicked, now);
+
   if (!snapshot) {
     return {
       state: 'empty',
@@ -62,6 +82,7 @@ export function renderViewModel(snapshot: GSCSnapshot | null, now: Date): Widget
       kpis: [],
       topQueries: [],
       emailDelivery: { label: 'Never attempted', kind: 'idle' },
+      manualCheckRecency,
     };
   }
 
@@ -106,7 +127,33 @@ export function renderViewModel(snapshot: GSCSnapshot | null, now: Date): Widget
       position: q.position.toFixed(1),
     })),
     emailDelivery: buildEmailDelivery(snapshot, now),
+    manualCheckRecency,
     ...(caveat !== undefined ? { caveat } : {}),
+  };
+}
+
+function buildManualCheckRecency(
+  lastClicked: string | null,
+  now: Date,
+): WidgetViewModel['manualCheckRecency'] {
+  if (!lastClicked) {
+    return { label: 'Never checked in GSC UI', neverClicked: true };
+  }
+  const parsed = new Date(lastClicked);
+  if (Number.isNaN(parsed.getTime())) {
+    // Corrupt KV value — fall back to "never" rather than crash.
+    return { label: 'Never checked in GSC UI', neverClicked: true };
+  }
+  const hours = Math.max(0, Math.floor((now.getTime() - parsed.getTime()) / (60 * 60 * 1000)));
+  if (hours < 24) {
+    return { label: 'Last checked in GSC UI: today', neverClicked: false };
+  }
+  const days = Math.floor(hours / 24);
+  return {
+    label: days === 1
+      ? 'Last checked in GSC UI: 1 day ago'
+      : `Last checked in GSC UI: ${days} days ago`,
+    neverClicked: false,
   };
 }
 
@@ -135,13 +182,16 @@ function buildKpis(snapshot: GSCSnapshot): WidgetKpiTile[] {
     ? (snapshot.performance.totalImpressions - snapshot.performance.priorPeriodImpressions) / snapshot.performance.priorPeriodImpressions
     : 0;
 
+  // Indexed-pages delta uses an ABSOLUTE diff (e.g. "+2 vs 28d ago"), not a
+  // percentage like Clicks/Impressions. The absolute number is more
+  // intuitive for a small indexed count (20 pages → +2 reads clearer than
+  // "+10%"). When the 28d-ago snapshot is absent (cold start, first 28 days
+  // of data), the sub is empty and deltaClass is flat.
+  const priorIndexed = snapshot.indexing.priorPeriodIndexedCount;
+  const indexedTile = buildIndexedTile(snapshot.indexing.indexedCount, priorIndexed);
+
   return [
-    {
-      label: 'Indexed pages',
-      value: String(snapshot.indexing.indexedCount),
-      sub: '',
-      deltaClass: 'flat',
-    },
+    indexedTile,
     {
       label: 'Sitemap',
       value: submitted === 0 ? '0' : `${indexed} / ${submitted}`,
@@ -161,6 +211,36 @@ function buildKpis(snapshot: GSCSnapshot): WidgetKpiTile[] {
       deltaClass: deltaClassFor(impressionsDelta),
     },
   ];
+}
+
+function buildIndexedTile(
+  current: number,
+  prior: number | null | undefined,
+): WidgetKpiTile {
+  if (prior === null || prior === undefined) {
+    return {
+      label: 'Indexed pages',
+      value: String(current),
+      sub: '',
+      deltaClass: 'flat',
+    };
+  }
+  const diff = current - prior;
+  let sub: string;
+  let deltaClass: 'up' | 'down' | 'flat';
+  if (diff === 0) {
+    sub = 'no change vs 28d ago';
+    deltaClass = 'flat';
+  } else {
+    sub = `${diff > 0 ? '+' : ''}${diff} vs 28d ago`;
+    deltaClass = diff > 0 ? 'up' : 'down';
+  }
+  return {
+    label: 'Indexed pages',
+    value: String(current),
+    sub,
+    deltaClass,
+  };
 }
 
 function formatDeltaSub(delta: number, suffix: string): string {

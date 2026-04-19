@@ -61,13 +61,15 @@ export async function runDailyPoll(
 
   const client = GSCClient.fromSecret(env.GSC_SERVICE_ACCOUNT_JSON, siteUrl);
 
-  const [sitemaps, performance, weekAgoSnapshot] = await Promise.all([
+  const [sitemaps, performance, weekAgoSnapshot, fourWeeksAgoSnapshot] = await Promise.all([
     fetchSitemaps(client),
     fetchPerformance(client, now),
     loadHistorySnapshot(kv, daysAgo(now, 7)),
+    loadHistorySnapshot(kv, daysAgo(now, 28)),
   ]);
 
   const indexedCount = sitemaps.reduce((sum, sm) => sum + sm.indexed, 0);
+  const priorPeriodIndexedCount = fourWeeksAgoSnapshot?.indexing.indexedCount ?? null;
   const previousLatest = await loadLatestSnapshot(kv);
 
   const { alerts, pendingAlerts } = resolveAlerts({
@@ -81,7 +83,7 @@ export async function runDailyPoll(
     capturedAt: now.toISOString(),
     siteUrl,
     sitemaps,
-    indexing: { indexedCount },
+    indexing: { indexedCount, priorPeriodIndexedCount },
     performance,
     alerts,
     pendingAlerts,

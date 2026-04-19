@@ -9,6 +9,7 @@ import { handleSitemap } from './routes/sitemap';
 import { handleGscDebug } from './routes/gscDebug';
 import { handleGscStatus } from './routes/gscStatus';
 import { handleRefreshGsc } from './routes/refreshGsc';
+import { handleGscManualCheckClicked } from './routes/gscManualCheckClicked';
 import { handleScheduled } from './scheduled';
 import { handleAdminLogin } from './routes/adminLogin';
 import { handleAdminLogout } from './routes/adminLogout';
@@ -122,6 +123,13 @@ export default {
     // delivery path. Used by the dashboard "Refresh" button.
     if (url.pathname === '/admin/api/refresh-gsc' && request.method === 'POST') {
       return handleRefreshGsc(request, env);
+    }
+
+    // API: POST /admin/api/gsc-manual-check-clicked (authenticated)
+    // Records that the admin clicked the "Check Search Console" link —
+    // drives the "Last checked in GSC UI" recency nudge.
+    if (url.pathname === '/admin/api/gsc-manual-check-clicked' && request.method === 'POST') {
+      return handleGscManualCheckClicked(request, env);
     }
 
     // Editor: GET /admin/now/edit

@@ -95,10 +95,11 @@
 
   function renderFooter(vm) {
     const delivery = vm.emailDelivery;
+    const recency = vm.manualCheckRecency;
     return `
       <div class="gsc-footer">
         <span class="email-delivery ${escapeHtml(delivery.kind)}">Email delivery: ${escapeHtml(delivery.label)}</span>
-        <span class="manual-check">Manual actions &amp; security issues aren't in the GSC API — Google emails you directly. <a href="https://search.google.com/search-console/manual-actions" target="_blank" rel="noopener">Check Search Console ↗</a></span>
+        <span class="manual-check">${escapeHtml(recency.label)} — Google emails you directly for manual actions and security issues. <a id="gsc-manual-check-link" href="https://search.google.com/search-console/manual-actions" target="_blank" rel="noopener">Check Search Console ↗</a></span>
       </div>
     `;
   }
@@ -120,14 +121,36 @@
     if (!body.ok) {
       throw new Error(body.error || 'Unknown error');
     }
-    return computeViewModel(body.snapshot, new Date());
+    return computeViewModel(body.snapshot, new Date(), body.manualCheckLastClicked || null);
+  }
+
+  function buildManualCheckRecency(lastClicked, now) {
+    if (!lastClicked) {
+      return { label: 'Never checked in GSC UI', neverClicked: true };
+    }
+    var parsed = new Date(lastClicked);
+    if (isNaN(parsed.getTime())) {
+      return { label: 'Never checked in GSC UI', neverClicked: true };
+    }
+    var hours = Math.max(0, Math.floor((now - parsed) / 3600000));
+    if (hours < 24) {
+      return { label: 'Last checked in GSC UI: today', neverClicked: false };
+    }
+    var days = Math.floor(hours / 24);
+    return {
+      label: days === 1
+        ? 'Last checked in GSC UI: 1 day ago'
+        : 'Last checked in GSC UI: ' + days + ' days ago',
+      neverClicked: false,
+    };
   }
 
   // Mirror of src/gscWidgetViewModel.ts. Duplicated here because the worker
   // sends the raw snapshot (smaller payload + no server-side date baked in)
   // and the client computes the view with its own "now". Tests cover the
   // server-side copy; behaviour must match.
-  function computeViewModel(snapshot, now) {
+  function computeViewModel(snapshot, now, manualCheckLastClicked) {
+    var manualCheckRecency = buildManualCheckRecency(manualCheckLastClicked || null, now);
     if (!snapshot) {
       return {
         state: 'empty',
@@ -136,6 +159,7 @@
         kpis: [],
         topQueries: [],
         emailDelivery: { label: 'Never attempted', kind: 'idle' },
+        manualCheckRecency: manualCheckRecency,
       };
     }
     const ageHours = Math.max(0, Math.floor((now - new Date(snapshot.capturedAt)) / 3600000));
@@ -169,6 +193,7 @@
         position: q.position.toFixed(1),
       })),
       emailDelivery: buildEmailDelivery(snapshot, now),
+      manualCheckRecency: manualCheckRecency,
     };
     if (caveat !== undefined) vm.caveat = caveat;
     return vm;
@@ -192,11 +217,27 @@
     const deltaClass = (d) => d > 0.02 ? 'up' : d < -0.02 ? 'down' : 'flat';
     const fmt = (d) => d === 0 ? 'no change vs prior 28d' : ((d > 0 ? '+' : '') + Math.round(d * 100) + '% vs prior 28d');
     return [
-      { label: 'Indexed pages', value: String(snapshot.indexing.indexedCount), sub: '', deltaClass: 'flat' },
+      buildIndexedTile(snapshot.indexing.indexedCount, snapshot.indexing.priorPeriodIndexedCount),
       { label: 'Sitemap', value: submitted === 0 ? '0' : (indexed + ' / ' + submitted), sub: 'indexed / submitted', deltaClass: 'flat' },
       { label: 'Clicks (28d)', value: String(perf.totalClicks), sub: fmt(clicksDelta), deltaClass: deltaClass(clicksDelta) },
       { label: 'Impressions (28d)', value: String(perf.totalImpressions), sub: fmt(imprDelta), deltaClass: deltaClass(imprDelta) },
     ];
+  }
+
+  function buildIndexedTile(current, prior) {
+    if (prior === null || prior === undefined) {
+      return { label: 'Indexed pages', value: String(current), sub: '', deltaClass: 'flat' };
+    }
+    var diff = current - prior;
+    if (diff === 0) {
+      return { label: 'Indexed pages', value: String(current), sub: 'no change vs 28d ago', deltaClass: 'flat' };
+    }
+    return {
+      label: 'Indexed pages',
+      value: String(current),
+      sub: (diff > 0 ? '+' : '') + diff + ' vs 28d ago',
+      deltaClass: diff > 0 ? 'up' : 'down',
+    };
   }
 
   function buildEmailDelivery(snapshot, now) {
@@ -281,9 +322,30 @@
       root.innerHTML = render(vm);
       const btn = document.getElementById('gsc-refresh-btn');
       if (btn) btn.addEventListener('click', doRefresh);
+      wireManualCheckLink();
     } catch (err) {
       root.innerHTML = renderError(err.message);
     }
+  }
+
+  // Fire-and-forget POST that records the admin clicked the "Check Search
+  // Console" link. The link still navigates; KV write failure is silently
+  // swallowed (recency nudge is non-critical — better to lose a tick than
+  // interfere with the click).
+  function wireManualCheckLink() {
+    var link = document.getElementById('gsc-manual-check-link');
+    if (!link) return;
+    link.addEventListener('click', function () {
+      // keepalive ensures the request survives if the user middle-clicks
+      // and immediately closes the current tab. The link's target="_blank"
+      // otherwise leaves this tab running, so delivery is fine in the
+      // common case — keepalive covers the close-immediately edge.
+      fetch('/admin/api/gsc-manual-check-clicked', {
+        method: 'POST',
+        credentials: 'same-origin',
+        keepalive: true,
+      }).catch(function () { /* silent */ });
+    });
   }
 
   // Test hook: a JSDOM test sets `window.__gscWidgetTest = {}` BEFORE this
@@ -297,6 +359,10 @@
       clearRefreshError: clearRefreshError,
       restoreRefreshButton: restoreRefreshButton,
       computeViewModel: computeViewModel,
+      buildManualCheckRecency: buildManualCheckRecency,
+      buildIndexedTile: buildIndexedTile,
+      wireManualCheckLink: wireManualCheckLink,
+      render: render,
     };
   } else if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', load);

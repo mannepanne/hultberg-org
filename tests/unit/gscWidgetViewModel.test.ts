@@ -255,6 +255,95 @@ describe('renderViewModel — email delivery', () => {
   });
 });
 
+describe('renderViewModel — manual-check recency', () => {
+  it('reports "Never checked" when lastClicked is null', () => {
+    const vm = renderViewModel(makeSnapshot(), NOW, null);
+    expect(vm.manualCheckRecency.neverClicked).toBe(true);
+    expect(vm.manualCheckRecency.label).toBe('Never checked in GSC UI');
+  });
+
+  it('reports "today" for a click <24h ago', () => {
+    const vm = renderViewModel(makeSnapshot(), NOW, '2026-04-18T08:00:00Z'); // 4h ago
+    expect(vm.manualCheckRecency.neverClicked).toBe(false);
+    expect(vm.manualCheckRecency.label).toBe('Last checked in GSC UI: today');
+  });
+
+  it('reports "1 day ago" for a click 1 day old', () => {
+    const vm = renderViewModel(makeSnapshot(), NOW, '2026-04-17T08:00:00Z'); // 28h ago
+    expect(vm.manualCheckRecency.label).toBe('Last checked in GSC UI: 1 day ago');
+  });
+
+  it('reports "N days ago" for older clicks', () => {
+    const vm = renderViewModel(makeSnapshot(), NOW, '2026-04-06T12:00:00Z'); // 12 days ago
+    expect(vm.manualCheckRecency.label).toBe('Last checked in GSC UI: 12 days ago');
+  });
+
+  it('falls back to "Never checked" for corrupt KV values', () => {
+    const vm = renderViewModel(makeSnapshot(), NOW, 'not-a-date');
+    expect(vm.manualCheckRecency.neverClicked).toBe(true);
+  });
+
+  it('is also emitted in the empty state (no snapshot)', () => {
+    const vm = renderViewModel(null, NOW, '2026-04-10T12:00:00Z');
+    expect(vm.state).toBe('empty');
+    expect(vm.manualCheckRecency.neverClicked).toBe(false);
+    expect(vm.manualCheckRecency.label).toContain('8 days ago');
+  });
+});
+
+describe('renderViewModel — indexed-pages delta', () => {
+  it('shows empty sub with flat delta when priorPeriodIndexedCount is null', () => {
+    const vm = renderViewModel(
+      makeSnapshot({ indexing: { indexedCount: 18, priorPeriodIndexedCount: null } }),
+      NOW,
+    );
+    const indexed = vm.kpis.find((k) => k.label === 'Indexed pages')!;
+    expect(indexed.value).toBe('18');
+    expect(indexed.sub).toBe('');
+    expect(indexed.deltaClass).toBe('flat');
+  });
+
+  it('treats undefined priorPeriodIndexedCount as null (back-compat)', () => {
+    const vm = renderViewModel(
+      makeSnapshot({ indexing: { indexedCount: 18 } }),
+      NOW,
+    );
+    const indexed = vm.kpis.find((k) => k.label === 'Indexed pages')!;
+    expect(indexed.sub).toBe('');
+    expect(indexed.deltaClass).toBe('flat');
+  });
+
+  it('shows +N with up-delta when current > prior', () => {
+    const vm = renderViewModel(
+      makeSnapshot({ indexing: { indexedCount: 20, priorPeriodIndexedCount: 18 } }),
+      NOW,
+    );
+    const indexed = vm.kpis.find((k) => k.label === 'Indexed pages')!;
+    expect(indexed.sub).toBe('+2 vs 28d ago');
+    expect(indexed.deltaClass).toBe('up');
+  });
+
+  it('shows -N with down-delta when current < prior', () => {
+    const vm = renderViewModel(
+      makeSnapshot({ indexing: { indexedCount: 15, priorPeriodIndexedCount: 18 } }),
+      NOW,
+    );
+    const indexed = vm.kpis.find((k) => k.label === 'Indexed pages')!;
+    expect(indexed.sub).toBe('-3 vs 28d ago');
+    expect(indexed.deltaClass).toBe('down');
+  });
+
+  it('shows "no change" when current equals prior', () => {
+    const vm = renderViewModel(
+      makeSnapshot({ indexing: { indexedCount: 18, priorPeriodIndexedCount: 18 } }),
+      NOW,
+    );
+    const indexed = vm.kpis.find((k) => k.label === 'Indexed pages')!;
+    expect(indexed.sub).toBe('no change vs 28d ago');
+    expect(indexed.deltaClass).toBe('flat');
+  });
+});
+
 describe('renderViewModel — manual-refresh caveat', () => {
   const unsentAlert = {
     type: 'indexed-drop' as const,

@@ -195,6 +195,14 @@ export interface GSCSnapshot {
   sitemaps: GSCSitemapStatus[];
   indexing: {
     indexedCount: number;
+    /**
+     * Indexed count from the 28-day-ago history snapshot, or `null` if no
+     * history snapshot exists for that date. Drives the "+2 vs 28d ago"
+     * delta on the Indexed tile.
+     * Optional for back-compat with snapshots written before this field
+     * existed; treat `undefined` as `null`.
+     */
+    priorPeriodIndexedCount?: number | null;
   };
   performance: GSCPerformance;
   alerts: GSCAlert[];

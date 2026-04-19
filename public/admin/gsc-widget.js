@@ -21,11 +21,17 @@
   }
 
   function render(vm) {
+    var freshnessAria = vm.state === 'stale'
+      ? 'aria-label="Stale: ' + escapeHtml(vm.freshnessLabel) + '"'
+      : '';
+    var freshnessText = vm.state === 'stale'
+      ? 'Stale · ' + escapeHtml(vm.freshnessLabel)
+      : escapeHtml(vm.freshnessLabel);
     return `
       <section class="widget" aria-label="Search visibility">
         <div class="widget-header">
           <h2>Search visibility (<a href="${GSC_CONSOLE_LINK}" target="_blank" rel="noopener">GSC</a>)</h2>
-          <span class="freshness ${vm.state === 'stale' ? 'stale' : ''}">${escapeHtml(vm.freshnessLabel)}</span>
+          <span class="freshness ${vm.state === 'stale' ? 'stale' : ''}" ${freshnessAria}>${freshnessText}</span>
           <button class="refresh" type="button" id="gsc-refresh-btn">↻ Refresh</button>
         </div>
         ${renderAlerts(vm.alerts)}
@@ -131,12 +137,17 @@
     return {
       state: isStale ? 'stale' : 'fresh',
       freshnessLabel: freshnessLabel(ageHours),
-      alerts: snapshot.alerts.map((a) => ({
-        type: a.type, severity: a.severity, subject: a.subject, message: a.message,
-        firstDetectedAt: a.firstDetectedAt,
-        daysSeen: Math.max(1, Math.floor((now - new Date(a.firstDetectedAt)) / 86400000) + 1),
-        emailSent: a.emailSent,
-      })),
+      alerts: snapshot.alerts.map(function (a) {
+        // Back-compat: alerts written by PR #29's cron lack firstDetectedAt.
+        // Mirrors the fallback in src/gscWidgetViewModel.ts.
+        var firstDetectedAt = a.firstDetectedAt || a.detectedAt || snapshot.capturedAt;
+        return {
+          type: a.type, severity: a.severity, subject: a.subject, message: a.message,
+          firstDetectedAt: firstDetectedAt,
+          daysSeen: Math.max(1, Math.floor((now - new Date(firstDetectedAt)) / 86400000) + 1),
+          emailSent: a.emailSent,
+        };
+      }),
       kpis: buildKpis(snapshot),
       topQueries: snapshot.performance.topQueries.map((q) => ({
         query: q.query, clicks: q.clicks, impressions: q.impressions,
@@ -195,6 +206,7 @@
   async function doRefresh() {
     const btn = document.getElementById('gsc-refresh-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'Refreshing…'; }
+    clearRefreshError();
     try {
       const response = await fetch('/admin/api/refresh-gsc', {
         method: 'POST',
@@ -202,14 +214,46 @@
         headers: { 'Content-Type': 'application/json' },
       });
       if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
+        const body = await response.json().catch(function () { return {}; });
         throw new Error(body.error || ('Refresh failed: ' + response.status));
       }
       await load();
     } catch (err) {
-      const root = document.getElementById(ROOT_ID);
-      if (root) root.innerHTML = renderError(err.message);
+      // Non-destructive: show error as a banner ABOVE the widget header.
+      // The widget content (alerts, KPIs, queries) stays intact and the
+      // refresh button is restored so the user can try again. Critically,
+      // the 429 rate-limit case (which is *expected* behaviour) doesn't
+      // destroy the UI.
+      showRefreshError(err.message);
+      restoreRefreshButton();
     }
+  }
+
+  function showRefreshError(message) {
+    var widget = document.querySelector('#' + ROOT_ID + ' .widget');
+    if (!widget) return;
+    var existing = document.getElementById('gsc-refresh-error');
+    if (existing) existing.remove();
+    var banner = document.createElement('div');
+    banner.id = 'gsc-refresh-error';
+    banner.className = 'refresh-error';
+    banner.setAttribute('role', 'alert');
+    banner.innerHTML =
+      '<span class="msg">Refresh failed: ' + escapeHtml(message) + '</span>' +
+      '<button type="button" class="dismiss" aria-label="Dismiss">×</button>';
+    widget.insertBefore(banner, widget.firstChild);
+    var dismissBtn = banner.querySelector('.dismiss');
+    if (dismissBtn) dismissBtn.addEventListener('click', clearRefreshError);
+  }
+
+  function clearRefreshError() {
+    var existing = document.getElementById('gsc-refresh-error');
+    if (existing) existing.remove();
+  }
+
+  function restoreRefreshButton() {
+    var btn = document.getElementById('gsc-refresh-btn');
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Refresh'; }
   }
 
   async function load() {

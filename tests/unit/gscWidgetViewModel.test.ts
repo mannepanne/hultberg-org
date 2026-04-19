@@ -138,6 +138,47 @@ describe('renderViewModel — top queries', () => {
   });
 });
 
+describe('renderViewModel — alerts back-compat', () => {
+  it('falls back to detectedAt when firstDetectedAt is missing (PR #29 legacy snapshot)', () => {
+    // Construct an alert object as PR #29 wrote it — without firstDetectedAt.
+    const legacyAlert = {
+      type: 'sitemap-error' as const,
+      severity: 'high' as const,
+      subject: 'x',
+      message: 'x',
+      detectedAt: '2026-04-16T08:00:00Z',
+      emailSent: true,
+    } as unknown as GSCSnapshot['alerts'][number];
+
+    const vm = renderViewModel(
+      makeSnapshot({ alerts: [legacyAlert] }),
+      NOW,
+    );
+    expect(vm.alerts).toHaveLength(1);
+    // Must NOT be NaN.
+    expect(Number.isNaN(vm.alerts[0].daysSeen)).toBe(false);
+    expect(vm.alerts[0].daysSeen).toBe(3);
+    expect(vm.alerts[0].firstDetectedAt).toBe('2026-04-16T08:00:00Z');
+  });
+
+  it('falls back to snapshot.capturedAt when both firstDetectedAt and detectedAt are missing', () => {
+    const verylegacy = {
+      type: 'sitemap-error' as const,
+      severity: 'high' as const,
+      subject: 'x',
+      message: 'x',
+      emailSent: true,
+    } as unknown as GSCSnapshot['alerts'][number];
+
+    const vm = renderViewModel(
+      makeSnapshot({ alerts: [verylegacy], capturedAt: '2026-04-17T08:00:00Z' }),
+      NOW,
+    );
+    expect(Number.isNaN(vm.alerts[0].daysSeen)).toBe(false);
+    expect(vm.alerts[0].firstDetectedAt).toBe('2026-04-17T08:00:00Z');
+  });
+});
+
 describe('renderViewModel — alerts', () => {
   it('calculates days-seen from firstDetectedAt', () => {
     const vm = renderViewModel(

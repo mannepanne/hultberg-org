@@ -109,8 +109,16 @@ describe('POST /admin/api/refresh-gsc', () => {
 
   it('does NOT send email even when alerts graduate (skipDispatch semantics)', async () => {
     // Seed pending-state so today's observation would normally graduate + email.
+    // Compute the 7-day-ago history key from real "now" — the refresh endpoint
+    // doesn't accept a `now` override, so we have to align with the wall clock.
+    const realNow = new Date();
+    const sevenDaysAgo = new Date(realNow);
+    sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 7);
+    const yyyymmdd = (d: Date) =>
+      `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+
     const weekAgo = {
-      capturedAt: '2026-04-11T08:00:00Z',
+      capturedAt: sevenDaysAgo.toISOString(),
       siteUrl: 'sc-domain:hultberg.org',
       sitemaps: [],
       indexing: { indexedCount: 20 },
@@ -123,11 +131,11 @@ describe('POST /admin/api/refresh-gsc', () => {
     };
     const previousLatest = {
       ...weekAgo,
-      capturedAt: '2026-04-17T08:00:00Z',
+      capturedAt: realNow.toISOString(),
       indexing: { indexedCount: 5 },
-      pendingAlerts: [{ type: 'indexed-drop', firstDetectedAt: '2026-04-17T08:00:00Z' }],
+      pendingAlerts: [{ type: 'indexed-drop', firstDetectedAt: realNow.toISOString() }],
     };
-    await mockEnv.GSC_KV.put('status:history:2026-04-11', JSON.stringify(weekAgo));
+    await mockEnv.GSC_KV.put(`status:history:${yyyymmdd(sevenDaysAgo)}`, JSON.stringify(weekAgo));
     await mockEnv.GSC_KV.put('status:latest', JSON.stringify(previousLatest));
 
     const response = await worker.fetch(await authedRequest(), mockEnv, mockCtx);

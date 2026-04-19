@@ -66,15 +66,21 @@ export function renderViewModel(snapshot: GSCSnapshot | null, now: Date): Widget
   return {
     state: isStale ? 'stale' : 'fresh',
     freshnessLabel: freshnessLabel(ageHours),
-    alerts: snapshot.alerts.map((a) => ({
-      type: a.type,
-      severity: a.severity,
-      subject: a.subject,
-      message: a.message,
-      firstDetectedAt: a.firstDetectedAt,
-      daysSeen: daysBetween(new Date(a.firstDetectedAt), now),
-      emailSent: a.emailSent,
-    })),
+    alerts: snapshot.alerts.map((a) => {
+      // Back-compat: alerts written by PR #29's cron lack firstDetectedAt.
+      // Fall back to detectedAt, then to the snapshot's own capture time —
+      // anything but `undefined`, which would render as "Seen for NaN days".
+      const firstDetectedAt = a.firstDetectedAt ?? a.detectedAt ?? snapshot.capturedAt;
+      return {
+        type: a.type,
+        severity: a.severity,
+        subject: a.subject,
+        message: a.message,
+        firstDetectedAt,
+        daysSeen: daysBetween(new Date(firstDetectedAt), now),
+        emailSent: a.emailSent,
+      };
+    }),
     kpis: buildKpis(snapshot),
     topQueries: snapshot.performance.topQueries.map((q) => ({
       query: q.query,

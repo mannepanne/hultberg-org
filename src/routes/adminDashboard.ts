@@ -151,6 +151,10 @@ function renderDashboard(email: string, updates: Update[]): string {
     .gsc-footer .email-delivery.warn { color: #856404; }
     .gsc-footer .email-delivery.error { color: #721c24; font-weight: 600; }
     .gsc-footer .email-delivery.idle { color: #6c757d; }
+    .refresh-error { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: #f8d7da; color: #721c24; border-bottom: 1px solid #f5c6cb; font-size: 0.88em; }
+    .refresh-error .msg { flex: 1; }
+    .refresh-error button.dismiss { background: transparent; border: none; color: #721c24; cursor: pointer; font-size: 1.2em; padding: 0 4px; line-height: 1; }
+    .refresh-error button.dismiss:hover { color: #491217; }
     @media (max-width: 720px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
 
     table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.1); }

@@ -278,7 +278,19 @@
     }
   }
 
-  if (document.readyState === 'loading') {
+  // Test hook: a JSDOM test sets `window.__gscWidgetTest = {}` BEFORE this
+  // script runs, then reads `window.__gscWidgetTest.api` to invoke individual
+  // helpers. Production browsers never set this, so the auto-load runs as
+  // normal. The reference is harmless either way.
+  if (typeof window !== 'undefined' && window.__gscWidgetTest) {
+    window.__gscWidgetTest.api = {
+      escapeHtml: escapeHtml,
+      showRefreshError: showRefreshError,
+      clearRefreshError: clearRefreshError,
+      restoreRefreshButton: restoreRefreshButton,
+      computeViewModel: computeViewModel,
+    };
+  } else if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', load);
   } else {
     load();

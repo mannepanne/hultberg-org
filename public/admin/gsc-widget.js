@@ -336,9 +336,14 @@
     var link = document.getElementById('gsc-manual-check-link');
     if (!link) return;
     link.addEventListener('click', function () {
+      // keepalive ensures the request survives if the user middle-clicks
+      // and immediately closes the current tab. The link's target="_blank"
+      // otherwise leaves this tab running, so delivery is fine in the
+      // common case — keepalive covers the close-immediately edge.
       fetch('/admin/api/gsc-manual-check-clicked', {
         method: 'POST',
         credentials: 'same-origin',
+        keepalive: true,
       }).catch(function () { /* silent */ });
     });
   }

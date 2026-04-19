@@ -200,4 +200,14 @@ export interface GSCSnapshot {
   alerts: GSCAlert[];
   pendingAlerts: GSCPendingAlert[];
   emailDelivery: GSCEmailDelivery;
+  /**
+   * Which entry path produced this snapshot. `cron` runs dispatch alert
+   * emails; `manual` (admin refresh button) skips dispatch and relies on
+   * the next cron to deliver. The widget surfaces a caveat when a manual
+   * refresh graduates an alert so the admin understands the email lag.
+   *
+   * Optional for back-compat with snapshots written before this field
+   * existed; treat `undefined` as `'cron'` (the historic behaviour).
+   */
+  source?: 'cron' | 'manual';
 }

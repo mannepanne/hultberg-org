@@ -127,6 +127,18 @@ describe('runDailyPoll', () => {
     expect(history).not.toBeNull();
   });
 
+  it('marks cron-path snapshots with source: cron', async () => {
+    mockGSCApi({ sitemaps: goodSitemapsResponse() });
+    const snapshot = await runDailyPoll(env, { now: NOW, siteUrl: SITE_URL });
+    expect(snapshot.source).toBe('cron');
+  });
+
+  it('marks manual-path snapshots with source: manual when skipDispatch is true', async () => {
+    mockGSCApi({ sitemaps: goodSitemapsResponse() });
+    const snapshot = await runDailyPoll(env, { now: NOW, siteUrl: SITE_URL, skipDispatch: true });
+    expect(snapshot.source).toBe('manual');
+  });
+
   it('includes top queries in the performance payload', async () => {
     mockGSCApi({
       sitemaps: goodSitemapsResponse(),

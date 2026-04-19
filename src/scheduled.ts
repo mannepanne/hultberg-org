@@ -90,6 +90,8 @@ export async function runDailyPoll(
       lastSuccessAt: null,
       lastErrorAt: null,
     },
+    // skipDispatch undefined (cron path) → 'cron'; true (manual-refresh path) → 'manual'.
+    source: opts.skipDispatch ? 'manual' : 'cron',
   };
 
   if (!opts.skipDispatch) {

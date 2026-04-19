@@ -254,3 +254,57 @@ describe('renderViewModel — email delivery', () => {
     expect(vm.emailDelivery.label).toContain('Both providers failed');
   });
 });
+
+describe('renderViewModel — manual-refresh caveat', () => {
+  const unsentAlert = {
+    type: 'indexed-drop' as const,
+    severity: 'high' as const,
+    subject: 'Indexed pages dropped 50%',
+    message: 'x',
+    firstDetectedAt: '2026-04-18T08:00:00Z',
+    detectedAt: '2026-04-18T08:00:00Z',
+    emailSent: false,
+  };
+  const sentAlert = { ...unsentAlert, emailSent: true };
+
+  it('sets caveat when source is manual AND there is at least one unsent alert', () => {
+    const vm = renderViewModel(
+      makeSnapshot({ source: 'manual', alerts: [unsentAlert] }),
+      NOW,
+    );
+    expect(vm.caveat).toBe('Manual refresh — alerts emailed at next 08:00 UTC cron.');
+  });
+
+  it('omits caveat when source is manual but all alerts are already sent', () => {
+    const vm = renderViewModel(
+      makeSnapshot({ source: 'manual', alerts: [sentAlert] }),
+      NOW,
+    );
+    expect(vm.caveat).toBeUndefined();
+  });
+
+  it('omits caveat when source is manual but there are no alerts', () => {
+    const vm = renderViewModel(
+      makeSnapshot({ source: 'manual', alerts: [] }),
+      NOW,
+    );
+    expect(vm.caveat).toBeUndefined();
+  });
+
+  it('omits caveat when source is cron (even with unsent alert — should not happen in practice but back-compat)', () => {
+    const vm = renderViewModel(
+      makeSnapshot({ source: 'cron', alerts: [unsentAlert] }),
+      NOW,
+    );
+    expect(vm.caveat).toBeUndefined();
+  });
+
+  it('treats undefined source as cron (back-compat with pre-#38 snapshots)', () => {
+    // No source field at all — historic snapshot from before this PR.
+    const vm = renderViewModel(
+      makeSnapshot({ alerts: [unsentAlert] }),
+      NOW,
+    );
+    expect(vm.caveat).toBeUndefined();
+  });
+});

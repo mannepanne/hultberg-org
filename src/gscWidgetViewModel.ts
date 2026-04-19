@@ -39,6 +39,12 @@ export interface WidgetViewModel {
     label: string;             // "CF · 2h ago" / "Resend (fallback) · 1d ago" / "Never attempted" / "Both providers failed · Xh ago"
     kind: 'ok' | 'warn' | 'error' | 'idle';
   };
+  /**
+   * Optional advisory line shown above the alerts strip. Set when a manual
+   * refresh has graduated at least one alert that has not yet been emailed —
+   * tells the admin that dispatch will happen on the next 08:00 UTC cron.
+   */
+  caveat?: string;
 }
 
 const STALE_HOURS = 36;
@@ -63,24 +69,34 @@ export function renderViewModel(snapshot: GSCSnapshot | null, now: Date): Widget
   const ageHours = Math.max(0, Math.floor(ageMs / (60 * 60 * 1000)));
   const isStale = ageHours >= STALE_HOURS;
 
+  const widgetAlerts: WidgetAlert[] = snapshot.alerts.map((a) => {
+    // Back-compat: alerts written by PR #29's cron lack firstDetectedAt.
+    // Fall back to detectedAt, then to the snapshot's own capture time —
+    // anything but `undefined`, which would render as "Seen for NaN days".
+    const firstDetectedAt = a.firstDetectedAt ?? a.detectedAt ?? snapshot.capturedAt;
+    return {
+      type: a.type,
+      severity: a.severity,
+      subject: a.subject,
+      message: a.message,
+      firstDetectedAt,
+      daysSeen: daysBetween(new Date(firstDetectedAt), now),
+      emailSent: a.emailSent,
+    };
+  });
+
+  // Treat undefined source as 'cron' (back-compat with snapshots written
+  // before the source field existed).
+  const isManual = snapshot.source === 'manual';
+  const hasUnsentAlert = widgetAlerts.some((a) => !a.emailSent);
+  const caveat = isManual && hasUnsentAlert
+    ? 'Manual refresh — alerts emailed at next 08:00 UTC cron.'
+    : undefined;
+
   return {
     state: isStale ? 'stale' : 'fresh',
     freshnessLabel: freshnessLabel(ageHours),
-    alerts: snapshot.alerts.map((a) => {
-      // Back-compat: alerts written by PR #29's cron lack firstDetectedAt.
-      // Fall back to detectedAt, then to the snapshot's own capture time —
-      // anything but `undefined`, which would render as "Seen for NaN days".
-      const firstDetectedAt = a.firstDetectedAt ?? a.detectedAt ?? snapshot.capturedAt;
-      return {
-        type: a.type,
-        severity: a.severity,
-        subject: a.subject,
-        message: a.message,
-        firstDetectedAt,
-        daysSeen: daysBetween(new Date(firstDetectedAt), now),
-        emailSent: a.emailSent,
-      };
-    }),
+    alerts: widgetAlerts,
     kpis: buildKpis(snapshot),
     topQueries: snapshot.performance.topQueries.map((q) => ({
       query: q.query,
@@ -90,6 +106,7 @@ export function renderViewModel(snapshot: GSCSnapshot | null, now: Date): Widget
       position: q.position.toFixed(1),
     })),
     emailDelivery: buildEmailDelivery(snapshot, now),
+    ...(caveat !== undefined ? { caveat } : {}),
   };
 }
 

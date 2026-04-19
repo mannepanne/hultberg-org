@@ -39,6 +39,7 @@
           <span class="freshness ${vm.state === 'stale' ? 'stale' : ''}" ${freshnessAria}>${freshnessText}</span>
           <button class="refresh" type="button" id="gsc-refresh-btn">↻ Refresh</button>
         </div>
+        ${vm.caveat ? '<div class="widget-caveat" role="status">' + escapeHtml(vm.caveat) + '</div>' : ''}
         ${renderAlerts(vm.alerts)}
         ${vm.kpis.length > 0 ? renderKpis(vm.kpis) : ''}
         ${vm.topQueries.length > 0 ? renderQueries(vm.topQueries) : ''}
@@ -139,23 +140,28 @@
     }
     const ageHours = Math.max(0, Math.floor((now - new Date(snapshot.capturedAt)) / 3600000));
     const isStale = ageHours >= 36;
-    return {
+    var widgetAlerts = snapshot.alerts.map(function (a) {
+      // Back-compat: alerts written by PR #29's cron lack firstDetectedAt.
+      // Mirrors the fallback in src/gscWidgetViewModel.ts (which uses ??).
+      // We use || here intentionally — also catches accidentally-empty-string
+      // values (which `??` would let through and then `new Date('')` would
+      // produce Invalid Date).
+      var firstDetectedAt = a.firstDetectedAt || a.detectedAt || snapshot.capturedAt;
+      return {
+        type: a.type, severity: a.severity, subject: a.subject, message: a.message,
+        firstDetectedAt: firstDetectedAt,
+        daysSeen: Math.max(1, Math.floor((now - new Date(firstDetectedAt)) / 86400000) + 1),
+        emailSent: a.emailSent,
+      };
+    });
+    // Treat undefined source as 'cron' (back-compat).
+    var caveat = snapshot.source === 'manual' && widgetAlerts.some(function (a) { return !a.emailSent; })
+      ? 'Manual refresh — alerts emailed at next 08:00 UTC cron.'
+      : undefined;
+    var vm = {
       state: isStale ? 'stale' : 'fresh',
       freshnessLabel: freshnessLabel(ageHours),
-      alerts: snapshot.alerts.map(function (a) {
-        // Back-compat: alerts written by PR #29's cron lack firstDetectedAt.
-        // Mirrors the fallback in src/gscWidgetViewModel.ts (which uses ??).
-        // We use || here intentionally — also catches accidentally-empty-string
-        // values (which `??` would let through and then `new Date('')` would
-        // produce Invalid Date).
-        var firstDetectedAt = a.firstDetectedAt || a.detectedAt || snapshot.capturedAt;
-        return {
-          type: a.type, severity: a.severity, subject: a.subject, message: a.message,
-          firstDetectedAt: firstDetectedAt,
-          daysSeen: Math.max(1, Math.floor((now - new Date(firstDetectedAt)) / 86400000) + 1),
-          emailSent: a.emailSent,
-        };
-      }),
+      alerts: widgetAlerts,
       kpis: buildKpis(snapshot),
       topQueries: snapshot.performance.topQueries.map((q) => ({
         query: q.query, clicks: q.clicks, impressions: q.impressions,
@@ -164,6 +170,8 @@
       })),
       emailDelivery: buildEmailDelivery(snapshot, now),
     };
+    if (caveat !== undefined) vm.caveat = caveat;
+    return vm;
   }
 
   function freshnessLabel(hours) {

@@ -287,15 +287,6 @@ describe('GET /now', () => {
     expect(response.status).toBe(500);
   });
 
-  it('includes Google Analytics', async () => {
-    const request = new Request('http://localhost/now');
-    const response = await worker.fetch(request, mockEnv, mockCtx);
-    const html = await response.text();
-
-    expect(html).toContain('googletagmanager.com/gtag');
-    expect(html).toContain('G-D1L22CCJTJ');
-  });
-
   it('includes Cloudflare Web Analytics', async () => {
     const request = new Request('http://localhost/now');
     const response = await worker.fetch(request, mockEnv, mockCtx);

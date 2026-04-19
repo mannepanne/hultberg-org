@@ -99,6 +99,31 @@ describe('POST /admin/api/refresh-gsc', () => {
     expect(response.status).toBe(403);
   });
 
+  it('rejects requests with missing Origin header', async () => {
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+    const request = new Request('http://localhost/admin/api/refresh-gsc', {
+      method: 'POST',
+      headers: {
+        Cookie: `auth_token=${jwt}`,
+      },
+    });
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+    expect(response.status).toBe(403);
+  });
+
+  it('rejects requests with empty-string Origin header', async () => {
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+    const request = new Request('http://localhost/admin/api/refresh-gsc', {
+      method: 'POST',
+      headers: {
+        Cookie: `auth_token=${jwt}`,
+        Origin: '',
+      },
+    });
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+    expect(response.status).toBe(403);
+  });
+
   it('runs the poll and returns the new snapshot', async () => {
     const response = await worker.fetch(await authedRequest(), mockEnv, mockCtx);
     expect(response.status).toBe(200);

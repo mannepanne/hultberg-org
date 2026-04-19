@@ -69,15 +69,6 @@ describe('GET /use-of-ai', () => {
     expect(cacheControl).toBe('public, max-age=3600, s-maxage=3600');
   });
 
-  it('includes Google Analytics', async () => {
-    const request = new Request('http://localhost/use-of-ai');
-    const response = await worker.fetch(request, mockEnv, mockCtx);
-    const html = await response.text();
-
-    expect(html).toContain('googletagmanager.com/gtag');
-    expect(html).toContain('G-D1L22CCJTJ');
-  });
-
   it('includes Cloudflare Web Analytics', async () => {
     const request = new Request('http://localhost/use-of-ai');
     const response = await worker.fetch(request, mockEnv, mockCtx);

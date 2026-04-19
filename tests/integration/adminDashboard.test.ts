@@ -176,6 +176,37 @@ describe('GET /admin/dashboard', () => {
     expect(response.status).toBe(200);
     expect(html).toContain('No updates yet');
   });
+
+  it('server-renders the GSC widget directly into the page (no loading flash)', async () => {
+    mockGitHubForDashboard([]);
+    const jwt = await generateJWT(mockEnv, 'test@example.com');
+    const request = new Request('http://localhost/admin/dashboard', {
+      headers: { Cookie: `auth_token=${jwt}` },
+    });
+    const response = await worker.fetch(request, mockEnv, mockCtx);
+    const html = await response.text();
+
+    // Widget arrives pre-rendered inside the root div — no empty root.
+    expect(html).toMatch(/<div id="gsc-widget-root">\s*<section class="widget"/);
+    // Refresh button is present so the client script can wire it.
+    expect(html).toContain('id="gsc-refresh-btn"');
+  });
+
+  it('falls back to the empty state when GSC_KV binding is missing', async () => {
+    const envNoGsc = createMockEnv({ GSC_KV: undefined });
+    mockGitHubForDashboard([]);
+    const jwt = await generateJWT(envNoGsc, 'test@example.com');
+    const request = new Request('http://localhost/admin/dashboard', {
+      headers: { Cookie: `auth_token=${jwt}` },
+    });
+    const response = await worker.fetch(request, envNoGsc, mockCtx);
+    const html = await response.text();
+
+    expect(response.status).toBe(200);
+    // Empty-state widget still renders — dashboard must never fail on GSC.
+    expect(html).toContain('<section class="widget"');
+    expect(html).toContain('No data yet');
+  });
 });
 
 describe('POST /admin/logout', () => {

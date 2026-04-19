@@ -7,7 +7,6 @@ import { handleUpdatePage } from './routes/updatePage';
 import { handleRSSFeed } from './routes/rssFeed';
 import { handleSitemap } from './routes/sitemap';
 import { handleGscDebug } from './routes/gscDebug';
-import { handleGscStatus } from './routes/gscStatus';
 import { handleRefreshGsc } from './routes/refreshGsc';
 import { handleGscManualCheckClicked } from './routes/gscManualCheckClicked';
 import { handleScheduled } from './scheduled';
@@ -110,12 +109,6 @@ export default {
     // Smoke-tests the GSC service account credentials — lists sites + sitemaps.
     if (url.pathname === '/admin/api/gsc-debug' && request.method === 'GET') {
       return handleGscDebug(request, env);
-    }
-
-    // API: GET /admin/api/gsc-status (authenticated)
-    // Returns the latest GSC snapshot from KV for the dashboard widget.
-    if (url.pathname === '/admin/api/gsc-status' && request.method === 'GET') {
-      return handleGscStatus(request, env);
     }
 
     // API: POST /admin/api/refresh-gsc (authenticated, rate-limited)

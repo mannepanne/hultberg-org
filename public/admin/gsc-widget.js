@@ -1,286 +1,59 @@
-// ABOUT: Client-side renderer for the GSC Search-visibility widget.
-// ABOUT: Fetches /admin/api/gsc-status and renders into #gsc-widget-root.
-// ABOUT: The view-model transformation lives server-side in src/gscWidgetViewModel.ts
-// ABOUT: and is executed by the backend; this script only handles DOM mutation
-// ABOUT: and user interaction (refresh button).
+// ABOUT: Client-side behaviour for the GSC Search-visibility widget.
+// ABOUT: The widget HTML is server-rendered (see src/gscWidgetRenderer.ts)
+// ABOUT: and arrives on the page already complete. This script only wires
+// ABOUT: the refresh button, the manual-check link, and the refresh-error
+// ABOUT: banner. It does NOT build HTML — all dynamic text goes through
+// ABOUT: textContent so there is no client-side escape surface.
 
 (function () {
   'use strict';
 
   const ROOT_ID = 'gsc-widget-root';
-  const PROPERTY_URL = 'sc-domain:hultberg.org';
-  const GSC_CONSOLE_LINK = 'https://search.google.com/search-console?resource_id=' + encodeURIComponent(PROPERTY_URL);
 
-  function escapeHtml(s) {
-    return String(s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
+  function wireHandlers() {
+    var refreshBtn = document.getElementById('gsc-refresh-btn');
+    if (refreshBtn) refreshBtn.addEventListener('click', doRefresh);
 
-  function render(vm) {
-    // freshnessAria is a pre-built attribute string interpolated raw into the
-    // template literal below. Safe because vm.freshnessLabel is integer-derived
-    // (computed from age in hours/days) and we still escape it. If you ever
-    // route attacker-influenced content through here, escape at the *value*
-    // boundary AND verify the attribute syntax can't be broken out of.
-    var freshnessAria = vm.state === 'stale'
-      ? 'aria-label="Stale: ' + escapeHtml(vm.freshnessLabel) + '"'
-      : '';
-    var freshnessText = vm.state === 'stale'
-      ? 'Stale · ' + escapeHtml(vm.freshnessLabel)
-      : escapeHtml(vm.freshnessLabel);
-    return `
-      <section class="widget" aria-label="Search visibility">
-        <div class="widget-header">
-          <h2>Search visibility (<a href="${GSC_CONSOLE_LINK}" target="_blank" rel="noopener">GSC</a>)</h2>
-          <span class="freshness ${vm.state === 'stale' ? 'stale' : ''}" ${freshnessAria}>${freshnessText}</span>
-          <button class="refresh" type="button" id="gsc-refresh-btn">↻ Refresh</button>
-        </div>
-        ${vm.caveat ? '<div class="widget-caveat" role="status">' + escapeHtml(vm.caveat) + '</div>' : ''}
-        ${renderAlerts(vm.alerts)}
-        ${vm.kpis.length > 0 ? renderKpis(vm.kpis) : ''}
-        ${vm.topQueries.length > 0 ? renderQueries(vm.topQueries) : ''}
-        ${renderFooter(vm)}
-      </section>
-    `;
-  }
-
-  function renderAlerts(alerts) {
-    if (alerts.length === 0) return '';
-    const items = alerts.map((a) => `
-      <div class="alert ${escapeHtml(a.severity)}">
-        <span class="icon">${a.severity === 'high' ? '🔴' : '⚠️'}</span>
-        <div class="body">
-          <div class="title">${escapeHtml(a.subject)}</div>
-          <div class="meta">${escapeHtml(a.message)} Seen for ${escapeHtml(String(a.daysSeen))} ${a.daysSeen === 1 ? 'day' : 'days'}.${a.emailSent ? ' Email sent.' : ''}</div>
-        </div>
-      </div>
-    `).join('');
-    return `<div class="alerts">${items}</div>`;
-  }
-
-  function renderKpis(kpis) {
-    const tiles = kpis.map((k) => `
-      <div class="tile">
-        <div class="label">${escapeHtml(k.label)}</div>
-        <div class="value">${escapeHtml(k.value)}</div>
-        <div class="sub ${k.deltaClass !== 'flat' ? 'delta ' + escapeHtml(k.deltaClass) : ''}">${escapeHtml(k.sub)}</div>
-      </div>
-    `).join('');
-    return `<div class="tiles">${tiles}</div>`;
-  }
-
-  function renderQueries(queries) {
-    const rows = queries.map((q) => `
-      <tr>
-        <td class="query">${escapeHtml(q.query)}</td>
-        <td class="metrics">
-          <span class="clicks">${escapeHtml(String(q.clicks))}</span>
-          ${escapeHtml(Number(q.impressions).toLocaleString())} impr · ${escapeHtml(q.ctrPct)} CTR · pos ${escapeHtml(q.position)}
-        </td>
-      </tr>
-    `).join('');
-    return `
-      <div class="queries">
-        <h3>Top queries · last 28 days</h3>
-        <table>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-    `;
-  }
-
-  function renderFooter(vm) {
-    const delivery = vm.emailDelivery;
-    const recency = vm.manualCheckRecency;
-    return `
-      <div class="gsc-footer">
-        <span class="email-delivery ${escapeHtml(delivery.kind)}">Email delivery: ${escapeHtml(delivery.label)}</span>
-        <span class="manual-check">${escapeHtml(recency.label)} — Google emails you directly for manual actions and security issues. <a id="gsc-manual-check-link" href="https://search.google.com/search-console/manual-actions" target="_blank" rel="noopener">Check Search Console ↗</a></span>
-      </div>
-    `;
-  }
-
-  function renderLoading() {
-    return '<section class="widget" aria-label="Search visibility"><div class="widget-body"><em>Loading search visibility…</em></div></section>';
-  }
-
-  function renderError(message) {
-    return `<section class="widget" aria-label="Search visibility"><div class="widget-body error">Failed to load: ${escapeHtml(message)}</div></section>`;
-  }
-
-  async function fetchViewModel() {
-    const response = await fetch('/admin/api/gsc-status', { credentials: 'same-origin' });
-    if (!response.ok) {
-      throw new Error('Status API returned ' + response.status);
+    var manualCheckLink = document.getElementById('gsc-manual-check-link');
+    if (manualCheckLink) {
+      manualCheckLink.addEventListener('click', function () {
+        // keepalive ensures delivery even if the user middle-clicks and
+        // immediately closes the current tab. KV write failure is silent —
+        // the recency nudge is non-critical.
+        fetch('/admin/api/gsc-manual-check-clicked', {
+          method: 'POST',
+          credentials: 'same-origin',
+          keepalive: true,
+        }).catch(function () { /* silent */ });
+      });
     }
-    const body = await response.json();
-    if (!body.ok) {
-      throw new Error(body.error || 'Unknown error');
-    }
-    return computeViewModel(body.snapshot, new Date(), body.manualCheckLastClicked || null);
-  }
-
-  function buildManualCheckRecency(lastClicked, now) {
-    if (!lastClicked) {
-      return { label: 'Never checked in GSC UI', neverClicked: true };
-    }
-    var parsed = new Date(lastClicked);
-    if (isNaN(parsed.getTime())) {
-      return { label: 'Never checked in GSC UI', neverClicked: true };
-    }
-    var hours = Math.max(0, Math.floor((now - parsed) / 3600000));
-    if (hours < 24) {
-      return { label: 'Last checked in GSC UI: today', neverClicked: false };
-    }
-    var days = Math.floor(hours / 24);
-    return {
-      label: days === 1
-        ? 'Last checked in GSC UI: 1 day ago'
-        : 'Last checked in GSC UI: ' + days + ' days ago',
-      neverClicked: false,
-    };
-  }
-
-  // Mirror of src/gscWidgetViewModel.ts. Duplicated here because the worker
-  // sends the raw snapshot (smaller payload + no server-side date baked in)
-  // and the client computes the view with its own "now". Tests cover the
-  // server-side copy; behaviour must match.
-  function computeViewModel(snapshot, now, manualCheckLastClicked) {
-    var manualCheckRecency = buildManualCheckRecency(manualCheckLastClicked || null, now);
-    if (!snapshot) {
-      return {
-        state: 'empty',
-        freshnessLabel: 'No data yet — the first poll runs daily at 08:00 UTC.',
-        alerts: [],
-        kpis: [],
-        topQueries: [],
-        emailDelivery: { label: 'Never attempted', kind: 'idle' },
-        manualCheckRecency: manualCheckRecency,
-      };
-    }
-    const ageHours = Math.max(0, Math.floor((now - new Date(snapshot.capturedAt)) / 3600000));
-    const isStale = ageHours >= 36;
-    var widgetAlerts = snapshot.alerts.map(function (a) {
-      // Back-compat: alerts written by PR #29's cron lack firstDetectedAt.
-      // Mirrors the fallback in src/gscWidgetViewModel.ts (which uses ??).
-      // We use || here intentionally — also catches accidentally-empty-string
-      // values (which `??` would let through and then `new Date('')` would
-      // produce Invalid Date).
-      var firstDetectedAt = a.firstDetectedAt || a.detectedAt || snapshot.capturedAt;
-      return {
-        type: a.type, severity: a.severity, subject: a.subject, message: a.message,
-        firstDetectedAt: firstDetectedAt,
-        daysSeen: Math.max(1, Math.floor((now - new Date(firstDetectedAt)) / 86400000) + 1),
-        emailSent: a.emailSent,
-      };
-    });
-    // Treat undefined source as 'cron' (back-compat).
-    var caveat = snapshot.source === 'manual' && widgetAlerts.some(function (a) { return !a.emailSent; })
-      ? 'Manual refresh — alerts emailed at next 08:00 UTC cron.'
-      : undefined;
-    var vm = {
-      state: isStale ? 'stale' : 'fresh',
-      freshnessLabel: freshnessLabel(ageHours),
-      alerts: widgetAlerts,
-      kpis: buildKpis(snapshot),
-      topQueries: snapshot.performance.topQueries.map((q) => ({
-        query: q.query, clicks: q.clicks, impressions: q.impressions,
-        ctrPct: (q.ctr * 100).toFixed(1) + '%',
-        position: q.position.toFixed(1),
-      })),
-      emailDelivery: buildEmailDelivery(snapshot, now),
-      manualCheckRecency: manualCheckRecency,
-    };
-    if (caveat !== undefined) vm.caveat = caveat;
-    return vm;
-  }
-
-  function freshnessLabel(hours) {
-    if (hours === 0) return 'Refreshed moments ago';
-    if (hours === 1) return 'Refreshed 1 hour ago';
-    if (hours < 24) return 'Refreshed ' + hours + ' hours ago';
-    const days = Math.floor(hours / 24);
-    return days === 1 ? 'Refreshed 1 day ago' : 'Refreshed ' + days + ' days ago';
-  }
-
-  function buildKpis(snapshot) {
-    const sm = snapshot.sitemaps[0];
-    const submitted = sm ? sm.submitted : 0;
-    const indexed = sm ? sm.indexed : 0;
-    const perf = snapshot.performance;
-    const clicksDelta = perf.priorPeriodClicks > 0 ? (perf.totalClicks - perf.priorPeriodClicks) / perf.priorPeriodClicks : 0;
-    const imprDelta = perf.priorPeriodImpressions > 0 ? (perf.totalImpressions - perf.priorPeriodImpressions) / perf.priorPeriodImpressions : 0;
-    const deltaClass = (d) => d > 0.02 ? 'up' : d < -0.02 ? 'down' : 'flat';
-    const fmt = (d) => d === 0 ? 'no change vs prior 28d' : ((d > 0 ? '+' : '') + Math.round(d * 100) + '% vs prior 28d');
-    return [
-      buildIndexedTile(snapshot.indexing.indexedCount, snapshot.indexing.priorPeriodIndexedCount),
-      { label: 'Sitemap', value: submitted === 0 ? '0' : (indexed + ' / ' + submitted), sub: 'indexed / submitted', deltaClass: 'flat' },
-      { label: 'Clicks (28d)', value: String(perf.totalClicks), sub: fmt(clicksDelta), deltaClass: deltaClass(clicksDelta) },
-      { label: 'Impressions (28d)', value: String(perf.totalImpressions), sub: fmt(imprDelta), deltaClass: deltaClass(imprDelta) },
-    ];
-  }
-
-  function buildIndexedTile(current, prior) {
-    if (prior === null || prior === undefined) {
-      return { label: 'Indexed pages', value: String(current), sub: '', deltaClass: 'flat' };
-    }
-    var diff = current - prior;
-    if (diff === 0) {
-      return { label: 'Indexed pages', value: String(current), sub: 'no change vs 28d ago', deltaClass: 'flat' };
-    }
-    return {
-      label: 'Indexed pages',
-      value: String(current),
-      sub: (diff > 0 ? '+' : '') + diff + ' vs 28d ago',
-      deltaClass: diff > 0 ? 'up' : 'down',
-    };
-  }
-
-  function buildEmailDelivery(snapshot, now) {
-    const d = snapshot.emailDelivery;
-    if (!d.lastProvider && !d.lastSuccessAt && !d.lastErrorAt) {
-      return { label: 'Never attempted', kind: 'idle' };
-    }
-    const rel = (iso) => {
-      if (!iso) return 'recently';
-      const h = Math.max(0, Math.floor((now - new Date(iso)) / 3600000));
-      if (h < 1) return 'just now';
-      if (h === 1) return '1h ago';
-      if (h < 24) return h + 'h ago';
-      const days = Math.floor(h / 24);
-      return days === 1 ? '1d ago' : days + 'd ago';
-    };
-    if (d.lastProvider === 'none') return { label: 'Both providers failed · ' + rel(d.lastErrorAt), kind: 'error' };
-    if (d.lastProvider === 'resend') return { label: 'Resend (fallback) · ' + rel(d.lastSuccessAt), kind: 'warn' };
-    if (d.lastProvider === 'cf') return { label: 'CF · ' + rel(d.lastSuccessAt), kind: 'ok' };
-    return { label: 'Never attempted', kind: 'idle' };
   }
 
   async function doRefresh() {
-    const btn = document.getElementById('gsc-refresh-btn');
+    var btn = document.getElementById('gsc-refresh-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'Refreshing…'; }
     clearRefreshError();
     try {
-      const response = await fetch('/admin/api/refresh-gsc', {
+      var response = await fetch('/admin/api/refresh-gsc', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
       });
-      if (!response.ok) {
-        const body = await response.json().catch(function () { return {}; });
+      var body = await response.json().catch(function () { return {}; });
+      if (!response.ok || !body.ok || !body.widgetHtml) {
         throw new Error(body.error || ('Refresh failed: ' + response.status));
       }
-      await load();
+      var root = document.getElementById(ROOT_ID);
+      if (root) {
+        // Server-rendered fragment — HTML comes from our own Worker code
+        // via src/gscWidgetRenderer.ts, where every dynamic field is
+        // escaped at the render boundary. No client-side escape needed.
+        root.innerHTML = body.widgetHtml;
+        wireHandlers();
+      }
     } catch (err) {
-      // Non-destructive: show error as a banner ABOVE the widget header.
-      // The widget content (alerts, KPIs, queries) stays intact and the
-      // refresh button is restored so the user can try again. Critically,
-      // the 429 rate-limit case (which is *expected* behaviour) doesn't
-      // destroy the UI.
+      // Non-destructive: show error above the widget header, preserve the
+      // existing content, re-enable the refresh button so the user can retry.
       showRefreshError(err.message);
       restoreRefreshButton();
     }
@@ -289,18 +62,29 @@
   function showRefreshError(message) {
     var widget = document.querySelector('#' + ROOT_ID + ' .widget');
     if (!widget) return;
-    var existing = document.getElementById('gsc-refresh-error');
-    if (existing) existing.remove();
+    clearRefreshError();
+
     var banner = document.createElement('div');
     banner.id = 'gsc-refresh-error';
     banner.className = 'refresh-error';
     banner.setAttribute('role', 'alert');
-    banner.innerHTML =
-      '<span class="msg">Refresh failed: ' + escapeHtml(message) + '</span>' +
-      '<button type="button" class="dismiss" aria-label="Dismiss">×</button>';
+
+    var msg = document.createElement('span');
+    msg.className = 'msg';
+    // textContent is an inert setter — the browser treats the value as
+    // literal text, not markup. No escape surface.
+    msg.textContent = 'Refresh failed: ' + message;
+
+    var dismiss = document.createElement('button');
+    dismiss.type = 'button';
+    dismiss.className = 'dismiss';
+    dismiss.setAttribute('aria-label', 'Dismiss');
+    dismiss.textContent = '×';
+    dismiss.addEventListener('click', clearRefreshError);
+
+    banner.appendChild(msg);
+    banner.appendChild(dismiss);
     widget.insertBefore(banner, widget.firstChild);
-    var dismissBtn = banner.querySelector('.dismiss');
-    if (dismissBtn) dismissBtn.addEventListener('click', clearRefreshError);
   }
 
   function clearRefreshError() {
@@ -313,60 +97,21 @@
     if (btn) { btn.disabled = false; btn.textContent = '↻ Refresh'; }
   }
 
-  async function load() {
-    const root = document.getElementById(ROOT_ID);
-    if (!root) return;
-    root.innerHTML = renderLoading();
-    try {
-      const vm = await fetchViewModel();
-      root.innerHTML = render(vm);
-      const btn = document.getElementById('gsc-refresh-btn');
-      if (btn) btn.addEventListener('click', doRefresh);
-      wireManualCheckLink();
-    } catch (err) {
-      root.innerHTML = renderError(err.message);
-    }
-  }
-
-  // Fire-and-forget POST that records the admin clicked the "Check Search
-  // Console" link. The link still navigates; KV write failure is silently
-  // swallowed (recency nudge is non-critical — better to lose a tick than
-  // interfere with the click).
-  function wireManualCheckLink() {
-    var link = document.getElementById('gsc-manual-check-link');
-    if (!link) return;
-    link.addEventListener('click', function () {
-      // keepalive ensures the request survives if the user middle-clicks
-      // and immediately closes the current tab. The link's target="_blank"
-      // otherwise leaves this tab running, so delivery is fine in the
-      // common case — keepalive covers the close-immediately edge.
-      fetch('/admin/api/gsc-manual-check-clicked', {
-        method: 'POST',
-        credentials: 'same-origin',
-        keepalive: true,
-      }).catch(function () { /* silent */ });
-    });
-  }
-
   // Test hook: a JSDOM test sets `window.__gscWidgetTest = {}` BEFORE this
   // script runs, then reads `window.__gscWidgetTest.api` to invoke individual
-  // helpers. Production browsers never set this, so the auto-load runs as
+  // helpers. Production browsers never set this, so the auto-wire runs as
   // normal. The reference is harmless either way.
   if (typeof window !== 'undefined' && window.__gscWidgetTest) {
     window.__gscWidgetTest.api = {
-      escapeHtml: escapeHtml,
       showRefreshError: showRefreshError,
       clearRefreshError: clearRefreshError,
       restoreRefreshButton: restoreRefreshButton,
-      computeViewModel: computeViewModel,
-      buildManualCheckRecency: buildManualCheckRecency,
-      buildIndexedTile: buildIndexedTile,
-      wireManualCheckLink: wireManualCheckLink,
-      render: render,
+      wireHandlers: wireHandlers,
+      doRefresh: doRefresh,
     };
   } else if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', load);
+    document.addEventListener('DOMContentLoaded', wireHandlers);
   } else {
-    load();
+    wireHandlers();
   }
 })();

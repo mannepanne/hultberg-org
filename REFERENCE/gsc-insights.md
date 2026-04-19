@@ -59,9 +59,20 @@ POST /admin/api/refresh-gsc   ►  runDailyPoll(env, { skipDispatch: true })
                          - status:latest
                          - status:history:YYYY-MM-DD (35d TTL)
                          - alert:dedup:{type}:{discriminator} (24h TTL)
+                         - manual-check:lastClicked
                                   │
                                   ▼
-GET /admin/api/gsc-status    ────►  gsc-widget.js renders widget
+GET  /admin/dashboard         ►  loadWidgetHtml reads KV, builds
+                                 view-model, embeds pre-rendered
+                                 HTML directly in page response.
+
+POST /admin/api/refresh-gsc   ►  runDailyPoll + renderWidget →
+                                 { ok, widgetHtml }, client swaps
+                                 #gsc-widget-root innerHTML.
+
+POST /admin/api/gsc-manual-check-clicked
+                              ►  writes manual-check:lastClicked
+                                 (fire-and-forget from widget footer)
 ```
 
 ## Files
@@ -73,12 +84,14 @@ GET /admin/api/gsc-status    ────►  gsc-widget.js renders widget
 - **`src/notifier.ts`** — Email abstraction. `sendAlert(env, {subject, body})` tries `env.SEND_EMAIL` first, falls back to Resend on any failure. `buildMimeMessage` sanitises CR/LF in header fields.
 - **`src/scheduled.ts`** — Orchestrator. `runDailyPoll` does the full cycle; `resolveAlerts` is the pure-function core; `handleScheduled` is the cron entry point (wraps in `ctx.waitUntil`).
 - **`src/gscHelpers.ts`** — Pure helpers: `sanitiseUpstreamError` (caps + strips multi-line errors), `mergeEmailDelivery` (dedup-aware state merger).
-- **`src/gscWidgetViewModel.ts`** — Pure `renderViewModel(snapshot, now)` that flattens a snapshot into the shape the DOM renderer consumes. Fully unit-testable.
+- **`src/gscWidgetViewModel.ts`** — Pure `renderViewModel(snapshot, now, manualCheckLastClicked)` that flattens a snapshot into the flat shape the renderer consumes. Fully unit-testable.
+- **`src/gscWidgetRenderer.ts`** — Pure `renderWidget(vm)` that produces the widget's HTML fragment from a view-model. Every dynamic field escaped at the boundary via `src/utils.ts`'s `escapeHtml`.
 - **`src/lint.ts`** — Pre-publish lint rules. Pure functions, no I/O.
 - **`src/routes/gscDebug.ts`** — `GET /admin/api/gsc-debug`. Auth-gated smoke-test; lists sites + sitemaps. Use post-secret-rotation or after deploy to verify credentials.
-- **`src/routes/gscStatus.ts`** — `GET /admin/api/gsc-status`. Auth-gated. Returns `{ok, snapshot}` from `status:latest` for the widget.
-- **`src/routes/refreshGsc.ts`** — `POST /admin/api/refresh-gsc`. Auth-gated, rate-limited (1/60s), CSRF-checked. Calls `runDailyPoll` with `skipDispatch: true`.
-- **`public/admin/gsc-widget.js`** — Client-side DOM renderer. Mirrors the view-model transformation from `gscWidgetViewModel.ts`.
+- **`src/routes/refreshGsc.ts`** — `POST /admin/api/refresh-gsc`. Auth-gated, rate-limited (1/60s), CSRF-checked. Calls `runDailyPoll` with `skipDispatch: true`, then returns `{ok, widgetHtml}` — the client innerHTML-swaps the fragment.
+- **`src/routes/gscManualCheckClicked.ts`** — `POST /admin/api/gsc-manual-check-clicked`. Auth-gated, CSRF-checked. Writes `manual-check:lastClicked` timestamp to KV. Fire-and-forget from the widget footer click handler.
+- **`src/routes/adminDashboard.ts`** — `loadWidgetHtml(env, now)` helper reads `status:latest` + `manual-check:lastClicked` from KV, builds the view-model, renders HTML, embeds it directly in the dashboard page. Falls back to the empty-state widget on KV unbound / parse error.
+- **`public/admin/gsc-widget.js`** — Behaviour only (~115 lines). Wires the refresh button, the manual-check link, and the refresh-error banner. Does NOT build HTML: initial widget is server-rendered, refresh response is already-rendered HTML, error banner uses `textContent` + `createElement`. No client-side `escapeHtml`.
 
 ### Config
 
@@ -164,6 +177,6 @@ Either click the **Refresh** button on `/admin/dashboard`, or `POST /admin/api/r
 
 ## Testing strategy
 
-- **Unit**: `jwt.test.ts`, `gsc.test.ts`, `gscHelpers.test.ts`, `lint.test.ts`, `notifier.test.ts`, `gscWidgetViewModel.test.ts`, `scheduled-resolveAlerts.test.ts`. Pure-function surface; no I/O.
-- **Integration**: `scheduled.test.ts`, `gscStatus.test.ts`, `refreshGsc.test.ts`. End-to-end orchestrator behaviour with mocked GSC API + KV.
+- **Unit**: `jwt.test.ts`, `gsc.test.ts`, `gscHelpers.test.ts`, `lint.test.ts`, `notifier.test.ts`, `gscWidgetViewModel.test.ts`, `gscWidgetRenderer.test.ts`, `scheduled-resolveAlerts.test.ts`. Pure-function surface; no I/O. Renderer tests include an explicit XSS-defence block covering every dynamic field.
+- **Integration**: `scheduled.test.ts`, `refreshGsc.test.ts`, `gscManualCheckClicked.test.ts`. End-to-end orchestrator behaviour with mocked GSC API + KV.
 - **Workerd runtime**: not exercised in CI (Vitest runs under Node). The `gsc-debug` endpoint is the de-facto post-deploy smoke test — **do not remove it without adding a miniflare/workerd-runner JWT round-trip test**.

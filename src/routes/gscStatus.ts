@@ -14,11 +14,14 @@ export async function handleGscStatus(request: Request, env: Env): Promise<Respo
     return json({ ok: false, error: 'GSC_KV binding not configured' }, 500);
   }
 
-  const raw = await env.GSC_KV.get('status:latest');
+  const [raw, manualCheckLastClicked] = await Promise.all([
+    env.GSC_KV.get('status:latest'),
+    env.GSC_KV.get('manual-check:lastClicked'),
+  ]);
   if (!raw) {
     // No snapshot yet (cron hasn't fired for the first time). Not an error —
     // widget renders an empty state from this.
-    return json({ ok: true, snapshot: null });
+    return json({ ok: true, snapshot: null, manualCheckLastClicked });
   }
 
   let snapshot: GSCSnapshot;
@@ -28,7 +31,7 @@ export async function handleGscStatus(request: Request, env: Env): Promise<Respo
     return json({ ok: false, error: 'Corrupt snapshot in KV' }, 500);
   }
 
-  return json({ ok: true, snapshot });
+  return json({ ok: true, snapshot, manualCheckLastClicked });
 }
 
 function json(body: unknown, status = 200): Response {

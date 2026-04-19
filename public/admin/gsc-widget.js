@@ -21,6 +21,11 @@
   }
 
   function render(vm) {
+    // freshnessAria is a pre-built attribute string interpolated raw into the
+    // template literal below. Safe because vm.freshnessLabel is integer-derived
+    // (computed from age in hours/days) and we still escape it. If you ever
+    // route attacker-influenced content through here, escape at the *value*
+    // boundary AND verify the attribute syntax can't be broken out of.
     var freshnessAria = vm.state === 'stale'
       ? 'aria-label="Stale: ' + escapeHtml(vm.freshnessLabel) + '"'
       : '';
@@ -139,7 +144,10 @@
       freshnessLabel: freshnessLabel(ageHours),
       alerts: snapshot.alerts.map(function (a) {
         // Back-compat: alerts written by PR #29's cron lack firstDetectedAt.
-        // Mirrors the fallback in src/gscWidgetViewModel.ts.
+        // Mirrors the fallback in src/gscWidgetViewModel.ts (which uses ??).
+        // We use || here intentionally — also catches accidentally-empty-string
+        // values (which `??` would let through and then `new Date('')` would
+        // produce Invalid Date).
         var firstDetectedAt = a.firstDetectedAt || a.detectedAt || snapshot.capturedAt;
         return {
           type: a.type, severity: a.severity, subject: a.subject, message: a.message,

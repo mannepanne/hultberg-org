@@ -15,11 +15,11 @@ const widgetSource = readFileSync(
 );
 
 interface WidgetTestApi {
-  escapeHtml: (s: string) => string;
   showRefreshError: (message: string) => void;
   clearRefreshError: () => void;
   restoreRefreshButton: () => void;
-  computeViewModel: (snapshot: unknown, now: Date) => unknown;
+  wireHandlers: () => void;
+  doRefresh: () => Promise<void>;
 }
 
 declare global {
@@ -46,26 +46,6 @@ describe('gsc-widget DOM helpers', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
     api = loadWidget();
-  });
-
-  describe('escapeHtml', () => {
-    it('escapes the five HTML metacharacters', () => {
-      expect(api.escapeHtml('<script>alert("x&y")</script>')).toBe(
-        '&lt;script&gt;alert(&quot;x&amp;y&quot;)&lt;/script&gt;',
-      );
-    });
-
-    it('escapes single quotes', () => {
-      expect(api.escapeHtml("it's")).toBe('it&#039;s');
-    });
-
-    it('passes through plain text unchanged', () => {
-      expect(api.escapeHtml('plain text 123')).toBe('plain text 123');
-    });
-
-    it('coerces non-string input to string before escaping', () => {
-      expect(api.escapeHtml(42 as unknown as string)).toBe('42');
-    });
   });
 
   describe('showRefreshError', () => {

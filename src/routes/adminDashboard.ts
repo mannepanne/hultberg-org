@@ -1,13 +1,41 @@
 // ABOUT: Route handler for /admin/dashboard
 // ABOUT: Admin interface listing all updates with edit and delete actions
 
-import type { Env } from '@/types';
-import type { Update } from '@/types';
+import type { Env, GSCSnapshot, Update } from '@/types';
 import { requireAuth } from '@/auth';
 import { fetchAllUpdates } from '@/github';
 import { escapeHtml } from '@/utils';
+import { renderViewModel } from '@/gscWidgetViewModel';
+import { renderWidget } from '@/gscWidgetRenderer';
 
 const CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self';";
+
+/**
+ * Load GSC widget state from KV and render the HTML fragment server-side.
+ *
+ * Reads `status:latest` (snapshot) and `manual-check:lastClicked`, feeds
+ * them through the view-model + renderer, and returns a ready-to-embed
+ * HTML string. If KV is unbound or the snapshot JSON is corrupt, renders
+ * the empty state — the admin page should still load cleanly.
+ */
+async function loadWidgetHtml(env: Env, now: Date): Promise<string> {
+  if (!env.GSC_KV) {
+    return renderWidget(renderViewModel(null, now, null));
+  }
+  try {
+    const [rawSnapshot, lastClicked] = await Promise.all([
+      env.GSC_KV.get('status:latest'),
+      env.GSC_KV.get('manual-check:lastClicked'),
+    ]);
+    const snapshot: GSCSnapshot | null = rawSnapshot
+      ? (JSON.parse(rawSnapshot) as GSCSnapshot)
+      : null;
+    return renderWidget(renderViewModel(snapshot, now, lastClicked));
+  } catch (err) {
+    console.error('loadWidgetHtml: falling back to empty state:', err);
+    return renderWidget(renderViewModel(null, now, null));
+  }
+}
 
 function formatDate(isoDate: string): string {
   if (!isoDate) return '—';
@@ -46,7 +74,7 @@ function updateRow(update: Update): string {
     </tr>`.trim();
 }
 
-function renderDashboard(email: string, updates: Update[]): string {
+function renderDashboard(email: string, updates: Update[], widgetHtml: string): string {
   const rows = updates.length > 0
     ? updates.map(updateRow).join('\n')
     : `<tr><td colspan="5" style="text-align:center;color:#6c757d;padding:32px">No updates yet. <a href="/admin/updates/new">Create your first update</a>.</td></tr>`;
@@ -74,7 +102,7 @@ function renderDashboard(email: string, updates: Update[]): string {
   </header>
 
   <main>
-    <div id="gsc-widget-root"></div>
+    <div id="gsc-widget-root">${widgetHtml}</div>
 
     <div class="actions">
       <a class="btn-primary" href="/admin/updates/new">+ New Update</a>
@@ -138,9 +166,12 @@ export async function handleAdminDashboard(request: Request, env: Env): Promise<
   }
 
   const email = authResult;
-  const updates = await fetchAllUpdates(env);
+  const [updates, widgetHtml] = await Promise.all([
+    fetchAllUpdates(env),
+    loadWidgetHtml(env, new Date()),
+  ]);
 
-  return new Response(renderDashboard(email, updates), {
+  return new Response(renderDashboard(email, updates, widgetHtml), {
     status: 200,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',

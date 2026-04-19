@@ -7,6 +7,8 @@ import type { Env } from '@/types';
 import { requireAuth } from '@/auth';
 import { runDailyPoll } from '@/scheduled';
 import { sanitiseUpstreamError } from '@/gscHelpers';
+import { renderViewModel } from '@/gscWidgetViewModel';
+import { renderWidget } from '@/gscWidgetRenderer';
 
 const RATE_LIMIT_SECONDS = 60;
 
@@ -39,7 +41,11 @@ export async function handleRefreshGsc(request: Request, env: Env): Promise<Resp
     // cron-only side effect — a user clicking "Refresh" shouldn't be surprised
     // by an alert email arriving in their inbox.
     const snapshot = await runDailyPoll(env, { skipDispatch: true });
-    return json({ ok: true, snapshot });
+    // Look up the manual-check timestamp so the re-rendered footer shows
+    // the same recency label the server-rendered cold-load would have.
+    const lastClicked = env.GSC_KV ? await env.GSC_KV.get('manual-check:lastClicked') : null;
+    const widgetHtml = renderWidget(renderViewModel(snapshot, new Date(), lastClicked));
+    return json({ ok: true, widgetHtml });
   } catch (err) {
     console.error('refresh-gsc failed:', sanitiseUpstreamError(err));
     return json({ ok: false, error: sanitiseUpstreamError(err) }, 500);

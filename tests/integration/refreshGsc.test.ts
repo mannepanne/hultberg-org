@@ -124,12 +124,18 @@ describe('POST /admin/api/refresh-gsc', () => {
     expect(response.status).toBe(403);
   });
 
-  it('runs the poll and returns the new snapshot', async () => {
+  it('runs the poll and returns the server-rendered widget HTML', async () => {
     const response = await worker.fetch(await authedRequest(), mockEnv, mockCtx);
     expect(response.status).toBe(200);
-    const body = await response.json() as { ok: boolean; snapshot: any };
+    const body = await response.json() as { ok: boolean; widgetHtml: string };
     expect(body.ok).toBe(true);
-    expect(body.snapshot.indexing.indexedCount).toBe(5);
+    expect(body.widgetHtml).toContain('<section class="widget"');
+    // The poll computed indexedCount=5 from the mocked sitemaps response.
+    // It should be rendered into the widget and also persisted to KV.
+    expect(body.widgetHtml).toContain('>5<');
+    const latest = await mockEnv.GSC_KV.get('status:latest');
+    expect(latest).not.toBeNull();
+    expect(JSON.parse(latest!).indexing.indexedCount).toBe(5);
   });
 
   it('does NOT send email even when alerts graduate (skipDispatch semantics)', async () => {
@@ -165,12 +171,18 @@ describe('POST /admin/api/refresh-gsc', () => {
 
     const response = await worker.fetch(await authedRequest(), mockEnv, mockCtx);
     expect(response.status).toBe(200);
-    const body = await response.json() as { ok: boolean; snapshot: any };
+    const body = await response.json() as { ok: boolean; widgetHtml: string };
+    expect(body.ok).toBe(true);
 
-    // Alert IS graduated into the snapshot (refresh computes state)...
-    expect(body.snapshot.alerts).toHaveLength(1);
-    expect(body.snapshot.alerts[0].type).toBe('indexed-drop');
-    expect(body.snapshot.alerts[0].emailSent).toBe(false);
+    // The refresh endpoint no longer returns the snapshot — it returns the
+    // rendered widget. We verify the state transition via the persisted KV
+    // value (the same snapshot the UI will pick up on next cold-load).
+    const persisted = JSON.parse((await mockEnv.GSC_KV.get('status:latest'))!);
+    expect(persisted.alerts).toHaveLength(1);
+    expect(persisted.alerts[0].type).toBe('indexed-drop');
+    expect(persisted.alerts[0].emailSent).toBe(false);
+    // Widget also surfaces the caveat (manual-path graduated an unsent alert).
+    expect(body.widgetHtml).toContain('alerts emailed at next 08:00 UTC cron');
     // ...but email was NOT sent (refresh skips dispatch).
     expect(sendEmailMock).not.toHaveBeenCalled();
     // ...and no dedup key was written, so the next cron will still deliver.

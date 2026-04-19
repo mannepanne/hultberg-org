@@ -5,17 +5,9 @@ import type { Env } from '@/types';
 import type { Update } from '@/types';
 import { requireAuth } from '@/auth';
 import { fetchAllUpdates } from '@/github';
+import { escapeHtml } from '@/utils';
 
 const CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self';";
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
 
 function formatDate(isoDate: string): string {
   if (!isoDate) return '—';
@@ -75,7 +67,7 @@ function renderDashboard(email: string, updates: Update[]): string {
       <a href="/admin/dashboard" aria-current="page">Dashboard</a>
       <a href="/admin/now/edit">Now</a>
     </nav>
-    <span class="user">${email}</span>
+    <span class="user">${escapeHtml(email)}</span>
     <form method="POST" action="/admin/logout">
       <button type="submit">Logout</button>
     </form>

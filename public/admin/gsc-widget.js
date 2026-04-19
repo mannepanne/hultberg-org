@@ -54,7 +54,7 @@
         <span class="icon">${a.severity === 'high' ? '🔴' : '⚠️'}</span>
         <div class="body">
           <div class="title">${escapeHtml(a.subject)}</div>
-          <div class="meta">${escapeHtml(a.message)} Seen for ${a.daysSeen} ${a.daysSeen === 1 ? 'day' : 'days'}.${a.emailSent ? ' Email sent.' : ''}</div>
+          <div class="meta">${escapeHtml(a.message)} Seen for ${escapeHtml(String(a.daysSeen))} ${a.daysSeen === 1 ? 'day' : 'days'}.${a.emailSent ? ' Email sent.' : ''}</div>
         </div>
       </div>
     `).join('');
@@ -77,8 +77,8 @@
       <tr>
         <td class="query">${escapeHtml(q.query)}</td>
         <td class="metrics">
-          <span class="clicks">${q.clicks}</span>
-          ${q.impressions.toLocaleString()} impr · ${escapeHtml(q.ctrPct)} CTR · pos ${escapeHtml(q.position)}
+          <span class="clicks">${escapeHtml(String(q.clicks))}</span>
+          ${escapeHtml(Number(q.impressions).toLocaleString())} impr · ${escapeHtml(q.ctrPct)} CTR · pos ${escapeHtml(q.position)}
         </td>
       </tr>
     `).join('');

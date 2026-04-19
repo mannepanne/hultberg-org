@@ -41,6 +41,7 @@ While building the GSC insights feature, Cloudflare's new Email Sending service 
 - **Unknown CF pricing.** The service "will require a paid Workers subscription" with charges "based on messages sent." Pricing not finalised at adoption time. Magnus accepted the unknown for this limited engagement.
 - **Two provider configurations to maintain.** Two DNS/DKIM setups, two observability paths. Accepted because the magic-link path must stay reliable and the comparison data has independent value.
 - **Sender reputation split.** The `alerts@hultberg.org` sender via CF is brand-new; the `noreply@hultberg.org` sender via Resend has history. Different addresses, so no direct interference, but worth being aware of.
+- **Trust surface widening.** Falling back to Resend when CF Email Sending fails means alert content passes through both providers' systems. Alert content is system-generated and non-sensitive at adoption time. If future features add user-typed content to alert bodies (e.g. top search queries, update titles), re-evaluate against this trust model — see issue #30.
 
 ## Implications
 

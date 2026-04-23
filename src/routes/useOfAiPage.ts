@@ -33,6 +33,7 @@ function renderUseOfAiPageHTML(): string {
 
   <meta property="og:title" content="Use of AI | Magnus Hultberg">
   <meta property="og:type" content="website">
+  <link rel="canonical" href="https://hultberg.org/use-of-ai">
   <meta property="og:url" content="https://hultberg.org/use-of-ai">
   <meta property="og:description" content="How Magnus Hultberg uses AI tools for writing and building">
   <meta property="og:site_name" content="Magnus Hultberg">

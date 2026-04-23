@@ -161,7 +161,7 @@ function renderUpdatesListingHTML(
         <meta name="twitter:card" content="summary" />
 
         <link rel="alternate" type="application/rss+xml" title="Updates - Magnus Hultberg" href="/updates/feed.xml" />
-        ${currentPage === 1 ? '<link rel="canonical" href="https://hultberg.org/updates" />' : ''}
+        <link rel="canonical" href="https://hultberg.org${baseUrl}${currentPage > 1 ? `?page=${currentPage}` : ''}" />
         ${currentPage > 1 ? `<link rel="prev" href="https://hultberg.org${currentPage === 2 ? baseUrl : `${baseUrl}?page=${currentPage - 1}`}" />` : ''}
         ${currentPage < totalPages ? `<link rel="next" href="https://hultberg.org${baseUrl}?page=${currentPage + 1}" />` : ''}
 

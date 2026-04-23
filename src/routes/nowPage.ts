@@ -67,6 +67,7 @@ function renderNowPageHTML(contentHTML: string): string {
 
   <meta property="og:title" content="What I'm doing now | Magnus Hultberg">
   <meta property="og:type" content="website">
+  <link rel="canonical" href="https://hultberg.org/now">
   <meta property="og:url" content="https://hultberg.org/now">
   <meta property="og:image" content="https://hultberg.org/now/magnus_hultberg_juggling.png">
   <meta property="og:description" content="What Magnus Hultberg is doing now">

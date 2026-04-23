@@ -400,12 +400,12 @@ describe('GET /updates - Pagination', () => {
     expect(html).toContain('<link rel="canonical" href="https://hultberg.org/updates" />');
   });
 
-  it('does not include canonical link on page 2+', async () => {
+  it('self-canonicalises page 2+ to its own paginated URL', async () => {
     const request = new Request('http://localhost/updates?page=2');
     const response = await worker.fetch(request, mockEnv, mockCtx);
     const html = await response.text();
 
-    expect(html).not.toContain('<link rel="canonical"');
+    expect(html).toContain('<link rel="canonical" href="https://hultberg.org/updates?page=2" />');
   });
 });
 

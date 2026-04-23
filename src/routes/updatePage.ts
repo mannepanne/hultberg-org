@@ -113,6 +113,7 @@ function renderUpdatePageHTML(update: Update, contentHTML: string): string {
 
         <meta property="og:title" content="${escapeHtml(update.title)}" />
         <meta property="og:type" content="article" />
+        <link rel="canonical" href="https://hultberg.org/updates/${escapeHtml(update.slug)}" />
         <meta property="og:url" content="https://hultberg.org/updates/${escapeHtml(update.slug)}" />
         <meta property="og:image" content="${ogImage}" />
         <meta property="og:description" content="${ogDescription}" />

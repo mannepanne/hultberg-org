@@ -79,7 +79,7 @@ function generateSitemapXML(
   }
 
   entries.push(buildUrl(`${origin}/use-of-ai`, undefined, '0.5'));
-  entries.push(buildUrl(`${origin}/2005/11/recipe_sharing_.html`, undefined, '0.3'));
+  entries.push(buildUrl(`${origin}/2005/11/recipe_sharing_`, undefined, '0.3'));
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

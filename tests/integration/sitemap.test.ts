@@ -113,7 +113,7 @@ describe('GET /sitemap.xml', () => {
     expect(xml).toContain('<loc>http://localhost/now</loc>');
     expect(xml).toContain('<loc>http://localhost/updates</loc>');
     expect(xml).toContain('<loc>http://localhost/use-of-ai</loc>');
-    expect(xml).toContain('<loc>http://localhost/2005/11/recipe_sharing_.html</loc>');
+    expect(xml).toContain('<loc>http://localhost/2005/11/recipe_sharing_</loc>');
   });
 
   it('includes one URL per published update', async () => {
@@ -173,7 +173,7 @@ describe('GET /sitemap.xml', () => {
     expect(useOfAi).toBeTruthy();
     expect(useOfAi![0]).not.toContain('<lastmod>');
 
-    const recipe = xml.match(/<url>\s*<loc>http:\/\/localhost\/2005\/11\/recipe_sharing_\.html<\/loc>[\s\S]*?<\/url>/);
+    const recipe = xml.match(/<url>\s*<loc>http:\/\/localhost\/2005\/11\/recipe_sharing_<\/loc>[\s\S]*?<\/url>/);
     expect(recipe).toBeTruthy();
     expect(recipe![0]).not.toContain('<lastmod>');
   });

@@ -8,6 +8,11 @@ enabled = true
 [assets]
 directory = "./public"
 binding = "ASSETS"
+# Invoke the Worker before serving "/" so we can return 410 Gone for legacy
+# WordPress query-string URLs (e.g. /?p=123, /?page_id=2, /?cat=1) that
+# Cloudflare Assets would otherwise answer with the homepage, creating
+# soft-404 ghosts in Google Search Console reports.
+run_worker_first = ["/"]
 
 # KV Namespaces for blog updates feature
 # AUTH_KV: Stores magic link tokens for authentication

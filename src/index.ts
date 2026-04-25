@@ -36,6 +36,25 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
+    // Legacy WordPress query-string URLs return 410 Gone so search engines
+    // drop them. Without this, "/" served by Cloudflare Assets answers 200
+    // for every variant (?p=N, ?page_id=N, ?cat=X, ?m=YYYYMM, ?feed=rss2,
+    // ?s=…, ?tag=…) regardless of query string, creating soft-404s that
+    // persist in GSC reports indefinitely.
+    if (url.pathname === '/' && url.search) {
+      const legacyWpParams = ['p', 'page_id', 'cat', 'm', 'feed', 's', 'tag', 'paged', 'author', 'preview'];
+      if (legacyWpParams.some(param => url.searchParams.has(param))) {
+        return new Response('Gone', { status: 410, headers: { 'Content-Type': 'text/plain' } });
+      }
+    }
+
+    // Homepage: delegate to static assets. wrangler.toml run_worker_first
+    // invokes the Worker for "/" so we must explicitly call ASSETS to serve
+    // public/index.html.
+    if (url.pathname === '/') {
+      return env.ASSETS?.fetch(request) ?? fetch(request);
+    }
+
     // Admin routes
     // API endpoint: POST /admin/api/send-magic-link
     if (url.pathname === '/admin/api/send-magic-link' && request.method === 'POST') {

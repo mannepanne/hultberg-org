@@ -65,6 +65,6 @@ Revisit this ADR when **any** of:
 
 ## References
 
-- Spec: [SPECIFICATIONS/gsc-insights-and-alerts.md](../../SPECIFICATIONS/gsc-insights-and-alerts.md)
+- Spec: [SPECIFICATIONS/ARCHIVE/gsc-insights-and-alerts.md](../../SPECIFICATIONS/ARCHIVE/gsc-insights-and-alerts.md)
 - [Cloudflare Email Sending announcement (Nov 2025)](https://blog.cloudflare.com/email-service/)
 - Related: `src/notifier.ts`, `src/email.ts` (`sendViaResend` helper)

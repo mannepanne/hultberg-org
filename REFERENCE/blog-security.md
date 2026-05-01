@@ -1,6 +1,6 @@
 # Blog Updates - Security Implementation
 
-**Related:** [blog-style-updates-mvp.md](./blog-style-updates-mvp.md) | [blog-updates-implementation.md](./blog-updates-implementation.md)
+**Related:** [blog-style-updates-mvp.md](../SPECIFICATIONS/ARCHIVE/blog-style-updates-mvp.md) | [blog-updates-implementation.md](../SPECIFICATIONS/ARCHIVE/blog-updates-implementation.md)
 
 This document details all security measures, authentication flows, and data protection strategies for the blog updates feature.
 See also:

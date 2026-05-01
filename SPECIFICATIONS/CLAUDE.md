@@ -123,32 +123,14 @@ When starting your project, replace the content below this line with your actual
 
 ## Active implementation phases
 
-Development is organised into [X] sequential phases. Each phase includes scope, acceptance criteria, testing strategy, and PR workflow.
+**Current phase:** None — all completed work is in [`ARCHIVE/`](./ARCHIVE/). New features are spec'd as one-off documents (e.g. `gsc-insights-and-alerts.md`) rather than as numbered sequential phases.
 
-**Current phase:** [Phase number and name]
-
-### Phase Files (Work Through in Order)
-
-1. **[01-phase-name.md](./01-phase-name.md)** - [Timeframe]
-   [Brief description of what this phase builds]
-
-2. **[02-phase-name.md](./02-phase-name.md)** - [Timeframe]
-   [Brief description of what this phase builds]
-
-3. **[03-phase-name.md](./03-phase-name.md)** - [Timeframe]
-   [Brief description of what this phase builds]
-
-[Continue numbering phases...]
+When starting a new feature spec, drop it directly in this directory. The [`00-TEMPLATE-phase.md`](./00-TEMPLATE-phase.md) template is available as a starting point but most features here don't need the full phase structure.
 
 ### Supporting documentation
 
-**[ORIGINAL_IDEA/](./ORIGINAL_IDEA/)**
-- `project-outline.md` - Master specification and product vision
-- `naming-rationale.md` - Project naming inspiration
-- [Add other initial concept documents]
-
 **[ARCHIVE/](./ARCHIVE/)**
-- Completed specifications (moved here when phase is done)
+- Completed specifications (moved here when implementation is shipped)
 
 **[REFERENCE/decisions/](../REFERENCE/decisions/)** - Architecture Decision Records
 - Search here BEFORE making architectural decisions (library choice, patterns, API design)

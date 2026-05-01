@@ -65,5 +65,5 @@ At that point, draft `SPECIFICATIONS/gsc-auto-fix-layer-2.md` referencing this A
 
 ## References
 
-- Spec: [SPECIFICATIONS/gsc-insights-and-alerts.md](../../SPECIFICATIONS/gsc-insights-and-alerts.md) — "Future work — Layer 2 placeholder" section
+- Spec: [SPECIFICATIONS/ARCHIVE/gsc-insights-and-alerts.md](../../SPECIFICATIONS/ARCHIVE/gsc-insights-and-alerts.md) — "Future work — Layer 2 placeholder" section
 - Project principles: `.claude/CLAUDE.md` (KISS, YAGNI)

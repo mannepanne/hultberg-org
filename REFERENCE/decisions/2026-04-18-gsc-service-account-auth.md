@@ -54,6 +54,6 @@ We're building a scheduled Worker (daily cron) that polls GSC for sitemap status
 
 ## References
 
-- Spec: [SPECIFICATIONS/gsc-insights-and-alerts.md](../../SPECIFICATIONS/gsc-insights-and-alerts.md)
+- Spec: [SPECIFICATIONS/ARCHIVE/gsc-insights-and-alerts.md](../../SPECIFICATIONS/ARCHIVE/gsc-insights-and-alerts.md)
 - Google docs: [Using OAuth 2.0 for Server to Server Applications](https://developers.google.com/identity/protocols/oauth2/service-account)
 - Related: `src/jwt.ts` (RS256 via Web Crypto), `src/gsc.ts` (API client)

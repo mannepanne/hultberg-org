@@ -20,7 +20,7 @@ A simple, lightweight blog feature for hultberg.org that allows Magnus to publis
 
 ## Current Site Architecture
 
-**Important:** The existing site at hultberg.org is fully functional. For complete architecture details, see [CLAUDE.md](../CLAUDE.md#current-implementation-notes).
+**Important:** The existing site at hultberg.org is fully functional. For complete architecture details, see [CLAUDE.md](../../CLAUDE.md).
 
 **Key points:**
 - Cloudflare Workers Assets serves static files from `public/` **before** the Worker's fetch handler runs

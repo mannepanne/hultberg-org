@@ -1,8 +1,8 @@
 # Testing Strategy Plan
 
 **Related Documents:**
-- [blog-style-updates-mvp.md](./blog-style-updates-mvp.md)
-- [blog-updates-implementation.md](./blog-updates-implementation.md)
+- [blog-style-updates-mvp.md](../SPECIFICATIONS/ARCHIVE/blog-style-updates-mvp.md)
+- [blog-updates-implementation.md](../SPECIFICATIONS/ARCHIVE/blog-updates-implementation.md)
 - [CLAUDE.md](../CLAUDE.md)
 
 ---

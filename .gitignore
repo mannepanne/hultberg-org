@@ -14,3 +14,9 @@ coverage/
 
 # Generated at build time by scripts/generate-index.js
 public/updates/data/index.json
+
+# Per-clone override for the review-mode flag. The committed
+# .claude/project-config.json governs what cloners inherit; this local file
+# lets a maintainer run a different prReviewMode locally (e.g. "enabled" for
+# dogfooding on the template repo) without flipping the committed default.
+.claude/project-config.local.json

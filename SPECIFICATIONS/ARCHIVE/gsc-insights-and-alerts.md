@@ -326,9 +326,9 @@ A separate spec (`gsc-auto-fix-layer-2.md`) will be drafted at that point, infor
 
 ## Related documentation
 
-- [Root CLAUDE.md](../CLAUDE.md) — project navigation
-- [environment-setup.md](../REFERENCE/environment-setup.md) — to be updated with `GSC_SERVICE_ACCOUNT_JSON` instructions
-- [testing-strategy.md](../REFERENCE/testing-strategy.md)
+- [Root CLAUDE.md](../../CLAUDE.md) — project navigation
+- [environment-setup.md](../../REFERENCE/environment-setup.md) — to be updated with `GSC_SERVICE_ACCOUNT_JSON` instructions
+- [testing-strategy.md](../../REFERENCE/testing-strategy.md)
 - [Google Search Console API docs](https://developers.google.com/webmaster-tools/v1/api_reference_index)
 - [URL Inspection API docs](https://developers.google.com/webmaster-tools/v1/urlInspection.index)
 - [Cloudflare Email Sending announcement](https://blog.cloudflare.com/email-service/)

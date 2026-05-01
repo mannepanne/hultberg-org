@@ -29,6 +29,26 @@ Common issues and solutions for local development, deployment, and API integrati
 
   How to use `/review-pr` and `/review-pr-team` skills for automated code review.
 
+### [blog-security.md](./blog-security.md)
+**When to read:** Working on the `/updates` blog feature, the `/admin` interface, authentication flows, or anything that touches stored update data.
+
+Security measures, authentication flows, and data protection strategies for the blog updates feature.
+
+### [web-analytics.md](./web-analytics.md)
+**When to read:** Modifying the analytics setup, adding event tracking, or troubleshooting traffic data.
+
+Google Analytics 4 (GA4) and Cloudflare Web Analytics setup — what each one tracks, how they're wired in, and where the IDs live.
+
+### [now-page-snapshots-timeline.md](./now-page-snapshots-timeline.md)
+**When to read:** Working on the `/now` page, its snapshot system, or the historical timeline UI.
+
+How the /now page snapshots system works (capture, storage, retrieval) and how the interactive timeline displays them.
+
+### [gsc-insights.md](./gsc-insights.md)
+**When to read:** Working on Google Search Console integration, the insights dashboard, the email alerts pipeline, or related plumbing.
+
+How GSC insights and alerts are wired up — service-account auth, daily polling, alert generation, and email delivery via Cloudflare Email Sending with Resend fallback.
+
 ### [safety-harness.md](./safety-harness.md)
 **When to read:** A safety-harness block or ask dialog fired and you want to understand what's going on, you want to add a pattern, or you want to bypass the hook for a legitimate use.
 

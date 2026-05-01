@@ -196,8 +196,8 @@ Phase [X]: [Phase Name]
 ```
 
 ### Review requirements
-- [ ] Use `/review-pr` for standard review
-- [ ] Use `/review-pr-team` if this phase involves:
+- [ ] Use `/review-pr` — the dispatcher triages the change and auto-routes to team tier for high-risk paths (data layer, auth, CI, deps, secrets)
+- [ ] Use `/review-pr-team` directly only to skip triage when you already know the phase involves:
   - Breaking changes
   - Security-sensitive code
   - Complex architectural decisions

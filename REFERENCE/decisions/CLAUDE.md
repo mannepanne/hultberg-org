@@ -131,6 +131,8 @@ grep -r "authentication" REFERENCE/decisions/
 
 **Format:** Listed chronologically (newest first)
 
+- [2026-04-22 — Opt-in config flag for the review system, with local override](./2026-04-22-prreviewmode-opt-in-config.md) — why `prReviewMode` is a tri-state enum (`enabled` / `disabled` / `prompt-on-first-use`), why the template default is the prompt state, why there's a gitignored local override, and why the gate logic is canonical-not-copied (single source of truth in `.claude/skills/review-gate.md`, referenced from each skill's Step 0 rather than duplicated).
+- [2026-04-22 — Tiered PR review via a triage dispatcher](./2026-04-22-tiered-pr-review-dispatcher.md) — why `/review-pr` triages into light/standard/team tiers, why the rubric lives in a prompt, and why `/review-pr-team` stays independent.
 - **[2026-04-18-defer-gsc-auto-fix-layer.md](./2026-04-18-defer-gsc-auto-fix-layer.md)** — Autonomous GSC auto-fix is deferred until Layer 1 data informs which fixers are worth building.
 - **[2026-04-18-cf-email-sending-with-resend-fallback.md](./2026-04-18-cf-email-sending-with-resend-fallback.md)** — GSC alerts use Cloudflare Email Sending (beta) with Resend as fallback; magic-link auth stays on Resend.
 - **[2026-04-18-gsc-service-account-auth.md](./2026-04-18-gsc-service-account-auth.md)** — Use a Google service account (not user OAuth) for GSC API access.

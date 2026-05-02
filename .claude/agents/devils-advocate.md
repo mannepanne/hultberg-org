@@ -55,6 +55,17 @@ Ask: What does the user actually need? What problem are they experiencing? Could
 - [ ] Is this solving for a common case or an edge case?
 - [ ] Is there existing functionality that could be extended instead?
 
+### Project-fit questions
+
+This project is a personal site with a single user (the maintainer). Probe whether the spec's solution shape actually fits that context:
+
+- [ ] **Solo-user mental model** — does anything in the spec assume multi-user behaviour, concurrent editors, or coordination between people? If so, is that future-proofing the project might never need? A single-user site can ignore many concurrency / locking / fairness problems that a multi-user product can't.
+- [ ] **Static page vs Worker-rendered** — the homepage and `/now` are served as static assets via `env.ASSETS`. Does this feature *need* dynamic rendering, or could it be a static page with a client-side fetch? Static is cheaper, simpler, and bypasses Worker CPU/subrequest limits.
+- [ ] **Existing infra reuse** — could this lean on something already in place (KV for state, GitHub Actions for cron-style jobs, the generate-index.js build step) rather than introducing new infrastructure? New infra is rarely free.
+- [ ] **GitHub-as-DB vs real database** — this project stores most data as JSON committed to the repo. Does this feature genuinely fit that pattern, or is it being forced into it? When data needs queries, joins, transactional writes, or sub-second consistency, GitHub-as-DB is the wrong shape — Cloudflare D1 or an external service would be honest. Equally: when data is naturally document-shaped and changes rarely, a real DB would be over-engineering. Surface the question explicitly.
+- [ ] **Could this be configuration?** — features like the Updates feed, the /now snapshots, and the GSC alerts thresholds are all data-shaped. Could the spec's outcome be achieved with a JSON edit + redeploy rather than new code? Personal-site features often turn out to be config in disguise.
+- [ ] **Is "good enough" actually good enough?** — is the spec optimising for theoretical robustness (multi-region failover, sub-100ms latency, high availability SLA) when this is a personal site where 99% uptime and 500ms latency are fine?
+
 ### Assumptions
 
 - [ ] What assumptions is this spec making about user behavior?

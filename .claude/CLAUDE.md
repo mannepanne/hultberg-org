@@ -3,7 +3,7 @@
 
 - This file provides collaboration principles and ways of working guidance to Claude Code (claude.ai/code) when working with in this repository.
 - The purpose is to help the Claude to better collaborate on this project.
-- Last updated: 21st February 2026
+- Last updated: 2nd May 2026
 
 **Credits and inspiration:**
 - https://github.com/obra
@@ -119,42 +119,11 @@ When you surface it, use the verbatim pitch text from [`.claude/skills/review-ga
 
 ## Documentation Organization Pattern
 
-Projects use a **lifecycle-based documentation structure** to minimize context usage while maintaining comprehensive documentation:
-
-### The Two CLAUDE.md Files
-- **`.claude/CLAUDE.md`** (this file) - General collaboration principles, technology preferences, and ways of working. Applies across all projects.
-- **`CLAUDE.md`** (project root) - **Navigation index only**. Lean, scannable quick reference with links to detailed docs. Project-specific context.
-
-Both files are loaded as system context with every request, so keeping them minimal saves tokens.
-
-### Documentation Folders
-
-**SPECIFICATIONS/** - Forward-looking plans for features being built
-- Active specs remain here during planning and implementation
-- Completed specs move to `SPECIFICATIONS/ARCHIVE/` when done
-- This folder should always be lean - only active/upcoming work
-
-**REFERENCE/** - How-it-works documentation for implemented features
-- Implementation guides, troubleshooting, technical debt tracking
-- Living documentation that evolves with the codebase
-- Loaded on-demand when needed for specific tasks
-
-### The Pattern
-1. **Planning** → Create spec in `SPECIFICATIONS/`
-2. **Building** → Spec stays active in `SPECIFICATIONS/`, implementation docs added to `REFERENCE/`
-3. **Completion** → Spec moves to `SPECIFICATIONS/ARCHIVE/`, implementation docs remain in `REFERENCE/`
-
-This creates clear separation between "what we're building" (SPECIFICATIONS) and "how it works" (REFERENCE).
-
-### Keeping CLAUDE.md Lean
-The project root `CLAUDE.md` should be a navigation index:
-- Quick project overview (what/why)
-- Essential architecture patterns
-- Key file locations
-- Clear headings with summaries
-- Links to detailed docs in `REFERENCE/` and `SPECIFICATIONS/`
-
-Extract detailed content into separate files: troubleshooting guides, setup instructions, testing strategies, etc. Reference them by link rather than including inline.
+- **`.claude/CLAUDE.md`** (this file) — cross-project collaboration principles and ways of working
+- **`CLAUDE.md`** (project root) — project-specific navigation index; links to detail, doesn't duplicate it
+- **SPECIFICATIONS/** — active work during planning/building; completed work moves to `SPECIFICATIONS/ARCHIVE/`
+- **REFERENCE/** — how-it-works docs for implemented features; loaded on-demand, not auto-loaded
+- Both CLAUDE.md files auto-load every turn — keep them lean; extract detail into REFERENCE/ or COLLABORATION/
 
 ## Technology Stack and Choices
 
@@ -186,46 +155,7 @@ We prefer free/low-cost, state-of-the-art solutions. Always use latest stable ve
 
 ### Testing Strategy
 
-I believe in testing, but let's keep it practical and valuable rather than dogmatic.
-
-**Tests as Development Guardrails (inspired by **[**OpenAI's Harness Engineering**](https://openai.com/index/harness-engineering/)**):**
-
-Tests serve dual purposes:
-1. **Validation** - Verify code works correctly
-2. **Directional Context** - Guide AI agents on what to build and how to build it
-
-When you make changes, tests should immediately signal if you're breaking existing functionality and provide clear context about what each component should do.
-
-**Test-Driven Development workflow:**
-1. Write tests first that describe expected behavior
-2. Implement minimum code to make tests pass
-3. Refactor while keeping tests green
-4. Aim for 100% coverage of new code (every line should have clear purpose)
-
-**Coverage philosophy:**
-- Untested code is unclear about its purpose and constraints
-- If we can't write a test for it, maybe we don't need it
-- Coverage gaps indicate missing specifications
-- Target high coverage (95%+ lines/functions/statements, 90%+ branches)
-
-**Test organization:**
-- **Unit tests**: Individual functions work correctly
-- **Integration tests**: Components work together properly
-- **End-to-end tests**: Complete user workflows actually work
-- Test files mirror source structure for easy navigation
-
-**Practical guidelines:**
-- Pay attention to test output - failing tests are trying to tell you something important
-- Prefer real data over mocks when possible (but be pragmatic about API costs)
-- When working on existing code, maintain or improve test coverage
-- If unsure what to test, ask - I'd rather discuss strategy than have you guess
-
-**Pre-commit validation:**
-- Run tests before committing
-- Type-check before committing
-- Catch issues early, before they hit CI/CD
-
-Remember: tests should give us confidence to make changes, not slow us down with bureaucracy.
+TDD: write tests first, implement to pass, refactor while green. Coverage targets: 95%+ lines/functions/statements, 90%+ branches. Pre-commit: `npm test` and `npx tsc --noEmit`. Full details: [testing-strategy.md](../REFERENCE/testing-strategy.md).
 
 ## Version Control and Repository Management
 
@@ -268,21 +198,7 @@ The goal is tracking our work and enabling collaboration, not perfect git aesthe
 
 ## Claude Code Specific Guidelines
 
-### Tool Usage
-- Use concurrent tool calls when possible (batch independent operations)
-- Prefer Task tool for complex searches to reduce context usage
-- Use TodoWrite/TodoRead for task tracking and project visibility
-
-### Communication
-- Be concise in responses (aim for <4 lines unless detail requested)
-- Use `file_path:line_number` format when referencing code locations
-- Avoid unnecessary preamble or postamble
-- When you are using /compact, please focus on our conversation, your most recent (and most significant) learnings, and what you need to do next. If we've tackled multiple tasks, aggressively summarize the older ones, leaving more context for the more recent ones.
-
-### File Operations
-- Always prefer editing existing files over creating new ones
-- Use Read tool before Write/Edit operations
-- Check file structure and patterns before making changes
+When using /compact: focus on the most recent and significant learnings, what needs doing next, and aggressively summarize older tasks.
 
 ### Learning and Memory Management
 - Use and update the project documentation frequently to capture technical insights, failed approaches, and user preferences.
@@ -299,36 +215,8 @@ The goal is tracking our work and enabling collaboration, not perfect git aesthe
 
 ## Problem Solving and Debugging
 
-I value a scientific approach to debugging - let's understand what's actually happening before we start fixing things.
-
-### Core Debugging Mindset
-- **Read the error messages first** - they're usually trying to tell us exactly what's wrong
-- **Look for root causes, not symptoms** - fixing the underlying issue prevents it from coming back
-- **One change at a time** - if we change multiple things, we won't know what actually worked
-- **Check what changed recently** - git diff and recent commits often point to the culprit
-- **Find working examples** - there's usually similar code in the project that works correctly
-
-### When Things Get Tricky
-- **Say "I don't understand X"** rather than guessing - I'd rather help figure it out together
-- **Look for patterns** - is this breaking in similar ways elsewhere? Are we missing a dependency?
-- **Test your hypothesis** - make the smallest change possible to test one specific theory
-- **If the first fix doesn't work, stop and reassess** - piling on more fixes usually makes things worse
-
-### Practical Reality Check
-Sometimes you need to move fast, sometimes the "proper" approach isn't practical. That's fine - just let me know when you're taking shortcuts so we can come back and clean things up later if needed. And as mentioned before, if accruing technical debt or planning to come back later and fix a shortcut, write it down in the project documentation so we don't forget.
-
-The goal is sustainable progress, not perfect process.
+Scientific approach: read errors first, find root causes, change one thing at a time. Flag shortcuts so they can be tracked. Full mindset: [debugging.md](./COLLABORATION/debugging.md).
 
 ## Documentation Standards
 
-We value documentation - it enables picking up projects later and communicating knowledge to others.
-
-**Key principles:**
-- Documentation should explain how everything works and how to use/extend it
-- Preferred format: Markdown (.md)
-- Always maintain README.md in project root
-- Use lifecycle-based structure: SPECIFICATIONS/ (active), ARCHIVE/ (completed), REFERENCE/ (implementation)
-- Keep documentation current alongside code changes
-- Focus on clarity, completeness, and actionability
-
-**Detailed templates and process:** [documentation-standards.md](./COLLABORATION/documentation-standards.md)
+Markdown format, README.md always maintained, lifecycle structure (SPECIFICATIONS → ARCHIVE → REFERENCE), keep docs current with code. Templates and process: [documentation-standards.md](./COLLABORATION/documentation-standards.md).

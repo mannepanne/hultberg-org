@@ -314,6 +314,15 @@ export function createMockGitHub() {
 
 ---
 
+## Practical Guidelines
+
+- **Pay attention to test output** — failing tests are trying to tell you something important
+- **Prefer real data over mocks when possible** — but be pragmatic about API costs (see Mocking Strategy above)
+- **When working on existing code, maintain or improve test coverage** — don't let coverage slip on changed paths
+- **If unsure what to test, ask** — better to discuss strategy than guess
+
+---
+
 ## Coverage Requirements
 
 ### Overall Coverage Target: 100%

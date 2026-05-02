@@ -76,6 +76,18 @@ Read the spec file provided. Understand:
 - [ ] Are API contracts specified (not just "call the API" but what request, what response)?
 - [ ] Are failure modes for each integration covered?
 
+### Project-specific completeness probes
+
+The areas below are where hultberg.org features have ended up incomplete in the past. If the spec touches any of these, check the listed items explicitly:
+
+- [ ] **Magic-link + KV-session auth flow** (`/admin`): does the spec cover login, token consumption (single-use), session expiry, logout, KV TTL, race condition on near-simultaneous token use, and what happens if KV write fails during session creation?
+- [ ] **Update commit flow** (`/admin` publishing → GitHub commit → Actions deploy): is the PAT scope spec'd? What happens on branch-protection conflict, on a merge conflict from near-simultaneous commits, on GH Actions failure, on wrangler deploy failure? Is the user told the publish succeeded *before* or *after* the deploy lands (~2 min later)?
+- [ ] **`/now` page snapshots**: is the snapshot capture trigger spec'd (manual? cron? on edit?)? Storage location? Retrieval path? What happens if a snapshot is missing or corrupted? How is the timeline UI's date range chosen?
+- [ ] **Email notifications** (GSC alerts → Cloudflare Email Sending → Resend fallback): does the spec cover the success path on CF Email Sending, the explicit fallback to Resend on CF failure, the total-fail path (both providers down), and what the user/maintainer sees in each case?
+- [ ] **Build-time `scripts/generate-index.js`**: does the spec change anything that affects the updates index? If so, is the regeneration trigger correct (it runs in CI before `wrangler deploy`)? Does local dev still work without running it manually?
+- [ ] **Static-asset caching**: anything served via `env.ASSETS` is cached at the edge. Does the spec assume freshness on update, or accept the cache window? If freshness matters, is the cache-bust mechanism spec'd?
+- [ ] **Cloudflare Web Analytics + GA4**: does the spec affect page rendering in a way that breaks the analytics gtag.js snippet or the CF Web Analytics beacon? Both rely on full HTML being served.
+
 ### Non-Functional Requirements
 
 - [ ] Performance expectations defined?

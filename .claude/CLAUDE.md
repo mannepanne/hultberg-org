@@ -3,7 +3,7 @@
 
 - This file provides collaboration principles and ways of working guidance to Claude Code (claude.ai/code) when working with in this repository.
 - The purpose is to help the Claude to better collaborate on this project.
-- Last updated: 21st February 2026
+- Last updated: 2nd May 2026
 
 **Credits and inspiration:**
 - https://github.com/obra
@@ -119,6 +119,8 @@ When you surface it, use the verbatim pitch text from [`.claude/skills/review-ga
 
 ## Documentation Organization Pattern
 
+- **`.claude/CLAUDE.md`** (this file) — cross-project collaboration principles and ways of working
+- **`CLAUDE.md`** (project root) — project-specific navigation index; links to detail, doesn't duplicate it
 - **SPECIFICATIONS/** — active work during planning/building; completed work moves to `SPECIFICATIONS/ARCHIVE/`
 - **REFERENCE/** — how-it-works docs for implemented features; loaded on-demand, not auto-loaded
 - Both CLAUDE.md files auto-load every turn — keep them lean; extract detail into REFERENCE/ or COLLABORATION/
@@ -196,7 +198,6 @@ The goal is tracking our work and enabling collaboration, not perfect git aesthe
 
 ## Claude Code Specific Guidelines
 
-### Communication
 When using /compact: focus on the most recent and significant learnings, what needs doing next, and aggressively summarize older tasks.
 
 ### Learning and Memory Management

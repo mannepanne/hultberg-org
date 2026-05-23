@@ -17,7 +17,7 @@
  * - Content version-controlled in GitHub
  * - CSP headers provide defense-in-depth
  * - Server-side rendering only
- * See REFERENCE/technical-debt.md for details.
+ * See https://github.com/mannepanne/hultberg-org/issues/59 for details.
  *
  * @param html - The HTML string to sanitize
  * @returns Sanitized HTML string safe for rendering

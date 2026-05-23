@@ -6,7 +6,7 @@ import type { Env } from './types';
 // TTL and timing constants
 const MAGIC_LINK_TTL_SECONDS = 900; // 15 minutes
 const TOKEN_PROPAGATION_TTL_SECONDS = 60; // Keep used tokens to prevent reuse during KV propagation
-const TOKEN_REUSE_PROTECTION_MS = 5000; // Reject tokens used within this window (ms) - see TD-002
+const TOKEN_REUSE_PROTECTION_MS = 5000; // Reject tokens used within this window (ms) - see https://github.com/mannepanne/hultberg-org/issues/60
 
 const JWT_EXPIRY_SECONDS = 604800; // 7 days
 
@@ -303,7 +303,7 @@ export function isAdminEmail(env: Env, email: string): boolean {
  * Rate limiting check
  * Returns true if rate limit exceeded, false otherwise
  * Limit: RATE_LIMIT_MAX_REQUESTS requests per RATE_LIMIT_WINDOW_SECONDS per IP
- * Note: get-increment-put is not atomic; see TD-002 for known limitation
+ * Note: get-increment-put is not atomic; see https://github.com/mannepanne/hultberg-org/issues/60 for known limitation
  */
 export async function checkRateLimit(env: Env, ip: string): Promise<boolean> {
   if (!env.RATE_LIMIT_KV) {

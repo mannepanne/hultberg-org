@@ -23,4 +23,4 @@ Both analytics scripts are included in:
 
 ## Future Consideration
 
-Evaluate Cloudflare Web Analytics for 3-6 months, then consider consolidating to only Cloudflare to reduce tracking script overhead. See [TD-013 in technical-debt.md](./technical-debt.md) for details.
+Evaluate Cloudflare Web Analytics for 3-6 months, then consider consolidating to only Cloudflare to reduce tracking script overhead. Tracked as [GitHub issue #70](https://github.com/mannepanne/hultberg-org/issues/70).

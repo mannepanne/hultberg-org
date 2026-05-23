@@ -89,7 +89,6 @@ Forward-looking plans for features being built:
 ### REFERENCE/
 How-it-works documentation for implemented features:
 - **[testing-strategy.md](./REFERENCE/testing-strategy.md)** - Testing philosophy and approach
-- **[technical-debt.md](./REFERENCE/technical-debt.md)** - Known issues and accepted risks
 - **[blog-security.md](./REFERENCE/blog-security.md)** - Security implementation patterns
 - **[environment-setup.md](./REFERENCE/environment-setup.md)** - Secrets and KV configuration
 - **[troubleshooting.md](./REFERENCE/troubleshooting.md)** - Common issues and solutions
@@ -153,7 +152,7 @@ npm run test:coverage     # Coverage report
 - **Getting unstuck?** → [troubleshooting.md](./REFERENCE/troubleshooting.md)
 - **Setting up environment?** → [environment-setup.md](./REFERENCE/environment-setup.md)
 - **Security patterns?** → [blog-security.md](./REFERENCE/blog-security.md)
-- **Known issues?** → [technical-debt.md](./REFERENCE/technical-debt.md)
+- **Known issues?** → GitHub Issues with `technical-debt` label
 - **Analytics setup?** → [web-analytics.md](./REFERENCE/web-analytics.md)
 - **Testing strategy?** → [testing-strategy.md](./REFERENCE/testing-strategy.md)
 - **/now snapshots & timeline?** → [now-page-snapshots-timeline.md](./REFERENCE/now-page-snapshots-timeline.md)

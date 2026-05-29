@@ -303,8 +303,8 @@ point. The wrapper:
   route-specific CSPs (admin, `/now`, etc.) are preserved untouched.
 
 This is why the homepage (`/`, served via `env.ASSETS.fetch()` under
-`run_worker_first`) is now hardened: the wrapper sees the asset response before
-it leaves the Worker.
+`run_worker_first`) is hardened: the wrapper sees the asset response before it
+leaves the Worker.
 
 ### Static assets that bypass the Worker
 

@@ -48,11 +48,15 @@ describe('Worker security headers', () => {
   });
 
   it('does not clobber a route that sets its own CSP', async () => {
-    // /updates/feed.xml sets a route-specific CSP; the wrapper must keep it.
-    const request = new Request('http://localhost/updates/feed.xml');
+    // /admin sets a route-specific CSP whose script-src includes 'unsafe-inline'
+    // — a directive DEFAULT_CSP deliberately omits. Asserting on it proves the
+    // route policy survived rather than being overwritten with the default.
+    const request = new Request('http://localhost/admin');
     const response = await worker.fetch(request, createMockEnv(), ctx);
 
-    expect(response.headers.get('Content-Security-Policy')).toContain("default-src 'self'");
+    const csp = response.headers.get('Content-Security-Policy') ?? '';
+    expect(csp).toContain("script-src 'self' 'unsafe-inline'");
+    expect(csp).not.toBe(DEFAULT_CSP);
     // ...while still gaining the base headers it previously lacked.
     expect(response.headers.get('X-Frame-Options')).toBe('DENY');
   });

@@ -260,7 +260,7 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext):
             <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="/now">Now</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a> | <a href="/use-of-ai">Use of AI</a></p>
             <img src="/errors/bazinga.gif" alt="bazinga!" /><br /><br />
             sorry, the page or file you are looking for isn't here...<br />
-            <a href="/" onclick="history.back(); return false;">go back from whence you came</a>, or tell me what a klutz I am by messaging me on
+            <a href="/">go back home</a>, or tell me what a klutz I am by messaging me on
             <a href="https://uk.linkedin.com/in/hultberg" target="_blank" rel="noopener noreferrer">LinkedIn</a>
             <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="/now">Now</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a> | <a href="/use-of-ai">Use of AI</a></p>
         </div>

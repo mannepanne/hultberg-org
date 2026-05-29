@@ -247,19 +247,23 @@ Content-Security-Policy:
 ```
 Content-Security-Policy:
   default-src 'self';
-  script-src 'self';
+  script-src 'self' https://static.cloudflareinsights.com;
   style-src 'self' 'unsafe-inline';
   img-src 'self';
-  connect-src 'self';
+  connect-src 'self' https://cloudflareinsights.com;
   frame-ancestors 'none';
   base-uri 'self';
 ```
 
+This is also the `DEFAULT_CSP` applied by `withSecurityHeaders()` to any
+response that does not set its own policy (see "Global Security Headers").
+
 **Stricter policy for public:**
-- No external CDNs
+- Only the Cloudflare Web Analytics beacon is allowed as an external script/connect origin
+- No other external CDNs
 - No inline scripts
 - Only inline styles (for simple formatting)
-- Blocks all XSS attempts via CSP layer
+- Blocks XSS attempts via the CSP layer
 
 ### Implementation
 

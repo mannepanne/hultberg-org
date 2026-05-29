@@ -31,9 +31,22 @@ import { handleListNowSnapshots } from './routes/listNowSnapshots';
 import { handleDeleteNowSnapshot } from './routes/deleteNowSnapshot';
 import { handleUseOfAiPage } from './routes/useOfAiPage';
 import { GITHUB_REPO } from './github';
+import { withSecurityHeaders } from './securityHeaders';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    // Single exit point: route the request, then apply security headers to
+    // every response (homepage, dynamic routes, 404). Routes that set their
+    // own CSP keep it; the rest get the default policy from withSecurityHeaders.
+    return withSecurityHeaders(await handleRequest(request, env, ctx));
+  },
+
+  // Cron trigger — runs daily per wrangler.toml. Wraps runDailyPoll in
+  // ctx.waitUntil so async work completes after the outer handler returns.
+  scheduled: handleScheduled,
+};
+
+async function handleRequest(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
     // Legacy WordPress query-string URLs return 410 Gone so search engines
@@ -260,9 +273,4 @@ export default {
         'Content-Type': 'text/html',
       },
     });
-  },
-
-  // Cron trigger — runs daily per wrangler.toml. Wraps runDailyPoll in
-  // ctx.waitUntil so async work completes after the outer handler returns.
-  scheduled: handleScheduled,
-};
+}

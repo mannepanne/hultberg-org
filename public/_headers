@@ -1,0 +1,13 @@
+# Security headers for static assets served directly by Cloudflare Assets
+# (legacy pages, images, error pages) — these bypass the Worker, so the
+# withSecurityHeaders() wrapper in src/index.ts never sees them.
+#
+# Deliberately no Content-Security-Policy here: the archived /2005/ pages rely
+# on third-party widgets (analytics, Twitter, Goodreads) that a strict CSP
+# would block. Strict-Transport-Security is omitted because Cloudflare's edge
+# already injects it on this zone.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), usb=()

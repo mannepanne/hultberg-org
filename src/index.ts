@@ -31,9 +31,22 @@ import { handleListNowSnapshots } from './routes/listNowSnapshots';
 import { handleDeleteNowSnapshot } from './routes/deleteNowSnapshot';
 import { handleUseOfAiPage } from './routes/useOfAiPage';
 import { GITHUB_REPO } from './github';
+import { withSecurityHeaders } from './securityHeaders';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    // Single exit point: route the request, then apply security headers to
+    // every response (homepage, dynamic routes, 404). Routes that set their
+    // own CSP keep it; the rest get the default policy from withSecurityHeaders.
+    return withSecurityHeaders(await handleRequest(request, env, ctx));
+  },
+
+  // Cron trigger — runs daily per wrangler.toml. Wraps runDailyPoll in
+  // ctx.waitUntil so async work completes after the outer handler returns.
+  scheduled: handleScheduled,
+};
+
+async function handleRequest(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
     // Legacy WordPress query-string URLs return 410 Gone so search engines
@@ -247,7 +260,7 @@ export default {
             <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="/now">Now</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a> | <a href="/use-of-ai">Use of AI</a></p>
             <img src="/errors/bazinga.gif" alt="bazinga!" /><br /><br />
             sorry, the page or file you are looking for isn't here...<br />
-            <a href="/" onclick="history.back(); return false;">go back from whence you came</a>, or tell me what a klutz I am by messaging me on
+            <a href="/">go back home</a>, or tell me what a klutz I am by messaging me on
             <a href="https://uk.linkedin.com/in/hultberg" target="_blank" rel="noopener noreferrer">LinkedIn</a>
             <p>← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="/now">Now</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a> | <a href="/use-of-ai">Use of AI</a></p>
         </div>
@@ -260,9 +273,4 @@ export default {
         'Content-Type': 'text/html',
       },
     });
-  },
-
-  // Cron trigger — runs daily per wrangler.toml. Wraps runDailyPoll in
-  // ctx.waitUntil so async work completes after the outer handler returns.
-  scheduled: handleScheduled,
-};
+}

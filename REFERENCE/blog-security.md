@@ -247,19 +247,23 @@ Content-Security-Policy:
 ```
 Content-Security-Policy:
   default-src 'self';
-  script-src 'self';
+  script-src 'self' https://static.cloudflareinsights.com;
   style-src 'self' 'unsafe-inline';
   img-src 'self';
-  connect-src 'self';
+  connect-src 'self' https://cloudflareinsights.com;
   frame-ancestors 'none';
   base-uri 'self';
 ```
 
+This is also the `DEFAULT_CSP` applied by `withSecurityHeaders()` to any
+response that does not set its own policy (see "Global Security Headers").
+
 **Stricter policy for public:**
-- No external CDNs
+- Only the Cloudflare Web Analytics beacon is allowed as an external script/connect origin
+- No other external CDNs
 - No inline scripts
 - Only inline styles (for simple formatting)
-- Blocks all XSS attempts via CSP layer
+- Blocks XSS attempts via the CSP layer
 
 ### Implementation
 
@@ -282,6 +286,45 @@ return new Response(html, {
   }
 });
 ```
+
+---
+
+## Global Security Headers
+
+Beyond CSP, every response carries a standard set of hardening headers. These
+are applied centrally rather than per-route.
+
+### Worker responses
+
+`src/index.ts` routes each request through `handleRequest()` and wraps the
+result in `withSecurityHeaders()` (`src/securityHeaders.ts`) at the single exit
+point. The wrapper:
+
+- Forces `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+  `Referrer-Policy: strict-origin-when-cross-origin`, and a restrictive
+  `Permissions-Policy` on every response.
+- Adds a default CSP **only when the route did not set its own** — the
+  route-specific CSPs (admin, `/now`, etc.) are preserved untouched.
+
+This is why the homepage (`/`, served via `env.ASSETS.fetch()` under
+`run_worker_first`) is hardened: the wrapper sees the asset response before it
+leaves the Worker.
+
+### Static assets that bypass the Worker
+
+Legacy `/2005/` pages, images, and error pages are served directly by
+Cloudflare Assets — the Worker never runs, so `withSecurityHeaders()` cannot
+reach them. `public/_headers` supplies the same four headers for those paths.
+It deliberately omits CSP so the archived pages' third-party widgets keep
+working. (Cloudflare's static-asset `_headers` file does **not** apply to
+Worker-generated responses, which is why both layers exist.)
+
+### HSTS
+
+`Strict-Transport-Security` is **not** set in code — Cloudflare's edge already
+injects it on this zone. Setting it again would duplicate the header. To
+lengthen its `max-age` (currently 30 days) or add `preload`, change it in the
+Cloudflare dashboard under SSL/TLS → Edge Certificates → HSTS.
 
 ---
 

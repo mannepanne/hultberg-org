@@ -112,14 +112,16 @@ describe('GET /use-of-ai', () => {
 
     // Code and projects section
     expect(html).toContain('<h2 style="font-size: 1.2em; font-weight: bold; line-height: 1.2; margin-top: 1.5em; margin-bottom: 0.5em;">Code and projects</h2>');
-    expect(html).toContain('hultberg.org, restaurants.hultberg.org, ansible.hultberg.org');
+    expect(html).toContain("The sites you're visiting, hultberg.org, and other projects of mine like:");
+    expect(html).toContain('<a href="https://hnefatafl.hultberg.org" target="_blank" rel="noopener noreferrer">hnefatafl.hultberg.org</a>');
+    expect(html).toContain('<a href="https://takt.hultberg.org" target="_blank" rel="noopener noreferrer">takt.hultberg.org</a>');
 
     // The bottom line section
     expect(html).toContain('<h2 style="font-size: 1.2em; font-weight: bold; line-height: 1.2; margin-top: 1.5em; margin-bottom: 0.5em;">The bottom line</h2>');
     expect(html).toContain('All of this is for me');
 
     // Last updated
-    expect(html).toContain('<em>Last updated: March 2026</em>');
+    expect(html).toContain('<em>Last updated: June 2026</em>');
   });
 
   it('includes meta description for SEO', async () => {

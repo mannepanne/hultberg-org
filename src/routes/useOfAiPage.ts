@@ -72,7 +72,17 @@ function renderUseOfAiPageHTML(): string {
 
   <h2 style="font-size: 1.2em; font-weight: bold; line-height: 1.2; margin-top: 1.5em; margin-bottom: 0.5em;">Code and projects</h2>
 
-  <p>The sites you're visiting, hultberg.org, restaurants.hultberg.org, ansible.hultberg.org, are built almost entirely with AI-generated code. I do not write code myself, in any meaningful sense.</p>
+  <p>The sites you're visiting, hultberg.org, and other projects of mine like:</p>
+
+  <ul>
+    <li><a href="https://restaurants.hultberg.org" target="_blank" rel="noopener noreferrer">restaurants.hultberg.org</a> (restaurants I want to visit)</li>
+    <li><a href="https://hnefatafl.hultberg.org" target="_blank" rel="noopener noreferrer">hnefatafl.hultberg.org</a> (ancient Viking game I wanted to try)</li>
+    <li><a href="https://qrious.hultberg.org" target="_blank" rel="noopener noreferrer">qrious.hultberg.org</a> (what QR codes once were, collect them all!)</li>
+    <li><a href="https://ansible.hultberg.org" target="_blank" rel="noopener noreferrer">ansible.hultberg.org</a> (because there's too much to read)</li>
+    <li><a href="https://takt.hultberg.org" target="_blank" rel="noopener noreferrer">takt.hultberg.org</a> (because rehab is sooooo dull)</li>
+  </ul>
+
+  <p>...are built almost entirely with AI-generated code. I do not write code myself, in any meaningful sense.</p>
 
   <p>What I do instead: I use <a href="https://github.com/mannepanne/useful-assets-template" target="_blank" rel="noopener noreferrer">an opinionated workflow</a> based on my extensive experience as a Product Manager mimicking collaboration with a team of engineers. I work through requirements in conversation with Claude until we've agreed a clear specification in writing. Claude Code then implements against that specification using a test-driven approach. Separately invoked sub-agents review every pull request before anything is merged; a security-minded reviewer, an architect, and others, depending on the phase.</p>
 
@@ -86,7 +96,7 @@ function renderUseOfAiPageHTML(): string {
 
   <p>That's the deal I've made with myself. I think it's a reasonable one.</p>
 
-  <p style="font-style: italic; margin-top: 1.5em;"><em>Last updated: March 2026</em></p>
+  <p style="font-style: italic; margin-top: 1.5em;"><em>Last updated: June 2026</em></p>
 
   <p style="margin-top: 2em;">← <a href="/">Home</a> | <a href="/updates">Updates</a> | <a href="/now">Now</a> | <a href="https://www.linkedin.com/in/hultberg/" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/mannepanne" target="_blank" rel="noopener noreferrer">GitHub</a> | <a href="/use-of-ai">Use of AI</a></p>
 

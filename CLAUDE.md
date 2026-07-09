@@ -120,7 +120,7 @@ How-it-works documentation for implemented features:
 3. Implement with tests: `npm test && npx tsc --noEmit`
 4. Create PR for review:
    - **`/review-pr`** - Fast single-reviewer (regular PRs)
-   - **`/review-pr-team`** - Multi-perspective (critical changes)
+   - **`/review-pr-team`** - Four-perspective (critical changes)
 
 ## TypeScript Configuration
 

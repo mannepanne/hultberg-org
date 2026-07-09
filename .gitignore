@@ -20,3 +20,7 @@ public/updates/data/index.json
 # lets a maintainer run a different prReviewMode locally (e.g. "enabled" for
 # dogfooding on the template repo) without flipping the committed default.
 .claude/project-config.local.json
+
+# Throwaway git worktrees for reviewer subagents spawned with
+# isolation: "worktree". Created and removed per review run.
+.claude/worktrees/

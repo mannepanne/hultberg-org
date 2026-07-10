@@ -18,9 +18,9 @@ Reviewer output uses 🔴/⚠️/💡 severity. Translate each finding into one 
 
 | Tier | Criteria |
 |---|---|
-| **Handle in this PR** | Technical solution is clear, within the PR's scope: bugs, code quality, doc gaps for code the PR touched, missing ABOUT comments, failing tests. **Default bucket — most findings land here.** |
-| **Your call** | Involves a UX or scope tradeoff the operator needs to decide. Present the options in plain English with your recommendation. A 🔴 in this tier still blocks merge until decided. |
-| **Track as issue** | Genuinely outside this PR's scope: pre-existing bug, separate feature, broader architectural problem. GitHub issues are the **only** allowed form of deferral — never say "we'll do that later" without creating a ticket. |
+| **Handle in this PR** | Technical solution is clear: bugs, code quality, doc gaps for code the PR touched, missing ABOUT comments, failing tests, minor tech debt, small style/convention fixes. **Default bucket — most findings land here. Minor does not mean defer — if it can be done in a few minutes, do it now.** |
+| **Your call** | Involves a UX or scope tradeoff the operator needs to decide. **Always present a default recommendation.** If you can't pick a default, the item belongs in "Handle in this PR" with your best guess as the action — "Your call" is not a hedge for items where you have a preference but didn't want to state it. A 🔴 in this tier still blocks merge until decided. |
+| **Track as issue** | Out of scope **and** non-trivial: work that requires a separate investigation, affects unrelated systems, or represents a distinct feature/story. The bar is high — only reach for this bucket when the work truly cannot be done as part of this PR. **Never create a GitHub Issue for:** documentation gaps, ABOUT comments, evergreen-language fixes, minor code quality or style improvements, or anything resolvable in a few lines. A GitHub Issue for a 5-minute fix costs more (time spent triaging it later) than just fixing it now. |
 
 When in doubt, default to **Handle in this PR**.
 
@@ -32,18 +32,20 @@ Use this exact format. **Skip any bucket that has nothing in it — don't emit e
 
 > **Done — [N] critical issue(s) to fix before merge.** *(or: no blockers)*
 >
-> **I'll handle these in this PR** *(confirm and I'll go):*
+> **I'll handle these in this PR** *(confirm and I'll go — reply "yes" for all, or name the specific items you want handled; I'll apply the changes to the current PR branch and commit them):*
 > - Update `REFERENCE/api.md` — the new endpoint isn't documented
 > - Add ABOUT comments to `src/lib/auth.ts` (new file)
 >
 > **Your call:**
 > - The auth flow skips email verification on social logins — users may be surprised. My recommendation: add a "verify on first login" prompt. Your choice.
 >
-> **Tracking as GitHub issues** *(shall I create these?):*
-> - `BUG: Error message on failed payment exposes stack trace`
-> - `ENHANCEMENT: Password reset email uses old brand colours`
+> **Tracking as GitHub issues** *(shall I create these? Reply "yes" for all, or name specific ones):*
+> - `BUG: Pre-existing race condition in payment retry path — unrelated to this PR, needs separate investigation`
+> - `ENHANCEMENT: Add SAML SSO login — came up in review discussion, distinct piece of work`
 
 Plain English throughout. No technical jargon in the "Your call" or "Tracking" sections unless it genuinely aids clarity.
+
+**Partial confirmation.** If the operator confirms some items and rejects or skips others (e.g. *"yes to 1 and 3, no on 2"*, or *"yes, no ADR, yes"*), treat the unconfirmed items as deferred — no action, no issue created, no follow-up nag in this turn. Before applying any changes, state explicitly which items you're acting on and which you're dropping, so the operator can correct you if you parsed wrong.
 
 ---
 
@@ -59,6 +61,21 @@ Plain English throughout. No technical jargon in the "Your call" or "Tracking" s
    ```
    - Title prefix: **uppercase** (`BUG:`, `ENHANCEMENT:`, `DOCUMENTATION:`, `TECHNICAL DEBT:`)
    - `--label` value: **lowercase, hyphenated** GitHub label name (`bug`, `enhancement`, `documentation`, `technical-debt`)
-3. Issue body: what was found, which PR surfaced it, recommended fix if known.
+3. Issue body — use this skeleton so issues stay consistent and searchable:
+
+   ```
+   ## Finding
+   <one paragraph: what was found, plus the file/location it lives in>
+
+   ## Source
+   Surfaced by review of <full PR URL>. <One line: why this is out-of-scope and non-trivial.>
+
+   ## Suggested fix
+   <If known. Otherwise: "Needs investigation.">
+   ```
+
+   Use the **full PR URL** (not just the number) so the issue is navigable from the Issues UI without the repo URL pre-loaded in the reader's head.
 
 **Standard labels:** `bug` · `documentation` · `enhancement` · `technical-debt`
+
+`bug`, `documentation`, and `enhancement` are GitHub default labels and exist in all new repositories. `technical-debt` is created on demand in step 1 above. If a repo has deleted a default label, `gh issue create --label "<name>"` will fail — recreate the label manually before retrying.
